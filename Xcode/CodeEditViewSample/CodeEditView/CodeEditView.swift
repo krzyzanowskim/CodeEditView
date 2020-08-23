@@ -1,8 +1,15 @@
 import Cocoa
 import CoreText
 
+// Ref: Creating Custom Views
+//      https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/TextEditing/Tasks/TextViewTask.html#//apple_ref/doc/uid/TP40008899-BCICEFGE
+//
+// TODO:
+//  - Text Checking: NSTextCheckingClient, NSTextCheckingController
+//  - tell the input context when position information for a character range changes, when the text view scrolls, by sending the invalidateCharacterCoordinates message to the input context.
+
 /// Code Edit View
-public class CodeEditView: NSView {
+public final class CodeEditView: NSView {
 
     public enum LineWrapping {
         /// No wrapping
@@ -27,6 +34,10 @@ public class CodeEditView: NSView {
     /// Line Spacing mode
     public var lineSpacing: Spacing = .normal
 
+    public override var acceptsFirstResponder: Bool {
+        true
+    }
+
     private var _lineBreakWidth: Double {
         switch lineWrapping {
             case .none:
@@ -38,6 +49,7 @@ public class CodeEditView: NSView {
         }
 
     }
+
     private let storage: TextStorage
 
     public init(storage: TextStorage) {
@@ -48,6 +60,23 @@ public class CodeEditView: NSView {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    public override func keyDown(with event: NSEvent) {
+        interpretKeyEvents([event])
+    }
+
+    public override func mouseDown(with event: NSEvent) {
+        inputContext?.handleEvent(event)
+    }
+
+    public override func doCommand(by selector: Selector) {
+        print("doCommand \(selector)")
+
+        // If aSelector cannot be invoked, should not pass this message up the responder chain.
+        // NSResponder also implements this method, and it does forward uninvokable commands up
+        // the responder chain, but a text view should not.
+        // super.doCommand(by: selector)
     }
 
     public override func draw(_ dirtyRect: NSRect) {
@@ -92,6 +121,57 @@ public class CodeEditView: NSView {
             }
         }
     }
+}
+
+// The default implementation of the NSView method inputContext manages
+// an NSTextInputContext instance automatically if the view subclass conforms
+// to the NSTextInputClient protocol.
+extension CodeEditView: NSTextInputClient {
+
+    public func insertText(_ string: Any, replacementRange: NSRange) {
+        guard let nsstring = string as? NSString else {
+            return
+        }
+        print("insertText \(nsstring) replacementRange \(replacementRange)")
+    }
+
+    public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
+        //
+    }
+
+    public func unmarkText() {
+        //
+    }
+
+    public func selectedRange() -> NSRange {
+        NSRange()
+    }
+
+    public func markedRange() -> NSRange {
+        NSRange()
+    }
+
+    public func hasMarkedText() -> Bool {
+        false
+    }
+
+    public func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
+        nil
+    }
+
+    public func validAttributesForMarkedText() -> [NSAttributedString.Key] {
+        [] // [.font, .backgroundColor, .foregroundColor]
+    }
+
+    public func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
+        NSRect.zero
+    }
+
+    public func characterIndex(for point: NSPoint) -> Int {
+        0
+    }
+
+
 }
 
 import SwiftUI
