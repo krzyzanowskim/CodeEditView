@@ -9,6 +9,10 @@
 /* Begin PBXBuildFile section */
 		750AC4C824F27D50004FB229 /* CodeEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4C724F27D50004FB229 /* CodeEditView.swift */; };
 		750AC4CA24F27D9E004FB229 /* CodeEdit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4C924F27D9E004FB229 /* CodeEdit.swift */; };
+		750AC4CC24F28293004FB229 /* Position.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4CB24F28293004FB229 /* Position.swift */; };
+		750AC4CE24F283EA004FB229 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4CD24F283EA004FB229 /* TextStorage.swift */; };
+		750AC4D024F283FF004FB229 /* TextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4CF24F283FF004FB229 /* TextStorageProvider.swift */; };
+		750AC4D424F28572004FB229 /* Range.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4D324F28572004FB229 /* Range.swift */; };
 		75EB017924F27BC10056D96A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EB017824F27BC10056D96A /* AppDelegate.swift */; };
 		75EB017B24F27BC10056D96A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EB017A24F27BC10056D96A /* ContentView.swift */; };
 		75EB017D24F27BC10056D96A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75EB017C24F27BC10056D96A /* Assets.xcassets */; };
@@ -19,6 +23,10 @@
 /* Begin PBXFileReference section */
 		750AC4C724F27D50004FB229 /* CodeEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEditView.swift; sourceTree = "<group>"; };
 		750AC4C924F27D9E004FB229 /* CodeEdit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeEdit.swift; sourceTree = "<group>"; };
+		750AC4CB24F28293004FB229 /* Position.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Position.swift; sourceTree = "<group>"; };
+		750AC4CD24F283EA004FB229 /* TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorage.swift; sourceTree = "<group>"; };
+		750AC4CF24F283FF004FB229 /* TextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorageProvider.swift; sourceTree = "<group>"; };
+		750AC4D324F28572004FB229 /* Range.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Range.swift; sourceTree = "<group>"; };
 		75EB017524F27BC10056D96A /* CodeEditViewSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodeEditViewSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EB017824F27BC10056D96A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		75EB017A24F27BC10056D96A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -45,8 +53,28 @@
 			children = (
 				750AC4C724F27D50004FB229 /* CodeEditView.swift */,
 				750AC4C924F27D9E004FB229 /* CodeEdit.swift */,
+				750AC4D224F2843B004FB229 /* TextStorage */,
+				750AC4D524F28897004FB229 /* Model */,
 			);
 			path = CodeEditView;
+			sourceTree = "<group>";
+		};
+		750AC4D224F2843B004FB229 /* TextStorage */ = {
+			isa = PBXGroup;
+			children = (
+				750AC4CD24F283EA004FB229 /* TextStorage.swift */,
+				750AC4CF24F283FF004FB229 /* TextStorageProvider.swift */,
+			);
+			path = TextStorage;
+			sourceTree = "<group>";
+		};
+		750AC4D524F28897004FB229 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				750AC4CB24F28293004FB229 /* Position.swift */,
+				750AC4D324F28572004FB229 /* Range.swift */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 		75EB016C24F27BC10056D96A = {
@@ -160,7 +188,11 @@
 			files = (
 				75EB017B24F27BC10056D96A /* ContentView.swift in Sources */,
 				750AC4C824F27D50004FB229 /* CodeEditView.swift in Sources */,
+				750AC4D024F283FF004FB229 /* TextStorageProvider.swift in Sources */,
+				750AC4D424F28572004FB229 /* Range.swift in Sources */,
 				750AC4CA24F27D9E004FB229 /* CodeEdit.swift in Sources */,
+				750AC4CC24F28293004FB229 /* Position.swift in Sources */,
+				750AC4CE24F283EA004FB229 /* TextStorage.swift in Sources */,
 				75EB017924F27BC10056D96A /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

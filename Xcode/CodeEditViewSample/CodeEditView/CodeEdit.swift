@@ -11,13 +11,15 @@ public struct CodeEdit: View {
 
 private final class CodeEditViewRepresentable: NSViewRepresentable {
     @Binding private var text: String
+    private let textStorage: TextStorage
 
     init(text: Binding<String>) {
         _text = text
+        textStorage = TextStorage()
     }
 
     func makeNSView(context: Context) -> some NSView {
-        CodeEditView()
+        return CodeEditView(storage: textStorage)
     }
 
     func updateNSView(_ nsView: NSViewType, context: Context) {
