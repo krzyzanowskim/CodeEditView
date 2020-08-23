@@ -25,6 +25,8 @@ DerivedData/
 ## Obj-C/Swift specific
 *.hmap
 
+.DS_Store
+
 ## App packaging
 *.ipa
 *.dSYM.zip
