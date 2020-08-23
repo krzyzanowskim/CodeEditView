@@ -5,6 +5,10 @@ import Foundation
 public final class TextStorage {
     private let storageProvider: TextStorageProvider
 
+    public var linesCount: Int {
+        storageProvider.linesCount
+    }
+
     public init(string: String = "") {
         storageProvider = StringTextStorageProvider()
         if !string.isEmpty {
