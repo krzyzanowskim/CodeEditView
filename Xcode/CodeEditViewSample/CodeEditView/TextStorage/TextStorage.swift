@@ -6,7 +6,7 @@ public final class TextStorage {
     private let storageProvider: TextStorageProvider
 
     public init(string: String = "") {
-        storageProvider = RopeTextStorageProvider()
+        storageProvider = StringTextStorageProvider()
         if !string.isEmpty {
             insert(string: string, at: Position(line: 0, character: 0))
         }

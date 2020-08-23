@@ -16,10 +16,10 @@ extension Position: Comparable {
             return true
         }
 
-        if lhs.line == rhs.line && lhs.character < rhs.character {
-            return true
+        if lhs.line > rhs.line {
+            return false
         }
 
-        return false
+        return lhs.character < rhs.character
     }
 }

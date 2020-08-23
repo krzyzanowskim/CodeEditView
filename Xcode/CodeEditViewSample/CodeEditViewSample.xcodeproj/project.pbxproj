@@ -13,6 +13,8 @@
 		750AC4CE24F283EA004FB229 /* TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4CD24F283EA004FB229 /* TextStorage.swift */; };
 		750AC4D024F283FF004FB229 /* TextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4CF24F283FF004FB229 /* TextStorageProvider.swift */; };
 		750AC4D424F28572004FB229 /* Range.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4D324F28572004FB229 /* Range.swift */; };
+		750AC4DC24F28EC2004FB229 /* RopeTextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */; };
+		75EA4C9B24F2B1D700BAA2D9 /* StringTextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EA4C9A24F2B1D700BAA2D9 /* StringTextStorageProvider.swift */; };
 		75EB017924F27BC10056D96A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EB017824F27BC10056D96A /* AppDelegate.swift */; };
 		75EB017B24F27BC10056D96A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EB017A24F27BC10056D96A /* ContentView.swift */; };
 		75EB017D24F27BC10056D96A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75EB017C24F27BC10056D96A /* Assets.xcassets */; };
@@ -27,6 +29,8 @@
 		750AC4CD24F283EA004FB229 /* TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorage.swift; sourceTree = "<group>"; };
 		750AC4CF24F283FF004FB229 /* TextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorageProvider.swift; sourceTree = "<group>"; };
 		750AC4D324F28572004FB229 /* Range.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Range.swift; sourceTree = "<group>"; };
+		750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RopeTextStorageProvider.swift; sourceTree = "<group>"; };
+		75EA4C9A24F2B1D700BAA2D9 /* StringTextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringTextStorageProvider.swift; sourceTree = "<group>"; };
 		75EB017524F27BC10056D96A /* CodeEditViewSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodeEditViewSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EB017824F27BC10056D96A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		75EB017A24F27BC10056D96A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -64,6 +68,8 @@
 			children = (
 				750AC4CD24F283EA004FB229 /* TextStorage.swift */,
 				750AC4CF24F283FF004FB229 /* TextStorageProvider.swift */,
+				750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */,
+				75EA4C9A24F2B1D700BAA2D9 /* StringTextStorageProvider.swift */,
 			);
 			path = TextStorage;
 			sourceTree = "<group>";
@@ -77,12 +83,20 @@
 			path = Model;
 			sourceTree = "<group>";
 		};
+		75EA4C9724F2A3BC00BAA2D9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		75EB016C24F27BC10056D96A = {
 			isa = PBXGroup;
 			children = (
 				750AC4C624F27D3E004FB229 /* CodeEditView */,
 				75EB017724F27BC10056D96A /* CodeEditViewSample */,
 				75EB017624F27BC10056D96A /* Products */,
+				75EA4C9724F2A3BC00BAA2D9 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -132,6 +146,8 @@
 			dependencies = (
 			);
 			name = CodeEditViewSample;
+			packageProductDependencies = (
+			);
 			productName = CodeEditViewSample;
 			productReference = 75EB017524F27BC10056D96A /* CodeEditViewSample.app */;
 			productType = "com.apple.product-type.application";
@@ -159,6 +175,8 @@
 				Base,
 			);
 			mainGroup = 75EB016C24F27BC10056D96A;
+			packageReferences = (
+			);
 			productRefGroup = 75EB017624F27BC10056D96A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -189,7 +207,9 @@
 				75EB017B24F27BC10056D96A /* ContentView.swift in Sources */,
 				750AC4C824F27D50004FB229 /* CodeEditView.swift in Sources */,
 				750AC4D024F283FF004FB229 /* TextStorageProvider.swift in Sources */,
+				75EA4C9B24F2B1D700BAA2D9 /* StringTextStorageProvider.swift in Sources */,
 				750AC4D424F28572004FB229 /* Range.swift in Sources */,
+				750AC4DC24F28EC2004FB229 /* RopeTextStorageProvider.swift in Sources */,
 				750AC4CA24F27D9E004FB229 /* CodeEdit.swift in Sources */,
 				750AC4CC24F28293004FB229 /* Position.swift in Sources */,
 				750AC4CE24F283EA004FB229 /* TextStorage.swift in Sources */,

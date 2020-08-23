@@ -1,4 +1,5 @@
 import Cocoa
+import CoreText
 
 /// Code Edit View
 public class CodeEditView: NSView {
@@ -16,5 +17,11 @@ public class CodeEditView: NSView {
 
     public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
+
+        // draw text
+        // 1. find text range for displayed dirtyRect
+        // 2. draw text from the range
+
+        // 
     }
 }
