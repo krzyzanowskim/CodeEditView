@@ -121,8 +121,6 @@ public final class CodeEditView: NSView {
             var posY: CGFloat = bounds.height // + scroll offset
 
             var lineStartIndex: CFIndex = 0
-            var drawLineNumber: LineNumber = 0
-            // alignmentRectInsets? safeAreaInsets?
             while lineStartIndex < stringLength {
                 let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, _lineBreakWidth, Double(posX))
                 let leftRange = CFRange(location: lineStartIndex, length: breakIndex)
@@ -137,13 +135,9 @@ public final class CodeEditView: NSView {
                 context.textPosition = .init(x: 0, y: posY - (ascent + descent))
                 CTLineDraw(ctline, context)
 
-                drawLineNumber += 1
-
                 lineStartIndex += breakIndex
                 posY -= (ascent + descent + leading) * lineSpacing.rawValue
             }
-
-            // Cache [LineNo: posY] for NSTextInputClient
         }
     }
 }
