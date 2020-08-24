@@ -122,7 +122,6 @@ public final class CodeEditView: NSView {
     }
 
     public override func prepareContent(in rect: NSRect) {
-        // print("prepareContent \(rect)")
         super.prepareContent(in: rect)
     }
 
@@ -188,18 +187,25 @@ public final class CodeEditView: NSView {
                 pos.y += lineHeight
 
                 textContentSize.width = max(textContentSize.width, lineWidth)
-                textContentSize.height += lineHeight
             }
+            textContentSize.height = pos.y//.rounded(.awayFromZero)
         }
 
         if lineBreakWidth != frame.size.width {
             frame.size.width = textContentSize.width
         }
 
-        frame.size.height = max(textContentSize.height, visibleRect.height)
+        let prevContentOffset = enclosingScrollView?.documentVisibleRect.origin ?? .zero
 
-        // FIXME: performance killer
-        // Flip Y
+        let prevFrame = frame
+        frame.size.height = (1000 * max(textContentSize.height, visibleRect.height).rounded()) / 1000
+        // print("\(before) -> \(frame.size.height)")
+
+        // Preserve content pffset
+        let heightDelta = frame.size.height - prevFrame.size.height
+        enclosingScrollView?.documentView?.scroll(CGPoint(x: prevContentOffset.x, y: prevContentOffset.y + heightDelta))
+
+        // Flip Y. Performance killer
         _linesLayout = _linesLayout.map { lineLayout -> LineLayout in
             LineLayout(ctline: lineLayout.ctline, origin: CGPoint(x: lineLayout.origin.x, y: frame.height - lineLayout.origin.y))
         }
