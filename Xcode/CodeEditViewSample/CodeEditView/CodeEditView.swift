@@ -52,18 +52,6 @@ public final class CodeEditView: NSView {
     /// Whether or not this view is the focused view for its window
     private var _isFirstResponder = false
 
-    private var _lineBreakWidth: CGFloat {
-        switch lineWrapping {
-            case .none:
-                return CGFloat.infinity
-            case .bounds:
-                return frame.width
-            case .width(let width):
-                return width
-        }
-
-    }
-
     private let _storage: TextStorage
 
     /// Visible line layout
@@ -133,6 +121,11 @@ public final class CodeEditView: NSView {
         }
     }
 
+    public override func prepareContent(in rect: NSRect) {
+        // print("prepareContent \(rect)")
+        super.prepareContent(in: rect)
+    }
+
     public override func layout() {
         layoutText()
 
@@ -141,7 +134,7 @@ public final class CodeEditView: NSView {
 
     /// Layout visible text
     private func layoutText() {
-        os_log(.debug, "layoutText")
+        // os_log(.debug, "layoutText")
 
         // Let's layout some text. Top Bottom/Left Right
         // TODO:
@@ -152,6 +145,19 @@ public final class CodeEditView: NSView {
         // Largest content size needed to draw the lines
         var textContentSize = CGSize()
 
+        // let contentViewOffset = enclosingScrollView?.documentVisibleRect.origin ?? .zero
+        // print("contentViewOffset \(contentViewOffset)")
+
+        let lineBreakWidth: CGFloat
+        switch lineWrapping {
+            case .none:
+                lineBreakWidth = CGFloat.infinity
+            case .bounds:
+                lineBreakWidth = frame.width
+            case .width(let width):
+                lineBreakWidth = width
+        }
+
         _linesLayout.removeAll()
 
         let contentRange = Position(line: 0, character: 0)..<Position(line: _storage.linesCount, character: 0)
@@ -161,32 +167,41 @@ public final class CodeEditView: NSView {
             let stringLength = string.utf16.count
 
             // Top Bottom/Left Right
-            let posX: CGFloat = 0
-            var posY: CGFloat = frame.height // + scroll offset
+            var pos = CGPoint.zero
 
             var lineStartIndex: CFIndex = 0
             while lineStartIndex < stringLength {
-                let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(_lineBreakWidth), Double(posX))
+                let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth), Double(pos.y))
                 let leftRange = CFRange(location: lineStartIndex, length: breakIndex)
-                let ctline = CTTypesetterCreateLineWithOffset(typesetter, leftRange, Double(posX))
+                let ctline = CTTypesetterCreateLineWithOffset(typesetter, leftRange, Double(pos.x))
 
                 var ascent: CGFloat = 0
                 var descent: CGFloat = 0
                 var leading: CGFloat = 0
                 let lineWidth = CGFloat(CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading))
-
-                textContentSize.width = max(textContentSize.width, lineWidth)
+                let lineHeight = (ascent + descent + leading) * lineSpacing.rawValue
 
                 // font origin based position
-                _linesLayout.append(LineLayout(ctline: ctline, origin: CGPoint(x: 0, y: posY - (ascent + descent) )))
+                _linesLayout.append(LineLayout(ctline: ctline, origin: CGPoint(x: 0, y: pos.y + (ascent + descent) )))
 
                 lineStartIndex += breakIndex
-                posY -= (ascent + descent + leading) * lineSpacing.rawValue
+                pos.y += lineHeight
+
+                textContentSize.width = max(textContentSize.width, lineWidth)
+                textContentSize.height += lineHeight
             }
         }
 
-        if _lineBreakWidth != frame.size.width {
+        if lineBreakWidth != frame.size.width {
             frame.size.width = textContentSize.width
+        }
+
+        frame.size.height = max(textContentSize.height, visibleRect.height)
+
+        // FIXME: performance killer
+        // Flip Y
+        _linesLayout = _linesLayout.map { lineLayout -> LineLayout in
+            LineLayout(ctline: lineLayout.ctline, origin: CGPoint(x: lineLayout.origin.x, y: frame.height - lineLayout.origin.y))
         }
     }
 }
