@@ -33,9 +33,17 @@ public final class CodeEditView: NSView {
     }
 
     /// Line Wrapping mode
-    public var lineWrapping: LineWrapping = .bounds
+    public var lineWrapping: LineWrapping = .bounds {
+        didSet {
+            needsLayout = true
+        }
+    }
     /// Line Spacing mode
-    public var lineSpacing: Spacing = .normal
+    public var lineSpacing: Spacing = .normal {
+        didSet {
+            needsLayout = true
+        }
+    }
 
     public override var acceptsFirstResponder: Bool {
         true

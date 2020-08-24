@@ -17,7 +17,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.titlebarAppearsTransparent = false
         window.titleVisibility = .visible
         // window.contentView = NSHostingView(rootView: CodeEdit(text: sampleText))
-        window.contentView = CodeEditView(storage: TextStorage(string: sampleText))
+
+        let codeView = CodeEditView(storage: TextStorage(string: sampleText))
+        codeView.autoresizingMask = [.width, .height]
+        codeView.lineWrapping = .bounds
+
+        let scrollView = NSScrollView()
+        scrollView.autoresizingMask = [.height, .width]
+        scrollView.borderType = .noBorder
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = true
+
+        let clipView = NSClipView()
+        scrollView.contentView = clipView
+        scrollView.documentView = codeView
+
+        window.contentView = scrollView
         window.makeKeyAndOrderFront(nil)
     }
 
