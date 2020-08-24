@@ -52,14 +52,14 @@ public final class CodeEditView: NSView {
     /// Whether or not this view is the focused view for its window
     private var _isFirstResponder = false
 
-    private var _lineBreakWidth: Double {
+    private var _lineBreakWidth: CGFloat {
         switch lineWrapping {
             case .none:
-                return Double.infinity
+                return CGFloat.infinity
             case .bounds:
-                return Double(bounds.width)
+                return frame.width
             case .width(let width):
-                return Double(width)
+                return width
         }
 
     }
@@ -149,6 +149,9 @@ public final class CodeEditView: NSView {
         // 2. draw text from the range
         // 3. Layout only lines that meant to be displayed +- overscan
 
+        // Largest content size needed to draw the lines
+        var textContentSize = CGSize()
+
         _linesLayout.removeAll()
 
         let contentRange = Position(line: 0, character: 0)..<Position(line: _storage.linesCount, character: 0)
@@ -159,18 +162,20 @@ public final class CodeEditView: NSView {
 
             // Top Bottom/Left Right
             let posX: CGFloat = 0
-            var posY: CGFloat = bounds.height // + scroll offset
+            var posY: CGFloat = frame.height // + scroll offset
 
             var lineStartIndex: CFIndex = 0
             while lineStartIndex < stringLength {
-                let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, _lineBreakWidth, Double(posX))
+                let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(_lineBreakWidth), Double(posX))
                 let leftRange = CFRange(location: lineStartIndex, length: breakIndex)
                 let ctline = CTTypesetterCreateLineWithOffset(typesetter, leftRange, Double(posX))
 
                 var ascent: CGFloat = 0
                 var descent: CGFloat = 0
                 var leading: CGFloat = 0
-                CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading)
+                let lineWidth = CGFloat(CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading))
+
+                textContentSize.width = max(textContentSize.width, lineWidth)
 
                 // font origin based position
                 _linesLayout.append(LineLayout(ctline: ctline, origin: CGPoint(x: 0, y: posY - (ascent + descent) )))
@@ -178,6 +183,10 @@ public final class CodeEditView: NSView {
                 lineStartIndex += breakIndex
                 posY -= (ascent + descent + leading) * lineSpacing.rawValue
             }
+        }
+
+        if _lineBreakWidth != frame.size.width {
+            frame.size.width = textContentSize.width
         }
     }
 }
