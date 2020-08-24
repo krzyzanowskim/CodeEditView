@@ -1,5 +1,6 @@
 import Cocoa
 import CoreText
+import OSLog
 
 // Ref: Creating Custom Views
 //      https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/TextEditing/Tasks/TextViewTask.html#//apple_ref/doc/uid/TP40008899-BCICEFGE
@@ -32,7 +33,7 @@ public final class CodeEditView: NSView {
     }
 
     /// Line Wrapping mode
-    public var lineWrapping: LineWrapping = .none
+    public var lineWrapping: LineWrapping = .bounds
     /// Line Spacing mode
     public var lineSpacing: Spacing = .normal
 
@@ -57,9 +58,21 @@ public final class CodeEditView: NSView {
 
     private let _storage: TextStorage
 
+    /// Visible line layout
+    private struct LineLayout {
+        let ctline: CTLine
+        /// A point that specifies the x and y values at which line is to be drawn, in user space coordinates.
+        /// A line origin based position.
+        let origin: CGPoint
+    }
+
+    /// Visible lines layout
+    private var _linesLayout: [LineLayout]
+
     public init(storage: TextStorage) {
         self._storage = storage
-        
+        self._linesLayout = []
+        self._linesLayout.reserveCapacity(200)
         super.init(frame: .zero)
     }
 
@@ -105,12 +118,32 @@ public final class CodeEditView: NSView {
             return
         }
 
-        // draw text
+        // draw text lines
+        for lineLayout in _linesLayout {
+            context.textPosition = .init(x: lineLayout.origin.x, y: lineLayout.origin.y)
+            CTLineDraw(lineLayout.ctline, context)
+        }
+    }
+
+    public override func layout() {
+        layoutText()
+
+        super.layout()
+    }
+
+    /// Layout visible text
+    private func layoutText() {
+        os_log(.debug, "layoutText")
+
+        // Let's layout some text. Top Bottom/Left Right
+        // TODO:
         // 1. find text range for displayed dirtyRect
         // 2. draw text from the range
+        // 3. Layout only lines that meant to be displayed +- overscan
 
-        // Let's draw some text. Top Bottom/Left Right
-        let contentRange: Swift.Range<Position> = Position(line: 0, character: 0)..<Position(line: _storage.linesCount, character: 0)
+        _linesLayout.removeAll()
+
+        let contentRange = Position(line: 0, character: 0)..<Position(line: _storage.linesCount, character: 0)
         if let string = _storage[contentRange] {
             let attributedString = CFAttributedStringCreate(nil, string as CFString, nil)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
@@ -131,9 +164,8 @@ public final class CodeEditView: NSView {
                 var leading: CGFloat = 0
                 CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading)
 
-                // origin based position
-                context.textPosition = .init(x: 0, y: posY - (ascent + descent))
-                CTLineDraw(ctline, context)
+                // font origin based position
+                _linesLayout.append(LineLayout(ctline: ctline, origin: CGPoint(x: 0, y: posY - (ascent + descent) )))
 
                 lineStartIndex += breakIndex
                 posY -= (ascent + descent + leading) * lineSpacing.rawValue
