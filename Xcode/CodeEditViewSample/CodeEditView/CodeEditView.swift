@@ -105,7 +105,6 @@ public final class CodeEditView: NSView {
             return
         }
 
-
         // draw text
         // 1. find text range for displayed dirtyRect
         // 2. draw text from the range
