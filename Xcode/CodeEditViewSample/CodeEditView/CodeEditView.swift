@@ -11,6 +11,8 @@ import CoreText
 /// Code Edit View
 public final class CodeEditView: NSView {
 
+    private typealias LineNumber = Int
+
     public enum LineWrapping {
         /// No wrapping
         case none
@@ -30,13 +32,16 @@ public final class CodeEditView: NSView {
     }
 
     /// Line Wrapping mode
-    public var lineWrapping: LineWrapping = .bounds
+    public var lineWrapping: LineWrapping = .none
     /// Line Spacing mode
     public var lineSpacing: Spacing = .normal
 
     public override var acceptsFirstResponder: Bool {
         true
     }
+
+    /// Whether or not this view is the focused view for its window
+    private var _isFirstResponder = false
 
     private var _lineBreakWidth: Double {
         switch lineWrapping {
@@ -50,16 +55,30 @@ public final class CodeEditView: NSView {
 
     }
 
-    private let storage: TextStorage
+    private let _storage: TextStorage
 
     public init(storage: TextStorage) {
-        self.storage = storage
+        self._storage = storage
         
         super.init(frame: .zero)
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    public override var preservesContentDuringLiveResize: Bool {
+        true
+    }
+
+    public override func becomeFirstResponder() -> Bool {
+        _isFirstResponder = true
+        return true
+    }
+
+    public override func resignFirstResponder() -> Bool {
+        _isFirstResponder = false
+        return true
     }
 
     public override func keyDown(with event: NSEvent) {
@@ -82,13 +101,18 @@ public final class CodeEditView: NSView {
     public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
+        guard let context = NSGraphicsContext.current?.cgContext else {
+            return
+        }
+
+
         // draw text
         // 1. find text range for displayed dirtyRect
         // 2. draw text from the range
 
         // Let's draw some text. Top Bottom/Left Right
-        let contentRange: Swift.Range<Position> = Position(line: 0, character: 0)..<Position(line: storage.linesCount, character: 0)
-        if let string = storage[contentRange] {
+        let contentRange: Swift.Range<Position> = Position(line: 0, character: 0)..<Position(line: _storage.linesCount, character: 0)
+        if let string = _storage[contentRange] {
             let attributedString = CFAttributedStringCreate(nil, string as CFString, nil)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
             let stringLength = string.utf16.count
@@ -98,6 +122,7 @@ public final class CodeEditView: NSView {
             var posY: CGFloat = bounds.height // + scroll offset
 
             var lineStartIndex: CFIndex = 0
+            var drawLineNumber: LineNumber = 0
             // alignmentRectInsets? safeAreaInsets?
             while lineStartIndex < stringLength {
                 let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, _lineBreakWidth, Double(posX))
@@ -109,16 +134,17 @@ public final class CodeEditView: NSView {
                 var leading: CGFloat = 0
                 CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading)
 
-                // print line
-                if let context = NSGraphicsContext.current?.cgContext {
-                    // origin position
-                    context.textPosition = .init(x: 0, y: posY - (ascent + descent))
-                    CTLineDraw(ctline, context)
-                }
+                // origin based position
+                context.textPosition = .init(x: 0, y: posY - (ascent + descent))
+                CTLineDraw(ctline, context)
+
+                drawLineNumber += 1
 
                 lineStartIndex += breakIndex
                 posY -= (ascent + descent + leading) * lineSpacing.rawValue
             }
+
+            // Cache [LineNo: posY] for NSTextInputClient
         }
     }
 }
@@ -136,39 +162,46 @@ extension CodeEditView: NSTextInputClient {
     }
 
     public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
-        //
+        print("setMarkedText \(string) selectedRange \(selectedRange) replacementRange \(replacementRange)")
     }
 
     public func unmarkText() {
-        //
+        print("unmarkText")
     }
 
     public func selectedRange() -> NSRange {
-        NSRange()
+        print("selectedRange")
+        return NSRange(location: NSNotFound, length: 0)
     }
 
     public func markedRange() -> NSRange {
-        NSRange()
+        print("markedRange")
+        return NSRange(location: NSNotFound, length: 0)
     }
 
     public func hasMarkedText() -> Bool {
-        false
+        print("hasMarkedText")
+        return false
     }
 
     public func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
-        nil
+        print("attributedSubstring forProposedRange \(range)")
+        return NSAttributedString()
     }
 
     public func validAttributesForMarkedText() -> [NSAttributedString.Key] {
-        [] // [.font, .backgroundColor, .foregroundColor]
+        [.font, .backgroundColor, .foregroundColor]
     }
 
     public func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
-        NSRect.zero
+        print("firstRect forCharacterRange \(range)")
+        return NSRect.zero
     }
 
     public func characterIndex(for point: NSPoint) -> Int {
-        0
+        print("characterIndex \(point)")
+        return NSNotFound
+        //return 0
     }
 
 
@@ -179,7 +212,7 @@ import SwiftUI
 struct CodeEditView_Previews: PreviewProvider {
     static var previews: some View {
         CodeEdit(text: sampleText)
-            .frame(maxWidth: 300, maxHeight: .infinity)
+            .frame(maxWidth: 400, maxHeight: .infinity)
     }
 
     private static let sampleText = """

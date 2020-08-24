@@ -19,7 +19,7 @@ private final class CodeEditViewRepresentable: NSViewRepresentable {
     }
 
     func makeNSView(context: Context) -> some NSView {
-        return CodeEditView(storage: textStorage)
+        CodeEditView(storage: textStorage)
     }
 
     func updateNSView(_ nsView: NSViewType, context: Context) {
