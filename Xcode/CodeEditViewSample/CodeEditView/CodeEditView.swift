@@ -191,19 +191,21 @@ public final class CodeEditView: NSView {
             textContentSize.height = pos.y//.rounded(.awayFromZero)
         }
 
+        // Adjust Width
         if lineBreakWidth != frame.size.width {
             frame.size.width = textContentSize.width
         }
 
+        // Adjust Height
         let prevContentOffset = enclosingScrollView?.documentVisibleRect.origin ?? .zero
-
         let prevFrame = frame
-        frame.size.height = (1000 * max(textContentSize.height, visibleRect.height).rounded()) / 1000
-        // print("\(before) -> \(frame.size.height)")
 
-        // Preserve content pffset
+        // Update ContentSize
+        frame.size.height = (1000 * max(textContentSize.height, visibleRect.height).rounded()) / 1000
+
+        // Preserve content offset
         let heightDelta = frame.size.height - prevFrame.size.height
-        enclosingScrollView?.documentView?.scroll(CGPoint(x: prevContentOffset.x, y: prevContentOffset.y + heightDelta))
+        scroll(CGPoint(x: prevContentOffset.x, y: prevContentOffset.y + heightDelta))
 
         // Flip Y. Performance killer
         _linesLayout = _linesLayout.map { lineLayout -> LineLayout in
