@@ -32,28 +32,6 @@ public final class CodeEditView: NSView {
         case relaxed = 1.4
     }
 
-    /// Line Wrapping mode
-    public var lineWrapping: LineWrapping = .bounds {
-        didSet {
-            needsLayout = true
-        }
-    }
-    /// Line Spacing mode
-    public var lineSpacing: Spacing = .normal {
-        didSet {
-            needsLayout = true
-        }
-    }
-
-    public override var acceptsFirstResponder: Bool {
-        true
-    }
-
-    /// Whether or not this view is the focused view for its window
-    private var _isFirstResponder = false
-
-    private let _storage: TextStorage
-
     /// Visible line layout
     private struct LineLayout {
         let ctline: CTLine
@@ -62,18 +40,58 @@ public final class CodeEditView: NSView {
         let origin: CGPoint
     }
 
+    /// Line Wrapping mode
+    public var lineWrapping: LineWrapping {
+        didSet {
+            needsLayout = true
+        }
+    }
+    /// Line Spacing mode
+    public var lineSpacing: Spacing {
+        didSet {
+            needsLayout = true
+        }
+    }
+
+    private let _carretView: CarretView
+    private var _carretPosition: Position
+
+    /// Whether or not this view is the focused view for its window
+    private var _isFirstResponder = false {
+        didSet {
+            self._carretView.isHidden = !_isFirstResponder
+        }
+    }
+
+    private let _storage: TextStorage
+
     /// Visible lines layout
     private var _linesLayout: [LineLayout]
 
     public init(storage: TextStorage) {
         self._storage = storage
+
         self._linesLayout = []
         self._linesLayout.reserveCapacity(200)
+
+        self.lineSpacing = .normal
+        self.lineWrapping = .bounds
+
+        self._carretView = CarretView()
+        self._carretPosition = .zero
+
         super.init(frame: .zero)
+
+        self.addSubview(_carretView)
+        _carretView.isHidden = true
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    public override var acceptsFirstResponder: Bool {
+        true
     }
 
     public override var preservesContentDuringLiveResize: Bool {
@@ -164,6 +182,8 @@ public final class CodeEditView: NSView {
             let attributedString = CFAttributedStringCreate(nil, string as CFString, nil)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
             let stringLength = string.utf16.count
+
+            // if _carretPosition.line ==
 
             // Top Bottom/Left Right
             var pos = CGPoint.zero
@@ -268,9 +288,9 @@ extension CodeEditView: NSTextInputClient {
         return NSNotFound
         //return 0
     }
-
-
 }
+
+// EDIT: - Preview
 
 import SwiftUI
 

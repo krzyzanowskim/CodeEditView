@@ -20,7 +20,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let codeView = CodeEditView(storage: TextStorage(string: sampleText))
         codeView.autoresizingMask = [.width, .height]
-        codeView.lineWrapping = .none
+        codeView.lineWrapping = .bounds
 
         let scrollView = NSScrollView()
         scrollView.autoresizingMask = [.height, .width]

@@ -14,6 +14,7 @@
 		750AC4D024F283FF004FB229 /* TextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4CF24F283FF004FB229 /* TextStorageProvider.swift */; };
 		750AC4D424F28572004FB229 /* Range.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4D324F28572004FB229 /* Range.swift */; };
 		750AC4DC24F28EC2004FB229 /* RopeTextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */; };
+		7511242824F57808005F82BA /* CarretView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7511242724F57808005F82BA /* CarretView.swift */; };
 		75EA4C9B24F2B1D700BAA2D9 /* StringTextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EA4C9A24F2B1D700BAA2D9 /* StringTextStorageProvider.swift */; };
 		75EB017924F27BC10056D96A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EB017824F27BC10056D96A /* AppDelegate.swift */; };
 		75EB017D24F27BC10056D96A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75EB017C24F27BC10056D96A /* Assets.xcassets */; };
@@ -29,6 +30,7 @@
 		750AC4CF24F283FF004FB229 /* TextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorageProvider.swift; sourceTree = "<group>"; };
 		750AC4D324F28572004FB229 /* Range.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Range.swift; sourceTree = "<group>"; };
 		750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RopeTextStorageProvider.swift; sourceTree = "<group>"; };
+		7511242724F57808005F82BA /* CarretView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarretView.swift; sourceTree = "<group>"; };
 		75EA4C9A24F2B1D700BAA2D9 /* StringTextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringTextStorageProvider.swift; sourceTree = "<group>"; };
 		75EB017524F27BC10056D96A /* CodeEditViewSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodeEditViewSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EB017824F27BC10056D96A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -53,6 +55,7 @@
 		750AC4C624F27D3E004FB229 /* CodeEditView */ = {
 			isa = PBXGroup;
 			children = (
+				7511242724F57808005F82BA /* CarretView.swift */,
 				750AC4C724F27D50004FB229 /* CodeEditView.swift */,
 				750AC4C924F27D9E004FB229 /* CodeEdit.swift */,
 				750AC4D224F2843B004FB229 /* TextStorage */,
@@ -202,6 +205,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				750AC4C824F27D50004FB229 /* CodeEditView.swift in Sources */,
+				7511242824F57808005F82BA /* CarretView.swift in Sources */,
 				750AC4D024F283FF004FB229 /* TextStorageProvider.swift in Sources */,
 				75EA4C9B24F2B1D700BAA2D9 /* StringTextStorageProvider.swift in Sources */,
 				750AC4D424F28572004FB229 /* Range.swift in Sources */,

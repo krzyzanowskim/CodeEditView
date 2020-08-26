@@ -8,6 +8,8 @@ public struct Position {
     /// represented as a string, the `character` value represents the gap between the
     /// `character` and `character + 1`.
     public let character: Int
+
+    static let zero = Position(line: 0, character: 0)
 }
 
 extension Position: Comparable {
