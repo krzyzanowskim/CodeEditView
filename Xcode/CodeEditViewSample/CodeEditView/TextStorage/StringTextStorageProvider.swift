@@ -30,6 +30,16 @@ class StringTextStorageProvider: TextStorageProvider {
         return content[startOffset..<endOffset]
     }
 
+    func string(in range: Swift.ClosedRange<Position>) -> Substring? {
+        let startOffset = content.index(offset(line: range.lowerBound.line), offsetBy: range.lowerBound.character)
+        let endOffset = content.index(offset(line: range.upperBound.line), offsetBy: range.upperBound.character)
+        return content[startOffset...endOffset]
+    }
+
+    func string(line idx: Int) -> Substring {
+        content.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline })[idx]
+    }
+
     private func offset(line: Int) -> String.Index {
         if line == 0 {
             return content.startIndex

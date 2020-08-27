@@ -31,4 +31,12 @@ public final class TextStorage {
     public subscript(_ range: Swift.Range<Position>) -> Substring? {
         storageProvider.string(in: range)
     }
+
+    public subscript(_ range: Swift.ClosedRange<Position>) -> Substring? {
+        storageProvider.string(in: range)
+    }
+
+    public subscript(line idx: Int) -> Substring {
+        storageProvider.string(line: idx)
+    }
 }

@@ -8,4 +8,6 @@ protocol TextStorageProvider {
     func insert(string: String, at position: Position)
     func remove(range: Range)
     func string(in range: Swift.Range<Position>) -> Substring?
+    func string(in range: Swift.ClosedRange<Position>) -> Substring?
+    func string(line idx: Int) -> Substring
 }

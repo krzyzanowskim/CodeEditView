@@ -189,10 +189,8 @@ public final class CodeEditView: NSView {
     }
 
     private func layoutCaret() {
-        let lineLayouts = _drawLinesLayout.filter({ $0.lineNum == _caretPosition.line })
-
-        // find lineLayout for character
-        guard !lineLayouts.isEmpty, let lineLayout = lineLayouts.first(where: { ($0.stringRange.location + $0.stringRange.length) >= _caretPosition.character }) else { return }
+        // find lineLayout for caret position
+        guard let lineLayout = _drawLinesLayout.first(where: { ($0.stringRange.location + $0.stringRange.length) >= _caretPosition.character && _caretPosition.line == $0.lineNum }) else { return }
 
         let characterOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caretPosition.character, nil)
         _caretView.frame = CGRect(x: lineLayout.origin.x + characterOffset, y: lineLayout.origin.y, width: lineLayout.height, height: lineLayout.height)
@@ -227,15 +225,15 @@ public final class CodeEditView: NSView {
         var pos = CGPoint.zero
 
         for lineNum in 0..<_storage.linesCount {
-            let range = Position(line: lineNum, character: 0)..<Position(line: lineNum + 1, character: -1)
-            guard let lineString = _storage[range] else { continue }
-            let lineLength = lineString.count
+            let lineStringContent = _storage[line: lineNum]
+            // result of split is empty substring, but the line is \n
+            let lineString = lineStringContent.isEmpty ? "\n" : lineStringContent
 
             let attributedString = CFAttributedStringCreate(nil, lineString as CFString, nil)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
 
             var lineStartIndex: CFIndex = 0
-            while lineStartIndex < lineLength {
+            while lineStartIndex < lineString.count {
                 let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth), Double(pos.y))
                 let stringRange = CFRange(location: lineStartIndex, length: breakIndex)
                 let ctline = CTTypesetterCreateLineWithOffset(typesetter, stringRange, Double(pos.x))
