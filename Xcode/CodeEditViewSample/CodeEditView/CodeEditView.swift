@@ -153,12 +153,18 @@ public final class CodeEditView: NSView {
 
     public override func moveDown(_ sender: Any?) {
         // Find drawLayout for the current caret position
-        if let idx = _drawLinesLayout.firstIndex(where: { ($0.stringRange.location + max(0, $0.stringRange.length - 1)) >= _caretPosition.character && _caretPosition.line == $0.lineNum }),
-           idx + 1 < _drawLinesLayout.count
-        {
+        let currentLineLayoutIndex = _drawLinesLayout.firstIndex { lineLayout -> Bool in
+            _caretPosition.character >= lineLayout.stringRange.location &&
+                _caretPosition.character < lineLayout.stringRange.location + lineLayout.stringRange.length &&
+                _caretPosition.line == lineLayout.lineNum
+        }
+
+        if let idx = currentLineLayoutIndex, idx + 1 < _drawLinesLayout.count {
             let currentLineLayout = _drawLinesLayout[idx]
             let nextLineLayout = _drawLinesLayout[idx + 1]
-            // distance from the beginning of the current line
+            // distance from the beginning of the current line limited by the next line lenght
+            // TODO: effectively reset caret position to the beginin of the line, while it's not expected
+            //       the caret offset should preserve between lines, and empty line should not reset the caret offset.
             let distance = min(_caretPosition.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length)
             _caretPosition = Position(line: nextLineLayout.lineNum, character: nextLineLayout.stringRange.location + distance)
         }
@@ -190,7 +196,12 @@ public final class CodeEditView: NSView {
 
     private func layoutCaret() {
         // find lineLayout for caret position
-        guard let lineLayout = _drawLinesLayout.first(where: { ($0.stringRange.location + max(0, $0.stringRange.length - 1)) >= _caretPosition.character && _caretPosition.line == $0.lineNum }) else { return }
+        let foundLineLayout = _drawLinesLayout.first { lineLayout -> Bool in
+            _caretPosition.character >= lineLayout.stringRange.location &&
+                _caretPosition.character < lineLayout.stringRange.location + lineLayout.stringRange.length &&
+                _caretPosition.line == lineLayout.lineNum
+        }
+        guard let lineLayout = foundLineLayout else { return }
 
         let characterOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caretPosition.character, nil)
         _caretView.frame = CGRect(x: lineLayout.origin.x + characterOffset, y: lineLayout.origin.y, width: lineLayout.height, height: lineLayout.height)
