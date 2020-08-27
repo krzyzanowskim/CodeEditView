@@ -177,19 +177,20 @@ public final class CodeEditView: NSView {
 
         _linesLayout.removeAll()
 
-        let contentRange = Position(line: 0, character: 0)..<Position(line: _storage.linesCount, character: 0)
-        if let string = _storage[contentRange] {
-            let attributedString = CFAttributedStringCreate(nil, string as CFString, nil)!
+        // Top Bottom/Left Right
+        var pos = CGPoint.zero
+
+        for lineNum in 0..<_storage.linesCount {
+            let range = Position(line: lineNum, character: 0)..<Position(line: lineNum + 1, character: -1)
+            let lineString = _storage[range]!
+            let lineLength = lineString.count
+
+            let attributedString = CFAttributedStringCreate(nil, lineString as CFString, nil)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
-            let stringLength = string.utf16.count
 
             // if _carretPosition.line ==
-
-            // Top Bottom/Left Right
-            var pos = CGPoint.zero
-
             var lineStartIndex: CFIndex = 0
-            while lineStartIndex < stringLength {
+            while lineStartIndex < lineLength {
                 let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth), Double(pos.y))
                 let leftRange = CFRange(location: lineStartIndex, length: breakIndex)
                 let ctline = CTTypesetterCreateLineWithOffset(typesetter, leftRange, Double(pos.x))
@@ -208,8 +209,8 @@ public final class CodeEditView: NSView {
 
                 textContentSize.width = max(textContentSize.width, lineWidth)
             }
-            textContentSize.height = pos.y//.rounded(.awayFromZero)
         }
+        textContentSize.height = pos.y
 
         // Adjust Width
         if lineBreakWidth != frame.size.width {

@@ -7,5 +7,5 @@ protocol TextStorageProvider {
     func character(at position: Position) -> Character?
     func insert(string: String, at position: Position)
     func remove(range: Range)
-    func string(in range: Swift.Range<Position>) -> String?
+    func string(in range: Swift.Range<Position>) -> Substring?
 }

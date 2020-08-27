@@ -24,10 +24,10 @@ class StringTextStorageProvider: TextStorageProvider {
         content.removeSubrange(startIndex..<endIndex)
     }
 
-    func string(in range: Swift.Range<Position>) -> String? {
+    func string(in range: Swift.Range<Position>) -> Substring? {
         let startOffset = content.index(offset(line: range.lowerBound.line), offsetBy: range.lowerBound.character)
         let endOffset = content.index(offset(line: range.upperBound.line), offsetBy: range.upperBound.character)
-        return String(content[startOffset..<endOffset])
+        return content[startOffset..<endOffset]
     }
 
     private func offset(line: Int) -> String.Index {

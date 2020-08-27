@@ -28,7 +28,7 @@ public final class TextStorage {
         storageProvider.character(at: position)
     }
 
-    public subscript(_ range: Swift.Range<Position>) -> String? {
+    public subscript(_ range: Swift.Range<Position>) -> Substring? {
         storageProvider.string(in: range)
     }
 }
