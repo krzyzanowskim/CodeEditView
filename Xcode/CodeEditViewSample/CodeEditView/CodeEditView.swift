@@ -55,13 +55,13 @@ public final class CodeEditView: NSView {
         }
     }
 
-    private let _carretView: CarretView
-    private var _carretPosition: Position
+    private let _caretView: CaretView
+    private var _caretPosition: Position
 
     /// Whether or not this view is the focused view for its window
     private var _isFirstResponder = false {
         didSet {
-            self._carretView.isHidden = !_isFirstResponder
+            self._caretView.isHidden = !_isFirstResponder
         }
     }
 
@@ -79,13 +79,13 @@ public final class CodeEditView: NSView {
         self.lineSpacing = .normal
         self.lineWrapping = .bounds
 
-        self._carretView = CarretView()
-        self._carretPosition = .zero
+        self._caretView = CaretView()
+        self._caretPosition = .zero
 
         super.init(frame: .zero)
 
-        self.addSubview(_carretView)
-        _carretView.isHidden = true
+        self.addSubview(_caretView)
+        _caretView.isHidden = true
     }
 
     required init?(coder: NSCoder) {
@@ -148,17 +148,17 @@ public final class CodeEditView: NSView {
     public override func layout() {
         super.layout()
         layoutText()
-        layoutCarret()
+        layoutCaret()
     }
 
-    private func layoutCarret() {
-        let lineLayouts = _drawLinesLayout.filter({ $0.lineNum == _carretPosition.line })
+    private func layoutCaret() {
+        let lineLayouts = _drawLinesLayout.filter({ $0.lineNum == _caretPosition.line })
         guard !lineLayouts.isEmpty else { return }
 
         let lineLayout = lineLayouts.first!
 
-        let charOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _carretPosition.character, nil)
-        _carretView.frame = CGRect(x: lineLayout.origin.x + charOffset, y: lineLayout.origin.y, width: lineLayout.height, height: lineLayout.height)
+        let charOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caretPosition.character, nil)
+        _caretView.frame = CGRect(x: lineLayout.origin.x + charOffset, y: lineLayout.origin.y, width: lineLayout.height, height: lineLayout.height)
     }
 
     /// Layout visible text

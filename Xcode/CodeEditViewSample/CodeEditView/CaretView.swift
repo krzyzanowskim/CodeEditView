@@ -1,18 +1,11 @@
-//
-//  CarretView.swift
-//  CodeEditViewSample
-//
-//  Created by Marcin Krzyzanowski on 25/08/2020.
-//
-
 import Cocoa
 
-public enum CarretStyle {
+public enum CaretStyle {
     case line
 }
 
-final class CarretView: NSView {
-    var style: CarretStyle = .line
+final class CaretView: NSView {
+    var style: CaretStyle = .line
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
