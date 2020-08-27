@@ -5,7 +5,7 @@ class StringTextStorageProvider: TextStorageProvider {
     private var content: String = ""
 
     var linesCount: Int {
-        content.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline }).count
+        content.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).count
     }
 
     func character(at position: Position) -> Character? {
@@ -36,8 +36,21 @@ class StringTextStorageProvider: TextStorageProvider {
         return content[startOffset...endOffset]
     }
 
-    func string(line idx: Int) -> Substring {
-        content.split(omittingEmptySubsequences: false, whereSeparator: { $0.isNewline })[idx]
+    func string(line: Int) -> Substring {
+        var currentLine = 0
+        for (lineOffset, character) in content.enumerated() where character.isNewline {
+            currentLine += 1
+            if currentLine == line {
+                let startIndex = content.index(content.startIndex, offsetBy: lineOffset)
+                if let endIndex = content[startIndex...].firstIndex(where: \.isNewline) {
+                    return content[startIndex...endIndex]
+                }
+            }
+            if currentLine > line {
+                break
+            }
+        }
+        return content[content.startIndex..<content.endIndex]
     }
 
     private func offset(line: Int) -> String.Index {

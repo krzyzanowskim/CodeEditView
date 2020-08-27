@@ -153,7 +153,7 @@ public final class CodeEditView: NSView {
 
     public override func moveDown(_ sender: Any?) {
         // Find drawLayout for the current caret position
-        if let idx = _drawLinesLayout.firstIndex(where: { ($0.stringRange.location + $0.stringRange.length) >= _caretPosition.character && _caretPosition.line == $0.lineNum }),
+        if let idx = _drawLinesLayout.firstIndex(where: { ($0.stringRange.location + max(0, $0.stringRange.length - 1)) >= _caretPosition.character && _caretPosition.line == $0.lineNum }),
            idx + 1 < _drawLinesLayout.count
         {
             let currentLineLayout = _drawLinesLayout[idx]
@@ -190,7 +190,7 @@ public final class CodeEditView: NSView {
 
     private func layoutCaret() {
         // find lineLayout for caret position
-        guard let lineLayout = _drawLinesLayout.first(where: { ($0.stringRange.location + $0.stringRange.length) >= _caretPosition.character && _caretPosition.line == $0.lineNum }) else { return }
+        guard let lineLayout = _drawLinesLayout.first(where: { ($0.stringRange.location + max(0, $0.stringRange.length - 1)) >= _caretPosition.character && _caretPosition.line == $0.lineNum }) else { return }
 
         let characterOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caretPosition.character, nil)
         _caretView.frame = CGRect(x: lineLayout.origin.x + characterOffset, y: lineLayout.origin.y, width: lineLayout.height, height: lineLayout.height)
@@ -225,9 +225,7 @@ public final class CodeEditView: NSView {
         var pos = CGPoint.zero
 
         for lineNum in 0..<_storage.linesCount {
-            let lineStringContent = _storage[line: lineNum]
-            // result of split is empty substring, but the line is \n
-            let lineString = lineStringContent.isEmpty ? "\n" : lineStringContent
+            let lineString = _storage[line: lineNum]
 
             let attributedString = CFAttributedStringCreate(nil, lineString as CFString, nil)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
