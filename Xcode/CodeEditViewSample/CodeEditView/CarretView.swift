@@ -37,6 +37,6 @@ final class CarretView: NSView {
 
     private func drawLineStyle(in context: CGContext, dirtyRect: NSRect) {
         context.setFillColor(NSColor.textColor.cgColor)
-        context.fill(CGRect(x: 0, y: 0, width: 2, height: bounds.height))
+        context.fill(CGRect(x: 0, y: 0, width: 1, height: bounds.height))
     }
 }

@@ -34,10 +34,12 @@ public final class CodeEditView: NSView {
 
     /// Visible line layout
     private struct LineLayout {
+        let lineNum: Int
         let ctline: CTLine
         /// A point that specifies the x and y values at which line is to be drawn, in user space coordinates.
         /// A line origin based position.
         let origin: CGPoint
+        let height: CGFloat
     }
 
     /// Line Wrapping mode
@@ -66,13 +68,13 @@ public final class CodeEditView: NSView {
     private let _storage: TextStorage
 
     /// Visible lines layout
-    private var _linesLayout: [LineLayout]
+    private var _drawLinesLayout: [LineLayout]
 
     public init(storage: TextStorage) {
         self._storage = storage
 
-        self._linesLayout = []
-        self._linesLayout.reserveCapacity(200)
+        self._drawLinesLayout = []
+        self._drawLinesLayout.reserveCapacity(200)
 
         self.lineSpacing = .normal
         self.lineWrapping = .bounds
@@ -133,7 +135,7 @@ public final class CodeEditView: NSView {
         }
 
         // draw text lines
-        for lineLayout in _linesLayout {
+        for lineLayout in _drawLinesLayout {
             context.textPosition = .init(x: lineLayout.origin.x, y: lineLayout.origin.y)
             CTLineDraw(lineLayout.ctline, context)
         }
@@ -144,9 +146,19 @@ public final class CodeEditView: NSView {
     }
 
     public override func layout() {
-        layoutText()
-
         super.layout()
+        layoutText()
+        layoutCarret()
+    }
+
+    private func layoutCarret() {
+        let lineLayouts = _drawLinesLayout.filter({ $0.lineNum == _carretPosition.line })
+        guard !lineLayouts.isEmpty else { return }
+
+        let lineLayout = lineLayouts.first!
+
+        let charOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _carretPosition.character, nil)
+        _carretView.frame = CGRect(x: lineLayout.origin.x + charOffset, y: lineLayout.origin.y, width: lineLayout.height, height: lineLayout.height)
     }
 
     /// Layout visible text
@@ -175,20 +187,19 @@ public final class CodeEditView: NSView {
                 lineBreakWidth = width
         }
 
-        _linesLayout.removeAll()
+        _drawLinesLayout.removeAll()
 
         // Top Bottom/Left Right
         var pos = CGPoint.zero
 
         for lineNum in 0..<_storage.linesCount {
             let range = Position(line: lineNum, character: 0)..<Position(line: lineNum + 1, character: -1)
-            let lineString = _storage[range]!
+            guard let lineString = _storage[range] else { continue }
             let lineLength = lineString.count
 
             let attributedString = CFAttributedStringCreate(nil, lineString as CFString, nil)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
 
-            // if _carretPosition.line ==
             var lineStartIndex: CFIndex = 0
             while lineStartIndex < lineLength {
                 let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth), Double(pos.y))
@@ -202,7 +213,7 @@ public final class CodeEditView: NSView {
                 let lineHeight = (ascent + descent + leading) * lineSpacing.rawValue
 
                 // font origin based position
-                _linesLayout.append(LineLayout(ctline: ctline, origin: CGPoint(x: 0, y: pos.y + (ascent + descent) )))
+                _drawLinesLayout.append(LineLayout(lineNum: lineNum, ctline: ctline, origin: CGPoint(x: 0, y: pos.y + (ascent + descent) ), height: lineHeight))
 
                 lineStartIndex += breakIndex
                 pos.y += lineHeight
@@ -229,8 +240,8 @@ public final class CodeEditView: NSView {
         scroll(CGPoint(x: prevContentOffset.x, y: prevContentOffset.y + heightDelta))
 
         // Flip Y. Performance killer
-        _linesLayout = _linesLayout.map { lineLayout -> LineLayout in
-            LineLayout(ctline: lineLayout.ctline, origin: CGPoint(x: lineLayout.origin.x, y: frame.height - lineLayout.origin.y))
+        _drawLinesLayout = _drawLinesLayout.map { lineLayout -> LineLayout in
+            LineLayout(lineNum: lineLayout.lineNum, ctline: lineLayout.ctline, origin: CGPoint(x: lineLayout.origin.x, y: frame.height - lineLayout.origin.y), height: lineLayout.height)
         }
     }
 }
