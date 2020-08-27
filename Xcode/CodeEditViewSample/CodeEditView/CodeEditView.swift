@@ -219,7 +219,7 @@ public final class CodeEditView: NSView {
                 lineBreakWidth = width
         }
 
-        _drawLinesLayout.removeAll()
+        _drawLinesLayout.removeAll(keepingCapacity: true)
 
         // Top Bottom/Left Right
         var pos = CGPoint.zero
