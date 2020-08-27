@@ -195,14 +195,7 @@ public final class CodeEditView: NSView {
     }
 
     private func layoutCaret() {
-        // find lineLayout for caret position
-        let foundLineLayout = _drawLinesLayout.first { lineLayout -> Bool in
-            _caretPosition.character >= lineLayout.stringRange.location &&
-                _caretPosition.character < lineLayout.stringRange.location + lineLayout.stringRange.length &&
-                _caretPosition.line == lineLayout.lineNum
-        }
-        guard let lineLayout = foundLineLayout else { return }
-
+        guard let lineLayout = lineLayout(for: _caretPosition) else { return }
         let characterOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caretPosition.character, nil)
         _caretView.frame = CGRect(x: lineLayout.origin.x + characterOffset, y: lineLayout.origin.y, width: lineLayout.height, height: lineLayout.height)
     }
@@ -295,6 +288,15 @@ public final class CodeEditView: NSView {
                        stringRange: lineLayout.stringRange)
         }
     }
+
+    // MARK: - Helpers
+
+    private func lineLayout(for position: Position) -> LineLayout? {
+        _drawLinesLayout.first {
+            position.line == $0.lineNum &&
+                position.character >= $0.stringRange.location && position.character < $0.stringRange.location + $0.stringRange.length
+        }
+    }
 }
 
 // The default implementation of the NSView method inputContext manages
@@ -353,6 +355,7 @@ extension CodeEditView: NSTextInputClient {
         //return 0
     }
 }
+
 
 // EDIT: - Preview
 
