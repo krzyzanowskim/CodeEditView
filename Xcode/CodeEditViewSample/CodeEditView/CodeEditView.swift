@@ -40,6 +40,7 @@ public final class CodeEditView: NSView {
         /// A line origin based position.
         let origin: CGPoint
         let height: CGFloat
+        let stringRange: CFRange
     }
 
     /// Line Wrapping mode
@@ -56,7 +57,11 @@ public final class CodeEditView: NSView {
     }
 
     private let _caretView: CaretView
-    private var _caretPosition: Position
+    private var _caretPosition: Position {
+        didSet {
+            needsLayout = true
+        }
+    }
 
     /// Whether or not this view is the focused view for its window
     private var _isFirstResponder = false {
@@ -121,10 +126,42 @@ public final class CodeEditView: NSView {
     public override func doCommand(by selector: Selector) {
         print("doCommand \(selector)")
 
+        switch selector {
+            case #selector(deleteBackward(_:)):
+                deleteBackward(self)
+            case #selector(moveUp(_:)):
+                moveUp(self)
+            case #selector(moveDown(_:)):
+                moveDown(self)
+            default:
+                return
+        }
+
         // If aSelector cannot be invoked, should not pass this message up the responder chain.
         // NSResponder also implements this method, and it does forward uninvokable commands up
         // the responder chain, but a text view should not.
         // super.doCommand(by: selector)
+    }
+
+    public override func deleteBackward(_ sender: Any?) {
+        _caretPosition = Position(line: _caretPosition.line, character: max(0, _caretPosition.character - 1))
+    }
+
+    public override func moveUp(_ sender: Any?) {
+        // _caretPosition = Position(line: max(0, _caretPosition.line - 1), character: _caretPosition.character)
+    }
+
+    public override func moveDown(_ sender: Any?) {
+        // Find drawLayout for the current caret position
+        if let idx = _drawLinesLayout.firstIndex(where: { ($0.stringRange.location + $0.stringRange.length) >= _caretPosition.character && _caretPosition.line == $0.lineNum }),
+           idx + 1 < _drawLinesLayout.count
+        {
+            let currentLineLayout = _drawLinesLayout[idx]
+            let nextLineLayout = _drawLinesLayout[idx + 1]
+            // distance from the beginning of the current line
+            let distance = min(_caretPosition.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length)
+            _caretPosition = Position(line: nextLineLayout.lineNum, character: nextLineLayout.stringRange.location + distance)
+        }
     }
 
     public override func draw(_ dirtyRect: NSRect) {
@@ -153,12 +190,12 @@ public final class CodeEditView: NSView {
 
     private func layoutCaret() {
         let lineLayouts = _drawLinesLayout.filter({ $0.lineNum == _caretPosition.line })
-        guard !lineLayouts.isEmpty else { return }
 
-        let lineLayout = lineLayouts.first!
+        // find lineLayout for character
+        guard !lineLayouts.isEmpty, let lineLayout = lineLayouts.first(where: { ($0.stringRange.location + $0.stringRange.length) >= _caretPosition.character }) else { return }
 
-        let charOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caretPosition.character, nil)
-        _caretView.frame = CGRect(x: lineLayout.origin.x + charOffset, y: lineLayout.origin.y, width: lineLayout.height, height: lineLayout.height)
+        let characterOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caretPosition.character, nil)
+        _caretView.frame = CGRect(x: lineLayout.origin.x + characterOffset, y: lineLayout.origin.y, width: lineLayout.height, height: lineLayout.height)
     }
 
     /// Layout visible text
@@ -173,9 +210,6 @@ public final class CodeEditView: NSView {
 
         // Largest content size needed to draw the lines
         var textContentSize = CGSize()
-
-        // let contentViewOffset = enclosingScrollView?.documentVisibleRect.origin ?? .zero
-        // print("contentViewOffset \(contentViewOffset)")
 
         let lineBreakWidth: CGFloat
         switch lineWrapping {
@@ -203,8 +237,8 @@ public final class CodeEditView: NSView {
             var lineStartIndex: CFIndex = 0
             while lineStartIndex < lineLength {
                 let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth), Double(pos.y))
-                let leftRange = CFRange(location: lineStartIndex, length: breakIndex)
-                let ctline = CTTypesetterCreateLineWithOffset(typesetter, leftRange, Double(pos.x))
+                let stringRange = CFRange(location: lineStartIndex, length: breakIndex)
+                let ctline = CTTypesetterCreateLineWithOffset(typesetter, stringRange, Double(pos.x))
 
                 var ascent: CGFloat = 0
                 var descent: CGFloat = 0
@@ -213,7 +247,13 @@ public final class CodeEditView: NSView {
                 let lineHeight = (ascent + descent + leading) * lineSpacing.rawValue
 
                 // font origin based position
-                _drawLinesLayout.append(LineLayout(lineNum: lineNum, ctline: ctline, origin: CGPoint(x: 0, y: pos.y + (ascent + descent) ), height: lineHeight))
+                _drawLinesLayout.append(
+                    LineLayout(lineNum: lineNum,
+                               ctline: ctline,
+                               origin: CGPoint(x: 0, y: pos.y + (ascent + descent)),
+                               height: lineHeight,
+                               stringRange: stringRange)
+                )
 
                 lineStartIndex += breakIndex
                 pos.y += lineHeight
@@ -241,7 +281,11 @@ public final class CodeEditView: NSView {
 
         // Flip Y. Performance killer
         _drawLinesLayout = _drawLinesLayout.map { lineLayout -> LineLayout in
-            LineLayout(lineNum: lineLayout.lineNum, ctline: lineLayout.ctline, origin: CGPoint(x: lineLayout.origin.x, y: frame.height - lineLayout.origin.y), height: lineLayout.height)
+            LineLayout(lineNum: lineLayout.lineNum,
+                       ctline: lineLayout.ctline,
+                       origin: CGPoint(x: lineLayout.origin.x, y: frame.height - lineLayout.origin.y),
+                       height: lineLayout.height,
+                       stringRange: lineLayout.stringRange)
         }
     }
 }
@@ -256,6 +300,7 @@ extension CodeEditView: NSTextInputClient {
             return
         }
         print("insertText \(nsstring) replacementRange \(replacementRange)")
+        _caretPosition = Position(line: _caretPosition.line, character: _caretPosition.character + 1)
     }
 
     public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
