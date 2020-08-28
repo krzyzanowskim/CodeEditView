@@ -39,7 +39,8 @@ public final class CodeEditView: NSView {
         /// A point that specifies the x and y values at which line is to be drawn, in user space coordinates.
         /// A line origin based position.
         let origin: CGPoint
-        let height: CGFloat
+        let lineHeight: CGFloat
+        let lineDescent: CGFloat
         let stringRange: CFRange
     }
 
@@ -213,7 +214,7 @@ public final class CodeEditView: NSView {
     private func layoutCaret() {
         guard let lineLayout = lineLayout(for: _caretPosition) else { return }
         let characterOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caretPosition.character, nil)
-        _caretView.frame = CGRect(x: lineLayout.origin.x + characterOffset, y: lineLayout.origin.y, width: lineLayout.height, height: lineLayout.height)
+        _caretView.frame = CGRect(x: lineLayout.origin.x + characterOffset, y: lineLayout.origin.y - lineLayout.lineDescent, width: 12, height: lineLayout.lineHeight - lineLayout.lineDescent)
     }
 
     /// Layout visible text
@@ -267,7 +268,8 @@ public final class CodeEditView: NSView {
                     LineLayout(lineIndex: lineIndex,
                                ctline: ctline,
                                origin: CGPoint(x: 0, y: pos.y + (ascent + descent)),
-                               height: lineHeight,
+                               lineHeight: lineHeight,
+                               lineDescent: descent,
                                stringRange: stringRange)
                 )
 
@@ -300,7 +302,8 @@ public final class CodeEditView: NSView {
             LineLayout(lineIndex: lineLayout.lineIndex,
                        ctline: lineLayout.ctline,
                        origin: CGPoint(x: lineLayout.origin.x, y: frame.height - lineLayout.origin.y),
-                       height: lineLayout.height,
+                       lineHeight: lineLayout.lineHeight,
+                       lineDescent: lineLayout.lineDescent,
                        stringRange: lineLayout.stringRange)
         }
     }

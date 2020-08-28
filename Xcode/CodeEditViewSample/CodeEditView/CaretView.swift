@@ -2,6 +2,7 @@ import Cocoa
 
 public enum CaretStyle {
     case line
+    case block
 }
 
 final class CaretView: NSView {
@@ -25,11 +26,18 @@ final class CaretView: NSView {
         switch style {
             case .line:
                 drawLineStyle(in: context, dirtyRect: dirtyRect)
+            case .block:
+                drawBlockStyle(in: context, dirtyRect: dirtyRect)
         }
     }
 
     private func drawLineStyle(in context: CGContext, dirtyRect: NSRect) {
         context.setFillColor(NSColor.textColor.cgColor)
-        context.fill(CGRect(x: 0, y: 0, width: 1, height: bounds.height))
+        context.fill(CGRect(x: 0, y: 0, width: 2, height: bounds.height))
+    }
+
+    private func drawBlockStyle(in context: CGContext, dirtyRect: NSRect) {
+        context.setFillColor(NSColor.textColor.cgColor)
+        context.fill(CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height))
     }
 }
