@@ -7,7 +7,6 @@ public enum CaretStyle {
 
 final class CaretView: NSView {
     var style: CaretStyle = .line
-    var canBlink: Bool = true
 
     private var caretVisible: Bool = true
     private let timeInterval: TimeInterval = 0.65
@@ -25,8 +24,6 @@ final class CaretView: NSView {
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-
-        timer.resume()
     }
 
     required init?(coder: NSCoder) {
@@ -43,10 +40,18 @@ final class CaretView: NSView {
         timer.resume()
     }
 
+    func startBlink() {
+        timer.resume()
+    }
+
+    func stopBlink() {
+        timer.suspend()
+    }
+
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
-        guard let context = NSGraphicsContext.current?.cgContext, caretVisible else {
+        guard let context = NSGraphicsContext.current?.cgContext else {
             return
         }
 

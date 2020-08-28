@@ -156,7 +156,9 @@ public final class CodeEditView: NSView {
     }
 
     public override func deleteBackward(_ sender: Any?) {
+        _storage.remove(range: .init(start: _caretPosition, end: _caretPosition))
         _caretPosition = Position(line: _caretPosition.line, character: max(0, _caretPosition.character - 1))
+        needsDisplay = true
     }
 
     public override func moveUp(_ sender: Any?) {

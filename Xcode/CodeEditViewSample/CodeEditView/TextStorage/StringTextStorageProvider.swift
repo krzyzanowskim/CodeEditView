@@ -21,7 +21,7 @@ class StringTextStorageProvider: TextStorageProvider {
     func remove(range: Range) {
         let startIndex = content.index(offset(line: range.start.line), offsetBy: range.start.character)
         let endIndex = content.index(offset(line: range.end.line), offsetBy: range.end.character)
-        content.removeSubrange(startIndex..<endIndex)
+        content.removeSubrange(startIndex...endIndex)
     }
 
     func string(in range: Swift.Range<Position>) -> Substring? {
