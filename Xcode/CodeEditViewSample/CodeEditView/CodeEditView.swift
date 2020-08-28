@@ -142,6 +142,8 @@ public final class CodeEditView: NSView {
                 moveLeft(self)
             case #selector(moveRight(_:)):
                 moveRight(self)
+            case #selector(insertNewline(_:)):
+                insertNewline(self)
             default:
                 print("doCommand \(selector)")
                 return
@@ -198,6 +200,12 @@ public final class CodeEditView: NSView {
         _caretPosition = Position(line: _caretPosition.line, character: _caretPosition.character + 1)
     }
 
+    public override func insertNewline(_ sender: Any?) {
+        _storage.insert(string: "\n", at: _caretPosition)
+        _caretPosition = Position(line: _caretPosition.line + 1, character: 0)
+        needsDisplay = true
+    }
+
     public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
@@ -208,6 +216,7 @@ public final class CodeEditView: NSView {
         // draw text lines
         for lineLayout in _lineLayouts {
             context.textPosition = .init(x: lineLayout.origin.x, y: lineLayout.origin.y)
+            context.clip(to: dirtyRect)
             CTLineDraw(lineLayout.ctline, context)
         }
     }
@@ -335,11 +344,13 @@ public final class CodeEditView: NSView {
 extension CodeEditView: NSTextInputClient {
 
     public func insertText(_ string: Any, replacementRange: NSRange) {
-        guard let nsstring = string as? NSString else {
+        guard let string = string as? String else {
             return
         }
-        print("insertText \(nsstring) replacementRange \(replacementRange)")
+        print("insertText \(string) replacementRange \(replacementRange)")
+        _storage.insert(string: string, at: _caretPosition)
         _caretPosition = Position(line: _caretPosition.line, character: _caretPosition.character + 1)
+        needsDisplay = true
     }
 
     public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
