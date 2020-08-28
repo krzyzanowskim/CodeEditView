@@ -56,6 +56,12 @@ public final class CodeEditView: NSView {
         }
     }
 
+    public var font: NSFont? = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular) {
+        didSet {
+            needsLayout = true
+        }
+    }
+
     private let _caretView: CaretView
     private var _caretPosition: Position {
         didSet {
@@ -240,9 +246,8 @@ public final class CodeEditView: NSView {
 
         for lineIndex in 0..<_storage.linesCount {
             let lineString = _storage[line: lineIndex]
-            // print("\(lineIndex) \(lineString)|")
 
-            let attributedString = CFAttributedStringCreate(nil, lineString as CFString, nil)!
+            let attributedString = CFAttributedStringCreate(nil, lineString as CFString, [kCTFontAttributeName: font] as CFDictionary)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
 
             var lineStartIndex: CFIndex = 0
