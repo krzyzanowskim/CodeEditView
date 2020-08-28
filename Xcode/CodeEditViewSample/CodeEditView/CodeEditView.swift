@@ -131,8 +131,6 @@ public final class CodeEditView: NSView {
     }
 
     public override func doCommand(by selector: Selector) {
-        print("doCommand \(selector)")
-
         switch selector {
             case #selector(deleteBackward(_:)):
                 deleteBackward(self)
@@ -140,7 +138,12 @@ public final class CodeEditView: NSView {
                 moveUp(self)
             case #selector(moveDown(_:)):
                 moveDown(self)
+            case #selector(moveLeft(_:)):
+                moveLeft(self)
+            case #selector(moveRight(_:)):
+                moveRight(self)
             default:
+                print("doCommand \(selector)")
                 return
         }
 
@@ -185,6 +188,14 @@ public final class CodeEditView: NSView {
             let distance = min(_caretPosition.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length - 1)
             _caretPosition = Position(line: nextLineLayout.lineIndex, character: nextLineLayout.stringRange.location + distance)
         }
+    }
+
+    public override func moveLeft(_ sender: Any?) {
+        _caretPosition = Position(line: _caretPosition.line, character: max(0, _caretPosition.character - 1))
+    }
+
+    public override func moveRight(_ sender: Any?) {
+        _caretPosition = Position(line: _caretPosition.line, character: _caretPosition.character + 1)
     }
 
     public override func draw(_ dirtyRect: NSRect) {
