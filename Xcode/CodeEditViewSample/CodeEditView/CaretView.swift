@@ -7,19 +7,46 @@ public enum CaretStyle {
 
 final class CaretView: NSView {
     var style: CaretStyle = .line
+    var canBlink: Bool = true
+
+    private var caretVisible: Bool = true
+    private let timeInterval: TimeInterval = 0.65
+    private lazy var timer: DispatchSourceTimer = {
+        let t = DispatchSource.makeTimerSource()
+        t.schedule(deadline: .now() + self.timeInterval, repeating: timeInterval)
+        t.setEventHandler(handler: { [weak self] in
+            DispatchQueue.main.async {
+                self?.caretVisible.toggle()
+                self?.needsDisplay = true
+            }
+        })
+        return t
+    }()
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+
+        timer.resume()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
+    deinit {
+        timer.setEventHandler {}
+        timer.cancel()
+        /*
+         If the timer is suspended, calling cancel without resuming
+         triggers a crash. This is documented here https://forums.developer.apple.com/thread/15902
+         */
+        timer.resume()
+    }
+
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
-        guard let context = NSGraphicsContext.current?.cgContext else {
+        guard let context = NSGraphicsContext.current?.cgContext, caretVisible else {
             return
         }
 
@@ -33,7 +60,7 @@ final class CaretView: NSView {
 
     private func drawLineStyle(in context: CGContext, dirtyRect: NSRect) {
         context.setFillColor(NSColor.textColor.cgColor)
-        context.fill(CGRect(x: 0, y: 0, width: 2, height: bounds.height))
+        context.fill(CGRect(x: 0, y: 0, width: 1, height: bounds.height))
     }
 
     private func drawBlockStyle(in context: CGContext, dirtyRect: NSRect) {
