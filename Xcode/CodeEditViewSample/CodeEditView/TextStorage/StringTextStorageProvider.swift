@@ -36,36 +36,34 @@ class StringTextStorageProvider: TextStorageProvider {
         return content[startOffset...endOffset]
     }
 
-    func string(line: Int) -> Substring {
-        var currentLine = 0
-        for (lineOffset, character) in content.enumerated() where character.isNewline {
-            currentLine += 1
-            if currentLine == line {
-                let startIndex = content.index(content.startIndex, offsetBy: lineOffset)
-                if let endIndex = content[startIndex...].firstIndex(where: \.isNewline) {
-                    return content[startIndex...endIndex]
-                }
-            }
-            if currentLine > line {
-                break
-            }
-        }
-        return content[content.startIndex..<content.endIndex]
+    func string(line lineIndex: Int) -> Substring {
+        content[lineRange(line: lineIndex)]
     }
 
-    private func offset(line: Int) -> String.Index {
-        if line == 0 {
-            return content.startIndex
-        }
+    private func offset(line lineIndex: Int) -> String.Index {
+        lineRange(line: lineIndex).lowerBound
+    }
 
+    private func lineRange(line lineIndex: Int) -> Swift.Range<String.Index> {
+        var lineStartIndex = content.startIndex
+        var lineEndIndex = content.startIndex
         var currentLine = 0
-        for (lineOffset, character) in content.enumerated() where character.isNewline {
-            currentLine += 1
-            if currentLine == line {
-                return content.index(content.startIndex, offsetBy: lineOffset)
+
+        while lineStartIndex <= content.endIndex && currentLine <= lineIndex {
+            if let newlineIndex = content[lineStartIndex...].firstIndex(where: \.isNewline) {
+                lineEndIndex = content.index(after: newlineIndex)
+            } else {
+                lineEndIndex = content.endIndex
             }
+
+            if currentLine == lineIndex {
+                return lineStartIndex..<lineEndIndex
+            }
+
+            currentLine += 1
+            lineStartIndex = lineEndIndex
         }
 
-        return content.endIndex
+        return content.startIndex..<content.endIndex
     }
 }
