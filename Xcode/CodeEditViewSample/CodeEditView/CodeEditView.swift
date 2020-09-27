@@ -186,6 +186,10 @@ public final class CodeEditView: NSView {
                 moveRight(self)
             case #selector(moveToRightEndOfLine(_:)):
                 moveToRightEndOfLine(self)
+            case #selector(moveToBeginningOfDocument(_:)):
+                moveToBeginningOfDocument(self)
+            case #selector(moveToEndOfDocument(_:)):
+                moveToEndOfDocument(self)
             case #selector(insertNewline(_:)):
                 insertNewline(self)
             case #selector(insertTab(_:)):
@@ -219,8 +223,7 @@ public final class CodeEditView: NSView {
             let prevLineLayout = _lineLayouts[idx - 1]
             let distance = min(_caret.position.character - currentLineLayout.stringRange.location, prevLineLayout.stringRange.length - 1)
             _caret.position = Position(line: prevLineLayout.lineIndex, character: prevLineLayout.stringRange.location + distance)
-
-            scrollToVisible(CGRect(x: 0, y: prevLineLayout.origin.y, width: 0, height: prevLineLayout.lineHeight + prevLineLayout.lineDescent))
+            scrollToVisiblePosition(_caret.position)
             needsDisplay = true
         }
     }
@@ -241,7 +244,7 @@ public final class CodeEditView: NSView {
             //       the caret offset should preserve between lines, and empty line should not reset the caret offset.
             let distance = min(_caret.position.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length - 1)
             _caret.position = Position(line: nextLineLayout.lineIndex, character: nextLineLayout.stringRange.location + distance)
-            scrollToVisible(CGRect(x: 0, y: nextLineLayout.origin.y - nextLineLayout.lineDescent, width: 0, height: nextLineLayout.lineHeight + nextLineLayout.lineDescent))
+            scrollToVisiblePosition(_caret.position)
             needsDisplay = true
         }
     }
@@ -274,6 +277,19 @@ public final class CodeEditView: NSView {
         needsDisplay = true
     }
 
+    public override func moveToBeginningOfDocument(_ sender: Any?) {
+        _caret.position = Position(line: 0, character: 0)
+        scrollToVisiblePosition(_caret.position)
+        needsDisplay = true
+    }
+
+    public override func moveToEndOfDocument(_ sender: Any?) {
+        let lastLineString = _storage[line: _storage.linesCount - 1]
+        _caret.position = Position(line: _storage.linesCount - 1, character: lastLineString.count - 1)
+        scrollToVisiblePosition(_caret.position)
+        needsDisplay = true
+    }
+
     public override func insertNewline(_ sender: Any?) {
         _storage.insert(string: "\n", at: _caret.position)
         _caret.position = Position(line: _caret.position.line + 1, character: 0)
@@ -296,7 +312,7 @@ public final class CodeEditView: NSView {
         }
 
         if _isFirstResponder {
-            drawCaretLine(context, dirtyRect: dirtyRect)
+            drawHighlightedLine(context, dirtyRect: dirtyRect)
         }
 
         context.saveGState()
@@ -315,7 +331,7 @@ public final class CodeEditView: NSView {
         super.prepareContent(in: rect)
     }
 
-    private func drawCaretLine(_ context: CGContext, dirtyRect: NSRect) {
+    private func drawHighlightedLine(_ context: CGContext, dirtyRect: NSRect) {
         // Find lineLayout for the current caret position
         let currentLineLayoutIndex = _lineLayouts.firstIndex { lineLayout -> Bool in
             _caret.position.line == lineLayout.lineIndex &&
@@ -451,6 +467,17 @@ public final class CodeEditView: NSView {
             position.line == $0.lineIndex &&
                 position.character >= $0.stringRange.location && position.character < $0.stringRange.location + $0.stringRange.length
         }
+    }
+
+    private func scrollToVisiblePosition(_ position: Position) {
+        guard let lineLayout = lineLayout(for: position) else {
+            return
+        }
+        scrollToVisibleLineLayout(lineLayout)
+    }
+
+    private func scrollToVisibleLineLayout(_ lineLayout: LineLayout) {
+        scrollToVisible(CGRect(x: 0, y: lineLayout.origin.y - lineLayout.lineDescent, width: 0, height: lineLayout.lineHeight + lineLayout.lineDescent))
     }
 }
 
