@@ -34,9 +34,9 @@ public final class CodeEditView: NSView {
 
     /// Visible line layout. cached values.
     private struct LineLayout {
-        /// Line index in current buffer. Not necessary equal to lineNumber
-        /// Wrapping makes lineIndex != lineNumber as it coresponds to displayed lines (ctline)
-        let lineIndex: Int
+        /// Line index in store. Line number (zero based)
+        /// In wrapping scenario, multiple LineLayouts for a single lineIndex.
+        let lineNumber: LineNumber
         let ctline: CTLine
         /// A point that specifies the x and y values at which line is to be drawn, in user space coordinates.
         /// A line origin based position.
@@ -215,14 +215,14 @@ public final class CodeEditView: NSView {
         let currentLineLayoutIndex = _lineLayouts.firstIndex { lineLayout -> Bool in
             _caret.position.character >= lineLayout.stringRange.location &&
                 _caret.position.character < lineLayout.stringRange.location + lineLayout.stringRange.length &&
-                _caret.position.line == lineLayout.lineIndex
+                _caret.position.line == lineLayout.lineNumber
         }
 
         if let idx = currentLineLayoutIndex, idx - 1 >= 0 {
             let currentLineLayout = _lineLayouts[idx]
             let prevLineLayout = _lineLayouts[idx - 1]
             let distance = min(_caret.position.character - currentLineLayout.stringRange.location, prevLineLayout.stringRange.length - 1)
-            _caret.position = Position(line: prevLineLayout.lineIndex, character: prevLineLayout.stringRange.location + distance)
+            _caret.position = Position(line: prevLineLayout.lineNumber, character: prevLineLayout.stringRange.location + distance)
             scrollToVisiblePosition(_caret.position)
             needsDisplay = true
         }
@@ -231,7 +231,7 @@ public final class CodeEditView: NSView {
     public override func moveDown(_ sender: Any?) {
         // Find lineLayout for the current caret position
         let currentLineLayoutIndex = _lineLayouts.firstIndex { lineLayout -> Bool in
-            _caret.position.line == lineLayout.lineIndex &&
+            _caret.position.line == lineLayout.lineNumber &&
             _caret.position.character >= lineLayout.stringRange.location &&
             _caret.position.character < lineLayout.stringRange.location + lineLayout.stringRange.length
         }
@@ -243,7 +243,7 @@ public final class CodeEditView: NSView {
             // TODO: effectively reset caret position to the beginin of the line, while it's not expected
             //       the caret offset should preserve between lines, and empty line should not reset the caret offset.
             let distance = min(_caret.position.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length - 1)
-            _caret.position = Position(line: nextLineLayout.lineIndex, character: nextLineLayout.stringRange.location + distance)
+            _caret.position = Position(line: nextLineLayout.lineNumber, character: nextLineLayout.stringRange.location + distance)
             scrollToVisiblePosition(_caret.position)
             needsDisplay = true
         }
@@ -334,7 +334,7 @@ public final class CodeEditView: NSView {
     private func drawHighlightedLine(_ context: CGContext, dirtyRect: NSRect) {
         // Find lineLayout for the current caret position
         let currentLineLayoutIndex = _lineLayouts.firstIndex { lineLayout -> Bool in
-            _caret.position.line == lineLayout.lineIndex &&
+            _caret.position.line == lineLayout.lineNumber &&
                 _caret.position.character >= lineLayout.stringRange.location &&
                 _caret.position.character < lineLayout.stringRange.location + lineLayout.stringRange.length
         }
@@ -414,8 +414,9 @@ public final class CodeEditView: NSView {
                 let lineHeight = (ascent + descent + leading) * lineSpacing.rawValue
 
                 // font origin based position
+                print(lineIndex)
                 _lineLayouts.append(
-                    LineLayout(lineIndex: lineIndex,
+                    LineLayout(lineNumber: lineIndex,
                                ctline: ctline,
                                origin: CGPoint(x: shouldIndentNextLine ? self.font?.pointSize ?? NSFont.systemFontSize : 0, y: pos.y + (ascent + descent)),
                                lineHeight: lineHeight,
@@ -451,7 +452,7 @@ public final class CodeEditView: NSView {
 
         // Flip Y. Performance killer
         _lineLayouts = _lineLayouts.map { lineLayout -> LineLayout in
-            LineLayout(lineIndex: lineLayout.lineIndex,
+            LineLayout(lineNumber: lineLayout.lineNumber,
                        ctline: lineLayout.ctline,
                        origin: CGPoint(x: lineLayout.origin.x, y: frame.height - lineLayout.origin.y),
                        lineHeight: lineLayout.lineHeight,
@@ -464,7 +465,7 @@ public final class CodeEditView: NSView {
 
     private func lineLayout(for position: Position) -> LineLayout? {
         _lineLayouts.first {
-            position.line == $0.lineIndex &&
+            position.line == $0.lineNumber &&
                 position.character >= $0.stringRange.location && position.character < $0.stringRange.location + $0.stringRange.length
         }
     }
