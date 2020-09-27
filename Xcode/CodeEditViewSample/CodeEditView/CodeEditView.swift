@@ -255,9 +255,9 @@ public final class CodeEditView: NSView {
 
     public override func insertTab(_ sender: Any?) {
         if insertSpacesForTab {
-            self.insertText(String([Character](repeating: " ", count: tabSize)), replacementRange: NSRange())
+            self.insertText(String([Character](repeating: " ", count: tabSize)), replacementRange: NSRange(location: NSNotFound, length: 0))
         } else {
-            self.insertText("\t", replacementRange: NSRange())
+            self.insertText("\t", replacementRange: NSRange(location: NSNotFound, length: 0))
         }
     }
 
