@@ -32,8 +32,11 @@ public final class CodeEditView: NSView {
         case relaxed = 1.4
     }
 
-    /// Visible line layout
+    /// Visible line layout. cached values.
     private struct LineLayout {
+        /// Line number
+        let lineNumber: LineNumber
+        /// Line index in current buffer. Not necessary equal to lineNumber
         let lineIndex: Int
         let ctline: CTLine
         /// A point that specifies the x and y values at which line is to be drawn, in user space coordinates.
@@ -186,6 +189,7 @@ public final class CodeEditView: NSView {
             let prevLineLayout = _lineLayouts[idx - 1]
             let distance = min(_caret.position.character - currentLineLayout.stringRange.location, prevLineLayout.stringRange.length - 1)
             _caret.position = Position(line: prevLineLayout.lineIndex, character: prevLineLayout.stringRange.location + distance)
+            needsDisplay = true
         }
     }
 
@@ -205,6 +209,7 @@ public final class CodeEditView: NSView {
             //       the caret offset should preserve between lines, and empty line should not reset the caret offset.
             let distance = min(_caret.position.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length - 1)
             _caret.position = Position(line: nextLineLayout.lineIndex, character: nextLineLayout.stringRange.location + distance)
+            needsDisplay = true
         }
     }
 
@@ -229,16 +234,41 @@ public final class CodeEditView: NSView {
             return
         }
 
+        drawCurrentLine(context, dirtyRect: dirtyRect)
+
+        context.saveGState()
+        context.setStrokeColor(NSColor.textColor.cgColor)
         // draw text lines
         for lineLayout in _lineLayouts {
             context.textPosition = .init(x: lineLayout.origin.x, y: lineLayout.origin.y)
             context.clip(to: dirtyRect)
             CTLineDraw(lineLayout.ctline, context)
         }
+        context.restoreGState()
     }
 
     public override func prepareContent(in rect: NSRect) {
         super.prepareContent(in: rect)
+    }
+
+    private func drawCurrentLine(_ context: CGContext, dirtyRect: NSRect) {
+        // Find lineLayout for the current caret position
+        let currentLineLayoutIndex = _lineLayouts.firstIndex { lineLayout -> Bool in
+            _caret.position.line == lineLayout.lineIndex &&
+                _caret.position.character >= lineLayout.stringRange.location &&
+                _caret.position.character < lineLayout.stringRange.location + lineLayout.stringRange.length
+        }
+
+        if let idx = currentLineLayoutIndex {
+            let lineLayout = _lineLayouts[idx]
+            let lineRect = CGRect(x: lineLayout.origin.x, y: lineLayout.origin.y - lineLayout.lineDescent, width: frame.width, height: lineLayout.lineHeight - lineLayout.lineDescent)
+
+            context.saveGState()
+            let color = NSColor.keyboardFocusIndicatorColor.withAlphaComponent(0.1)
+            context.setFillColor(color.cgColor)
+            context.fill(lineRect)
+            context.restoreGState()
+        }
     }
 
     public override func layout() {
@@ -301,7 +331,8 @@ public final class CodeEditView: NSView {
 
                 // font origin based position
                 _lineLayouts.append(
-                    LineLayout(lineIndex: lineIndex,
+                    LineLayout(lineNumber: lineIndex,
+                               lineIndex: lineIndex,
                                ctline: ctline,
                                origin: CGPoint(x: 0, y: pos.y + (ascent + descent)),
                                lineHeight: lineHeight,
@@ -335,7 +366,8 @@ public final class CodeEditView: NSView {
 
         // Flip Y. Performance killer
         _lineLayouts = _lineLayouts.map { lineLayout -> LineLayout in
-            LineLayout(lineIndex: lineLayout.lineIndex,
+            LineLayout(lineNumber: lineLayout.lineNumber,
+                       lineIndex: lineLayout.lineIndex,
                        ctline: lineLayout.ctline,
                        origin: CGPoint(x: lineLayout.origin.x, y: frame.height - lineLayout.origin.y),
                        lineHeight: lineLayout.lineHeight,
