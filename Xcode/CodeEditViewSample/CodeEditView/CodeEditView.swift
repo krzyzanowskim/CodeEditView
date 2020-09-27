@@ -180,8 +180,12 @@ public final class CodeEditView: NSView {
                 moveDown(self)
             case #selector(moveLeft(_:)):
                 moveLeft(self)
+            case #selector(moveToLeftEndOfLine(_:)):
+                moveToLeftEndOfLine(self)
             case #selector(moveRight(_:)):
                 moveRight(self)
+            case #selector(moveToRightEndOfLine(_:)):
+                moveToRightEndOfLine(self)
             case #selector(insertNewline(_:)):
                 insertNewline(self)
             case #selector(insertTab(_:)):
@@ -243,11 +247,31 @@ public final class CodeEditView: NSView {
     }
 
     public override func moveLeft(_ sender: Any?) {
-        _caret.position = Position(line: _caret.position.line, character: max(0, _caret.position.character - 1))
+        if _caret.position.character > 0 {
+            _caret.position = Position(line: _caret.position.line, character: max(0, _caret.position.character - 1))
+        } else {
+            _caret.position = Position(line: max(0, _caret.position.line - 1), character: 0)
+        }
+        needsDisplay = true
+    }
+
+    public override func moveToLeftEndOfLine(_ sender: Any?) {
+        _caret.position = Position(line: _caret.position.line, character: 0)
+        needsDisplay = true
     }
 
     public override func moveRight(_ sender: Any?) {
-        _caret.position = Position(line: _caret.position.line, character: _caret.position.character + 1)
+        let currentLineString = _storage[line: _caret.position.line]
+        if _caret.position.character + 1 < currentLineString.count {
+            _caret.position = Position(line: _caret.position.line, character: _caret.position.character + 1)
+        } else {
+            moveDown(sender)
+        }
+    }
+
+    public override func moveToRightEndOfLine(_ sender: Any?) {
+        _caret.position = Position(line: _caret.position.line, character: _storage[line: _caret.position.line].count - 1)
+        needsDisplay = true
     }
 
     public override func insertNewline(_ sender: Any?) {
