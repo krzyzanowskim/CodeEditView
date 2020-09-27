@@ -114,7 +114,7 @@ public final class CodeEditView: NSView {
 
         self.lineSpacing = .normal
         self.lineWrapping = .bounds
-        self.indentWrappedLines = true
+        self.indentWrappedLines = false
 
         self._caret = Caret()
 
@@ -242,16 +242,19 @@ public final class CodeEditView: NSView {
             return
         }
 
-        drawCaretLine(context, dirtyRect: dirtyRect)
+        if _isFirstResponder {
+            drawCaretLine(context, dirtyRect: dirtyRect)
+        }
 
         context.saveGState()
-        context.setStrokeColor(NSColor.textColor.cgColor)
+        context.setFillColor(NSColor.textColor.cgColor)
+
         // draw text lines
         for lineLayout in _lineLayouts {
             context.textPosition = .init(x: lineLayout.origin.x, y: lineLayout.origin.y)
-            context.clip(to: dirtyRect)
             CTLineDraw(lineLayout.ctline, context)
         }
+        context.clip(to: dirtyRect)
         context.restoreGState()
     }
 
@@ -322,7 +325,10 @@ public final class CodeEditView: NSView {
         for lineIndex in 0..<_storage.linesCount {
             let lineString = _storage[line: lineIndex]
 
-            let attributedString = CFAttributedStringCreate(nil, lineString as CFString, [kCTFontAttributeName: font] as CFDictionary)!
+            let attributedString = CFAttributedStringCreate(nil, lineString as CFString, [
+                kCTFontAttributeName: font,
+                kCTForegroundColorFromContextAttributeName: NSNumber(booleanLiteral: true)
+            ] as CFDictionary)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
 
             var lineStartIndex: CFIndex = 0
