@@ -90,7 +90,17 @@ public final class CodeEditView: NSView {
     }
 
     /// Text color
-    public var textColor: NSColor = .textColor
+    public var textColor: NSColor = .textColor {
+        didSet {
+            needsDisplay = true
+        }
+    }
+
+    /// Insert spaces when pressing Tab
+    public var insertSpacesForTab: Bool
+
+    /// The number of spaces a tab is equal to.
+    public var tabSize: Int
 
     private var _caret: Caret {
         didSet {
@@ -119,6 +129,8 @@ public final class CodeEditView: NSView {
         self.lineSpacing = .normal
         self.lineWrapping = .bounds
         self.indentWrappedLines = false
+        self.insertSpacesForTab = false
+        self.tabSize = 4
 
         self._caret = Caret()
 
@@ -172,6 +184,8 @@ public final class CodeEditView: NSView {
                 moveRight(self)
             case #selector(insertNewline(_:)):
                 insertNewline(self)
+            case #selector(insertTab(_:)):
+                insertTab(self)
             default:
                 print("doCommand \(selector)")
                 return
@@ -237,6 +251,14 @@ public final class CodeEditView: NSView {
         _storage.insert(string: "\n", at: _caret.position)
         _caret.position = Position(line: _caret.position.line + 1, character: 0)
         needsDisplay = true
+    }
+
+    public override func insertTab(_ sender: Any?) {
+        if insertSpacesForTab {
+            self.insertText(String([Character](repeating: " ", count: tabSize)), replacementRange: NSRange())
+        } else {
+            self.insertText("\t", replacementRange: NSRange())
+        }
     }
 
     public override func draw(_ dirtyRect: NSRect) {
@@ -416,7 +438,7 @@ extension CodeEditView: NSTextInputClient {
         }
         print("insertText \(string) replacementRange \(replacementRange)")
         _storage.insert(string: string, at: _caret.position)
-        _caret.position = Position(line: _caret.position.line, character: _caret.position.character + 1)
+        _caret.position = Position(line: _caret.position.line, character: _caret.position.character + string.count)
         needsDisplay = true
     }
 
