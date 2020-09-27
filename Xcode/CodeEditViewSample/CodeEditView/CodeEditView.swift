@@ -44,6 +44,21 @@ public final class CodeEditView: NSView {
         let stringRange: CFRange
     }
 
+    private struct Caret {
+        var position: Position = .zero
+        var displayPosition: Position = .zero
+        let view: CaretView = CaretView()
+
+        var isHidden: Bool {
+            set {
+                view.isHidden = newValue
+            }
+            get {
+                view.isHidden
+            }
+        }
+    }
+
     /// Line Wrapping mode
     public var lineWrapping: LineWrapping {
         didSet {
@@ -63,17 +78,16 @@ public final class CodeEditView: NSView {
         }
     }
 
-    private let _caretView: CaretView
-    private var _caretPosition: Position {
+    private var _caret: Caret {
         didSet {
             needsLayout = true
         }
     }
-
+    
     /// Whether or not this view is the focused view for its window
     private var _isFirstResponder = false {
         didSet {
-            self._caretView.isHidden = !_isFirstResponder
+            self._caret.isHidden = !_isFirstResponder
         }
     }
 
@@ -91,13 +105,12 @@ public final class CodeEditView: NSView {
         self.lineSpacing = .normal
         self.lineWrapping = .bounds
 
-        self._caretView = CaretView()
-        self._caretPosition = .zero
+        self._caret = Caret()
 
         super.init(frame: .zero)
 
-        self.addSubview(_caretView)
-        _caretView.isHidden = true
+        self.addSubview(_caret.view)
+        _caret.isHidden = true
     }
 
     required init?(coder: NSCoder) {
@@ -156,31 +169,32 @@ public final class CodeEditView: NSView {
     }
 
     public override func deleteBackward(_ sender: Any?) {
-        _storage.remove(range: .init(start: _caretPosition, end: _caretPosition))
-        _caretPosition = Position(line: _caretPosition.line, character: max(0, _caretPosition.character - 1))
+        _storage.remove(range: .init(start: _caret.position, end: _caret.position))
+        _caret.position = Position(line: _caret.position.line, character: max(0, _caret.position.character - 1))
         needsDisplay = true
     }
 
     public override func moveUp(_ sender: Any?) {
         let currentLineLayoutIndex = _lineLayouts.firstIndex { lineLayout -> Bool in
-            _caretPosition.character >= lineLayout.stringRange.location &&
-                _caretPosition.character < lineLayout.stringRange.location + lineLayout.stringRange.length &&
-                _caretPosition.line == lineLayout.lineIndex
+            _caret.position.character >= lineLayout.stringRange.location &&
+                _caret.position.character < lineLayout.stringRange.location + lineLayout.stringRange.length &&
+                _caret.position.line == lineLayout.lineIndex
         }
 
         if let idx = currentLineLayoutIndex, idx - 1 >= 0 {
             let currentLineLayout = _lineLayouts[idx]
             let prevLineLayout = _lineLayouts[idx - 1]
-            let distance = min(_caretPosition.character - currentLineLayout.stringRange.location, prevLineLayout.stringRange.length - 1)
-            _caretPosition = Position(line: prevLineLayout.lineIndex, character: prevLineLayout.stringRange.location + distance)
+            let distance = min(_caret.position.character - currentLineLayout.stringRange.location, prevLineLayout.stringRange.length - 1)
+            _caret.position = Position(line: prevLineLayout.lineIndex, character: prevLineLayout.stringRange.location + distance)
         }
     }
 
     public override func moveDown(_ sender: Any?) {
-        // Find drawLayout for the current caret position
+        // Find lineLayout for the current caret position
         let currentLineLayoutIndex = _lineLayouts.firstIndex { lineLayout -> Bool in
-            _caretPosition.line == lineLayout.lineIndex &&
-            _caretPosition.character >= lineLayout.stringRange.location && _caretPosition.character < lineLayout.stringRange.location + lineLayout.stringRange.length
+            _caret.position.line == lineLayout.lineIndex &&
+            _caret.position.character >= lineLayout.stringRange.location &&
+            _caret.position.character < lineLayout.stringRange.location + lineLayout.stringRange.length
         }
 
         if let idx = currentLineLayoutIndex, idx + 1 < _lineLayouts.count {
@@ -189,22 +203,22 @@ public final class CodeEditView: NSView {
             // distance from the beginning of the current line limited by the next line lenght
             // TODO: effectively reset caret position to the beginin of the line, while it's not expected
             //       the caret offset should preserve between lines, and empty line should not reset the caret offset.
-            let distance = min(_caretPosition.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length - 1)
-            _caretPosition = Position(line: nextLineLayout.lineIndex, character: nextLineLayout.stringRange.location + distance)
+            let distance = min(_caret.position.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length - 1)
+            _caret.position = Position(line: nextLineLayout.lineIndex, character: nextLineLayout.stringRange.location + distance)
         }
     }
 
     public override func moveLeft(_ sender: Any?) {
-        _caretPosition = Position(line: _caretPosition.line, character: max(0, _caretPosition.character - 1))
+        _caret.position = Position(line: _caret.position.line, character: max(0, _caret.position.character - 1))
     }
 
     public override func moveRight(_ sender: Any?) {
-        _caretPosition = Position(line: _caretPosition.line, character: _caretPosition.character + 1)
+        _caret.position = Position(line: _caret.position.line, character: _caret.position.character + 1)
     }
 
     public override func insertNewline(_ sender: Any?) {
-        _storage.insert(string: "\n", at: _caretPosition)
-        _caretPosition = Position(line: _caretPosition.line + 1, character: 0)
+        _storage.insert(string: "\n", at: _caret.position)
+        _caret.position = Position(line: _caret.position.line + 1, character: 0)
         needsDisplay = true
     }
 
@@ -234,9 +248,9 @@ public final class CodeEditView: NSView {
     }
 
     private func layoutCaret() {
-        guard let lineLayout = lineLayout(for: _caretPosition) else { return }
-        let characterOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caretPosition.character, nil)
-        _caretView.frame = CGRect(x: lineLayout.origin.x + characterOffset, y: lineLayout.origin.y - lineLayout.lineDescent, width: 12, height: lineLayout.lineHeight - lineLayout.lineDescent)
+        guard let lineLayout = lineLayout(for: _caret.position) else { return }
+        let characterOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caret.position.character, nil)
+        _caret.view.frame = CGRect(x: lineLayout.origin.x + characterOffset, y: lineLayout.origin.y - lineLayout.lineDescent, width: 12, height: lineLayout.lineHeight - lineLayout.lineDescent)
     }
 
     /// Layout visible text
@@ -350,8 +364,8 @@ extension CodeEditView: NSTextInputClient {
             return
         }
         print("insertText \(string) replacementRange \(replacementRange)")
-        _storage.insert(string: string, at: _caretPosition)
-        _caretPosition = Position(line: _caretPosition.line, character: _caretPosition.character + 1)
+        _storage.insert(string: string, at: _caret.position)
+        _caret.position = Position(line: _caret.position.line, character: _caret.position.character + 1)
         needsDisplay = true
     }
 
