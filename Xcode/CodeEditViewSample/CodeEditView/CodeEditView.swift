@@ -215,6 +215,7 @@ public final class CodeEditView: NSView {
             let prevLineLayout = _lineLayouts[idx - 1]
             let distance = min(_caret.position.character - currentLineLayout.stringRange.location, prevLineLayout.stringRange.length - 1)
             _caret.position = Position(line: prevLineLayout.lineIndex, character: prevLineLayout.stringRange.location + distance)
+            scroll(CGPoint(x: 0, y: currentLineLayout.origin.y))
             needsDisplay = true
         }
     }
@@ -235,6 +236,7 @@ public final class CodeEditView: NSView {
             //       the caret offset should preserve between lines, and empty line should not reset the caret offset.
             let distance = min(_caret.position.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length - 1)
             _caret.position = Position(line: nextLineLayout.lineIndex, character: nextLineLayout.stringRange.location + distance)
+            scroll(CGPoint(x: 0, y: nextLineLayout.origin.y))
             needsDisplay = true
         }
     }
