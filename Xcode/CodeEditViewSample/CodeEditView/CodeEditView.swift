@@ -34,9 +34,8 @@ public final class CodeEditView: NSView {
 
     /// Visible line layout. cached values.
     private struct LineLayout {
-        /// Line number
-        let lineNumber: LineNumber
         /// Line index in current buffer. Not necessary equal to lineNumber
+        /// Wrapping makes lineIndex != lineNumber as it coresponds to displayed lines (ctline)
         let lineIndex: Int
         let ctline: CTLine
         /// A point that specifies the x and y values at which line is to be drawn, in user space coordinates.
@@ -68,6 +67,14 @@ public final class CodeEditView: NSView {
             needsLayout = true
         }
     }
+
+    // Whether should indent wrapped lines
+    public var indentWrappedLines: Bool {
+        didSet {
+            needsLayout = true
+        }
+    }
+
     /// Line Spacing mode
     public var lineSpacing: Spacing {
         didSet {
@@ -107,6 +114,7 @@ public final class CodeEditView: NSView {
 
         self.lineSpacing = .normal
         self.lineWrapping = .bounds
+        self.indentWrappedLines = true
 
         self._caret = Caret()
 
@@ -234,7 +242,7 @@ public final class CodeEditView: NSView {
             return
         }
 
-        drawCurrentLine(context, dirtyRect: dirtyRect)
+        drawCaretLine(context, dirtyRect: dirtyRect)
 
         context.saveGState()
         context.setStrokeColor(NSColor.textColor.cgColor)
@@ -251,7 +259,7 @@ public final class CodeEditView: NSView {
         super.prepareContent(in: rect)
     }
 
-    private func drawCurrentLine(_ context: CGContext, dirtyRect: NSRect) {
+    private func drawCaretLine(_ context: CGContext, dirtyRect: NSRect) {
         // Find lineLayout for the current caret position
         let currentLineLayoutIndex = _lineLayouts.firstIndex { lineLayout -> Bool in
             _caret.position.line == lineLayout.lineIndex &&
@@ -261,7 +269,7 @@ public final class CodeEditView: NSView {
 
         if let idx = currentLineLayoutIndex {
             let lineLayout = _lineLayouts[idx]
-            let lineRect = CGRect(x: lineLayout.origin.x, y: lineLayout.origin.y - lineLayout.lineDescent, width: frame.width, height: lineLayout.lineHeight - lineLayout.lineDescent)
+            let lineRect = CGRect(x: 0, y: lineLayout.origin.y - lineLayout.lineDescent, width: frame.width, height: lineLayout.lineHeight - lineLayout.lineDescent)
 
             context.saveGState()
             let color = NSColor.keyboardFocusIndicatorColor.withAlphaComponent(0.1)
@@ -318,6 +326,7 @@ public final class CodeEditView: NSView {
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
 
             var lineStartIndex: CFIndex = 0
+            var shouldIndentNextLine = false
             while lineStartIndex < lineString.count {
                 let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth), Double(pos.y))
                 let stringRange = CFRange(location: lineStartIndex, length: breakIndex)
@@ -331,10 +340,9 @@ public final class CodeEditView: NSView {
 
                 // font origin based position
                 _lineLayouts.append(
-                    LineLayout(lineNumber: lineIndex,
-                               lineIndex: lineIndex,
+                    LineLayout(lineIndex: lineIndex,
                                ctline: ctline,
-                               origin: CGPoint(x: 0, y: pos.y + (ascent + descent)),
+                               origin: CGPoint(x: shouldIndentNextLine ? self.font?.pointSize ?? NSFont.systemFontSize : 0, y: pos.y + (ascent + descent)),
                                lineHeight: lineHeight,
                                lineDescent: descent,
                                stringRange: stringRange)
@@ -344,6 +352,8 @@ public final class CodeEditView: NSView {
                 pos.y += lineHeight
 
                 textContentSize.width = max(textContentSize.width, lineWidth)
+                // Indent wrapped lines
+                shouldIndentNextLine = self.indentWrappedLines
             }
         }
         textContentSize.height = pos.y
@@ -366,8 +376,7 @@ public final class CodeEditView: NSView {
 
         // Flip Y. Performance killer
         _lineLayouts = _lineLayouts.map { lineLayout -> LineLayout in
-            LineLayout(lineNumber: lineLayout.lineNumber,
-                       lineIndex: lineLayout.lineIndex,
+            LineLayout(lineIndex: lineLayout.lineIndex,
                        ctline: lineLayout.ctline,
                        origin: CGPoint(x: lineLayout.origin.x, y: frame.height - lineLayout.origin.y),
                        lineHeight: lineLayout.lineHeight,
