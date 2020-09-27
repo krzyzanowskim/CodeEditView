@@ -82,11 +82,15 @@ public final class CodeEditView: NSView {
         }
     }
 
+    /// Font
     public var font: NSFont? = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular) {
         didSet {
             needsLayout = true
         }
     }
+
+    /// Text color
+    public var textColor: NSColor = .textColor
 
     private var _caret: Caret {
         didSet {
@@ -247,7 +251,7 @@ public final class CodeEditView: NSView {
         }
 
         context.saveGState()
-        context.setFillColor(NSColor.textColor.cgColor)
+        context.setFillColor(textColor.cgColor)
 
         // draw text lines
         for lineLayout in _lineLayouts {
@@ -275,7 +279,7 @@ public final class CodeEditView: NSView {
             let lineRect = CGRect(x: 0, y: lineLayout.origin.y - lineLayout.lineDescent, width: frame.width, height: lineLayout.lineHeight - lineLayout.lineDescent)
 
             context.saveGState()
-            let color = NSColor.keyboardFocusIndicatorColor.withAlphaComponent(0.1)
+            let color = NSColor.controlAccentColor.withAlphaComponent(0.25)
             context.setFillColor(color.cgColor)
             context.fill(lineRect)
             context.restoreGState()
