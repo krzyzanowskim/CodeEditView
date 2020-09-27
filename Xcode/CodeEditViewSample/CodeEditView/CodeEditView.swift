@@ -97,10 +97,18 @@ public final class CodeEditView: NSView {
     }
 
     /// Insert spaces when pressing Tab
-    public var insertSpacesForTab: Bool
+    public var insertSpacesForTab: Bool {
+        didSet {
+            needsLayout = true
+        }
+    }
 
     /// The number of spaces a tab is equal to.
-    public var tabSize: Int
+    public var tabSize: Int {
+        didSet {
+            needsLayout = true
+        }
+    }
 
     private var _caret: Caret {
         didSet {
@@ -206,7 +214,7 @@ public final class CodeEditView: NSView {
     }
 
     public override func deleteBackward(_ sender: Any?) {
-        _storage.remove(range: .init(start: _caret.position, end: _caret.position))
+        _storage.remove(range: Range(start: _caret.position, end: _caret.position))
         _caret.position = Position(line: _caret.position.line, character: max(0, _caret.position.character - 1))
         needsDisplay = true
     }
@@ -414,7 +422,6 @@ public final class CodeEditView: NSView {
                 let lineHeight = (ascent + descent + leading) * lineSpacing.rawValue
 
                 // font origin based position
-                print(lineIndex)
                 _lineLayouts.append(
                     LineLayout(lineNumber: lineIndex,
                                ctline: ctline,
@@ -492,8 +499,16 @@ extension CodeEditView: NSTextInputClient {
             return
         }
         print("insertText \(string) replacementRange \(replacementRange)")
+        /*
+        let previousCaretPosition = _caret.position
+        undoManager?.registerUndo(withTarget: self, handler: { target in
+            self._storage.remove(range: Range(start: previousCaretPosition, end: Position(line: previousCaretPosition.line, character: string.count - 1)))
+            self._caret.position = previousCaretPosition
+        })
+         */
         _storage.insert(string: string, at: _caret.position)
         _caret.position = Position(line: _caret.position.line, character: _caret.position.character + string.count)
+
         needsDisplay = true
     }
 
