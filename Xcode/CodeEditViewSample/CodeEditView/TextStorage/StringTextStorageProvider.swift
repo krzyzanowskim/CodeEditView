@@ -100,21 +100,5 @@ class StringTextStorageProviderTests: XCTestCase {
         storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 0)))
         XCTAssertEqual(storageProvider.string(line: 0), "")
     }
-
-    func testRemove2() {
-        let storageProvider = StringTextStorageProvider()
-        storageProvider.insert(string: "test", at: Position(line: 0, character: 0))
-        XCTAssertEqual(storageProvider.string(line: 0), "test")
-        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 1)))
-        XCTAssertEqual(storageProvider.string(line: 0), "st")
-    }
-
-    func testRemove3() {
-        let storageProvider = StringTextStorageProvider()
-        storageProvider.insert(string: "Lorem", at: Position(line: 0, character: 0))
-        XCTAssertEqual(storageProvider.string(line: 0), "Lorem")
-        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 0)))
-        XCTAssertEqual(storageProvider.string(line: 0), "orem")
-    }
 }
 #endif

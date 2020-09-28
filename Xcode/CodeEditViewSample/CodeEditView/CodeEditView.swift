@@ -182,6 +182,8 @@ public final class CodeEditView: NSView {
         switch selector {
             case #selector(deleteBackward(_:)):
                 deleteBackward(self)
+            case #selector(deleteForward(_:)):
+                deleteForward(self)
             case #selector(moveUp(_:)):
                 moveUp(self)
             case #selector(moveDown(_:)):
@@ -214,8 +216,14 @@ public final class CodeEditView: NSView {
     }
 
     public override func deleteBackward(_ sender: Any?) {
-        _storage.remove(range: Range(start: _caret.position, end: _caret.position))
         _caret.position = Position(line: _caret.position.line, character: max(0, _caret.position.character - 1))
+        _storage.remove(range: Range(start: _caret.position, end: _caret.position))
+        needsDisplay = true
+    }
+
+    public override func deleteForward(_ sender: Any?) {
+        _storage.remove(range: Range(start: _caret.position, end: _caret.position))
+        _caret.position = Position(line: _caret.position.line, character: max(0, _caret.position.character))
         needsDisplay = true
     }
 
