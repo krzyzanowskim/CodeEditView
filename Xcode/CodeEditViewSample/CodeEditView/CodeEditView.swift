@@ -369,16 +369,18 @@ public final class CodeEditView: NSView {
                 _caret.position.character < lineLayout.stringRange.location + lineLayout.stringRange.length
         }
 
+
         if let idx = currentLineLayoutIndex {
             let lineLayout = _lineLayouts[idx]
             let lineRect = CGRect(x: 0, y: lineLayout.origin.y - lineLayout.lineDescent, width: frame.width, height: lineLayout.lineHeight - lineLayout.lineDescent)
 
             context.saveGState()
-            let color = NSColor.controlAccentColor.withAlphaComponent(0.25)
+            let color = NSColor.controlAccentColor.withAlphaComponent(0.1)
             context.setFillColor(color.cgColor)
             context.fill(lineRect)
             context.restoreGState()
         }
+
     }
 
     public override func layout() {
