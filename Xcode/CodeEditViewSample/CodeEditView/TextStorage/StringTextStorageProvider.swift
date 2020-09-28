@@ -5,7 +5,11 @@ class StringTextStorageProvider: TextStorageProvider {
     private var content: String = ""
 
     var linesCount: Int {
-        content.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).count
+        guard !content.isEmpty else {
+            return 0
+        }
+
+        return content.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).count
     }
 
     func character(at position: Position) -> Character? {
@@ -67,3 +71,50 @@ class StringTextStorageProvider: TextStorageProvider {
         return content.startIndex..<content.endIndex
     }
 }
+
+// MARK - Tests
+
+#if canImport(XCTest)
+import XCTest
+
+class StringTextStorageProviderTests: XCTestCase {
+
+    func testProvider() {
+        let storageProvider = StringTextStorageProvider()
+        XCTAssertEqual(storageProvider.linesCount, 0)
+        storageProvider.insert(string: "test", at: Position(line: 0, character: 0))
+        XCTAssertEqual(storageProvider.linesCount, 1)
+        XCTAssertEqual(storageProvider.character(at: Position(line: 0, character: 1)), "e")
+    }
+
+    func testRemove1() {
+        let storageProvider = StringTextStorageProvider()
+        storageProvider.insert(string: "test", at: Position(line: 0, character: 0))
+        XCTAssertEqual(storageProvider.string(line: 0), "test")
+        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 0)))
+        XCTAssertEqual(storageProvider.string(line: 0), "est")
+        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 0)))
+        XCTAssertEqual(storageProvider.string(line: 0), "st")
+        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 0)))
+        XCTAssertEqual(storageProvider.string(line: 0), "t")
+        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 0)))
+        XCTAssertEqual(storageProvider.string(line: 0), "")
+    }
+
+    func testRemove2() {
+        let storageProvider = StringTextStorageProvider()
+        storageProvider.insert(string: "test", at: Position(line: 0, character: 0))
+        XCTAssertEqual(storageProvider.string(line: 0), "test")
+        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 1)))
+        XCTAssertEqual(storageProvider.string(line: 0), "st")
+    }
+
+    func testRemove3() {
+        let storageProvider = StringTextStorageProvider()
+        storageProvider.insert(string: "Lorem", at: Position(line: 0, character: 0))
+        XCTAssertEqual(storageProvider.string(line: 0), "Lorem")
+        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 0)))
+        XCTAssertEqual(storageProvider.string(line: 0), "orem")
+    }
+}
+#endif

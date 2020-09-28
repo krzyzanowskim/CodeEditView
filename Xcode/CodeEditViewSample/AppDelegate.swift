@@ -34,6 +34,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         window.contentView = scrollView
         window.makeKeyAndOrderFront(nil)
+
+        if UserDefaults.standard.bool(forKey: "run-tests") {
+            do {
+                try TestRunner.run()
+            } catch let error {
+                fatalError(error.localizedDescription)
+            }
+        }
+
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {

@@ -15,6 +15,7 @@
 		750AC4D424F28572004FB229 /* Range.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4D324F28572004FB229 /* Range.swift */; };
 		750AC4DC24F28EC2004FB229 /* RopeTextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */; };
 		7511242824F57808005F82BA /* CaretView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7511242724F57808005F82BA /* CaretView.swift */; };
+		75228D2B25228265005EE0FB /* TestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75228D2A25228261005EE0FB /* TestRunner.swift */; };
 		75EA4C9B24F2B1D700BAA2D9 /* StringTextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EA4C9A24F2B1D700BAA2D9 /* StringTextStorageProvider.swift */; };
 		75EB017924F27BC10056D96A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EB017824F27BC10056D96A /* AppDelegate.swift */; };
 		75EB017D24F27BC10056D96A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75EB017C24F27BC10056D96A /* Assets.xcassets */; };
@@ -31,6 +32,8 @@
 		750AC4D324F28572004FB229 /* Range.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Range.swift; sourceTree = "<group>"; };
 		750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RopeTextStorageProvider.swift; sourceTree = "<group>"; };
 		7511242724F57808005F82BA /* CaretView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaretView.swift; sourceTree = "<group>"; };
+		75228D2325227BE6005EE0FB /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		75228D2A25228261005EE0FB /* TestRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRunner.swift; sourceTree = "<group>"; };
 		75EA4C9A24F2B1D700BAA2D9 /* StringTextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringTextStorageProvider.swift; sourceTree = "<group>"; };
 		75EB017524F27BC10056D96A /* CodeEditViewSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodeEditViewSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EB017824F27BC10056D96A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -87,6 +90,7 @@
 		75EA4C9724F2A3BC00BAA2D9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				75228D2325227BE6005EE0FB /* XCTest.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -113,6 +117,7 @@
 			isa = PBXGroup;
 			children = (
 				75EB017824F27BC10056D96A /* AppDelegate.swift */,
+				75228D2A25228261005EE0FB /* TestRunner.swift */,
 				75EB017C24F27BC10056D96A /* Assets.xcassets */,
 				75EB018124F27BC10056D96A /* Main.storyboard */,
 				75EB018424F27BC10056D96A /* Info.plist */,
@@ -211,6 +216,7 @@
 				750AC4D424F28572004FB229 /* Range.swift in Sources */,
 				750AC4DC24F28EC2004FB229 /* RopeTextStorageProvider.swift in Sources */,
 				750AC4CA24F27D9E004FB229 /* CodeEdit.swift in Sources */,
+				75228D2B25228265005EE0FB /* TestRunner.swift in Sources */,
 				750AC4CC24F28293004FB229 /* Position.swift in Sources */,
 				750AC4CE24F283EA004FB229 /* TextStorage.swift in Sources */,
 				75EB017924F27BC10056D96A /* AppDelegate.swift in Sources */,
@@ -357,10 +363,14 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Preview Content\"";
 				ENABLE_PREVIEWS = YES;
+				ENABLE_TESTING_SEARCH_PATHS = YES;
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
+					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
+					"$(PLATFORM_DIR)/Developer/usr/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = best.swift.CodeEditViewSample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
