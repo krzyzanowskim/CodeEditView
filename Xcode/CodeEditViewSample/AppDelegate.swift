@@ -21,6 +21,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let codeView = CodeEditView(storage: TextStorage(string: sampleText))
         codeView.autoresizingMask = [.width, .height]
         codeView.lineWrapping = .bounds
+        codeView.indentWrappedLines = true
+        codeView.wrapWords = true
+        codeView.highlightCurrentLine = true
 
         let scrollView = NSScrollView()
         scrollView.autoresizingMask = [.height, .width]

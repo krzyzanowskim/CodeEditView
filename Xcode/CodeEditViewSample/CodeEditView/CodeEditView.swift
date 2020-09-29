@@ -20,7 +20,7 @@ public final class CodeEditView: NSView {
         /// Wrap at bounds
         case bounds
         /// Wrap at specific width
-        case width(_ value: CGFloat = -1)
+        case width(_ value: CGFloat = .infinity)
     }
 
     public enum Spacing: CGFloat {
@@ -72,6 +72,18 @@ public final class CodeEditView: NSView {
     public var indentWrappedLines: Bool {
         didSet {
             needsLayout = true
+        }
+    }
+
+    public var wrapWords: Bool {
+        didSet {
+            needsLayout = true
+        }
+    }
+
+    public var highlightCurrentLine: Bool {
+        didSet {
+            needsDisplay = true
         }
     }
 
@@ -138,8 +150,10 @@ public final class CodeEditView: NSView {
         self.lineSpacing = .normal
         self.lineWrapping = .bounds
         self.indentWrappedLines = false
+        self.wrapWords = true
         self.insertSpacesForTab = false
         self.tabSize = 4
+        self.highlightCurrentLine = true
 
         self._caret = Caret()
 
@@ -348,7 +362,7 @@ public final class CodeEditView: NSView {
             return
         }
 
-        if _isFirstResponder {
+        if _isFirstResponder && highlightCurrentLine {
             drawHighlightedLine(context, dirtyRect: dirtyRect)
         }
 
@@ -457,7 +471,12 @@ public final class CodeEditView: NSView {
                 let leadingIndent = isWrappedLine ? indentWidth : 0
                 pos.x = leadingIndent
 
-                let breakIndex = CTTypesetterSuggestClusterBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - leadingIndent), Double(pos.y))
+                let breakIndex: CFIndex
+                if wrapWords {
+                    breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - leadingIndent), Double(pos.y))
+                } else {
+                    breakIndex = CTTypesetterSuggestClusterBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - leadingIndent), Double(pos.y))
+                }
                 let stringRange = CFRange(location: lineStartIndex, length: breakIndex)
                 let ctline = CTTypesetterCreateLineWithOffset(typesetter, stringRange, Double(pos.x))
 
