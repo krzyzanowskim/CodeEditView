@@ -65,7 +65,7 @@ final class CaretView: NSView {
 
     private func drawLineStyle(in context: CGContext, dirtyRect: NSRect) {
         context.setFillColor(NSColor.textColor.cgColor)
-        context.fill(CGRect(x: 0, y: 0, width: 1, height: bounds.height))
+        context.fill(CGRect(x: 0, y: 0, width: max(1, frame.width * 0.1), height: bounds.height))
     }
 
     private func drawBlockStyle(in context: CGContext, dirtyRect: NSRect) {

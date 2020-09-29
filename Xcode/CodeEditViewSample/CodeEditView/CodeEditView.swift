@@ -83,7 +83,7 @@ public final class CodeEditView: NSView {
     }
 
     /// Font
-    public var font: NSFont? = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular) {
+    public var font: NSFont {
         didSet {
             needsLayout = true
         }
@@ -134,6 +134,7 @@ public final class CodeEditView: NSView {
         self._lineLayouts = []
         self._lineLayouts.reserveCapacity(200)
 
+        self.font = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         self.lineSpacing = .normal
         self.lineWrapping = .bounds
         self.indentWrappedLines = false
@@ -378,7 +379,10 @@ public final class CodeEditView: NSView {
 
         if let idx = currentLineLayoutIndex {
             let lineLayout = _lineLayouts[idx]
-            let lineRect = CGRect(x: 0, y: lineLayout.origin.y - lineLayout.lineDescent, width: frame.width, height: lineLayout.lineHeight - lineLayout.lineDescent)
+            let lineRect = CGRect(x: 0,
+                                  y: lineLayout.origin.y - lineLayout.lineDescent - 1.5, // 1.5 should be calculated
+                                  width: frame.width,
+                                  height: lineLayout.lineHeight)
 
             context.saveGState()
             let color = NSColor.controlAccentColor.withAlphaComponent(0.1)
@@ -398,7 +402,10 @@ public final class CodeEditView: NSView {
     private func layoutCaret() {
         guard let lineLayout = lineLayout(for: _caret.position) else { return }
         let characterOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caret.position.character, nil)
-        _caret.view.frame = CGRect(x: lineLayout.origin.x + characterOffset, y: lineLayout.origin.y - lineLayout.lineDescent, width: 12, height: lineLayout.lineHeight - lineLayout.lineDescent)
+        _caret.view.frame = CGRect(x: lineLayout.origin.x + characterOffset,
+                                   y: lineLayout.origin.y - lineLayout.lineDescent,
+                                   width: font.boundingRectForFont.width,
+                                   height: lineLayout.lineHeight - lineLayout.lineDescent)
     }
 
     /// Layout visible text
@@ -438,8 +445,7 @@ public final class CodeEditView: NSView {
             ] as CFDictionary)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
 
-            let fontSize = font?.pointSize ?? NSFont.systemFontSize
-            let indentWidth = indentWrappedLines ? fontSize : 0
+            let indentWidth = indentWrappedLines ? font.pointSize : 0
 
             var isWrappedLine = false
             var lineStartIndex: CFIndex = 0
