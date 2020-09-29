@@ -522,6 +522,18 @@ extension CodeEditView: NSTextInputClient {
         guard let string = string as? String else {
             return
         }
+
+        guard !string.unicodeScalars.contains(where: { $0.properties.isDefaultIgnorableCodePoint || $0.properties.isNoncharacterCodePoint }) else {
+            print("Ignore bytes: \(Array(string.utf8))")
+            return
+        }
+
+        // Ignore ASCII control characters
+        if string.count == 1 && string.unicodeScalars.drop(while: { (0x10...0x1F).contains($0.value) }).isEmpty {
+            print("Ignore control characters 0x10...0x1F")
+            return
+        }
+
         print("insertText \(string) replacementRange \(replacementRange)")
         /*
         let previousCaretPosition = _caret.position
