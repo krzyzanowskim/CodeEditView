@@ -16,6 +16,7 @@
 		750AC4DC24F28EC2004FB229 /* RopeTextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */; };
 		7511242824F57808005F82BA /* CaretView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7511242724F57808005F82BA /* CaretView.swift */; };
 		75228D2B25228265005EE0FB /* TestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75228D2A25228261005EE0FB /* TestRunner.swift */; };
+		759610152522D8FA002D27A9 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759610142522D8FA002D27A9 /* Logger.swift */; };
 		75EA4C9B24F2B1D700BAA2D9 /* StringTextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EA4C9A24F2B1D700BAA2D9 /* StringTextStorageProvider.swift */; };
 		75EB017924F27BC10056D96A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EB017824F27BC10056D96A /* AppDelegate.swift */; };
 		75EB017D24F27BC10056D96A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75EB017C24F27BC10056D96A /* Assets.xcassets */; };
@@ -34,6 +35,7 @@
 		7511242724F57808005F82BA /* CaretView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaretView.swift; sourceTree = "<group>"; };
 		75228D2325227BE6005EE0FB /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		75228D2A25228261005EE0FB /* TestRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRunner.swift; sourceTree = "<group>"; };
+		759610142522D8FA002D27A9 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		75EA4C9A24F2B1D700BAA2D9 /* StringTextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringTextStorageProvider.swift; sourceTree = "<group>"; };
 		75EB017524F27BC10056D96A /* CodeEditViewSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodeEditViewSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EB017824F27BC10056D96A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -58,6 +60,7 @@
 		750AC4C624F27D3E004FB229 /* CodeEditView */ = {
 			isa = PBXGroup;
 			children = (
+				759610142522D8FA002D27A9 /* Logger.swift */,
 				7511242724F57808005F82BA /* CaretView.swift */,
 				750AC4C724F27D50004FB229 /* CodeEditView.swift */,
 				750AC4C924F27D9E004FB229 /* CodeEdit.swift */,
@@ -216,6 +219,7 @@
 				750AC4D424F28572004FB229 /* Range.swift in Sources */,
 				750AC4DC24F28EC2004FB229 /* RopeTextStorageProvider.swift in Sources */,
 				750AC4CA24F27D9E004FB229 /* CodeEdit.swift in Sources */,
+				759610152522D8FA002D27A9 /* Logger.swift in Sources */,
 				75228D2B25228265005EE0FB /* TestRunner.swift in Sources */,
 				750AC4CC24F28293004FB229 /* Position.swift in Sources */,
 				750AC4CE24F283EA004FB229 /* TextStorage.swift in Sources */,
@@ -288,7 +292,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -343,7 +347,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;

@@ -1,6 +1,5 @@
 import Cocoa
 import CoreText
-import OSLog
 
 // Ref: Creating Custom Views
 //      https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/TextEditing/Tasks/TextViewTask.html#//apple_ref/doc/uid/TP40008899-BCICEFGE
@@ -222,7 +221,7 @@ public final class CodeEditView: NSView {
             case #selector(insertTab(_:)):
                 insertTab(self)
             default:
-                print("doCommand \(selector)")
+                logger.debug("doCommand \(selector)")
                 return
         }
 
@@ -317,6 +316,7 @@ public final class CodeEditView: NSView {
         } else {
             moveDown(sender)
         }
+        needsDisplay = true
     }
 
     public override func moveToRightEndOfLine(_ sender: Any?) {
@@ -563,17 +563,17 @@ extension CodeEditView: NSTextInputClient {
         }
 
         guard !string.unicodeScalars.contains(where: { $0.properties.isDefaultIgnorableCodePoint || $0.properties.isNoncharacterCodePoint }) else {
-            print("Ignore bytes: \(Array(string.utf8))")
+            logger.info("Ignore bytes: \(Array(string.utf8))")
             return
         }
 
         // Ignore ASCII control characters
         if string.count == 1 && string.unicodeScalars.drop(while: { (0x10...0x1F).contains($0.value) }).isEmpty {
-            print("Ignore control characters 0x10...0x1F")
+            logger.info("Ignore control characters 0x10...0x1F")
             return
         }
 
-        print("insertText \(string) replacementRange \(replacementRange)")
+        logger.debug("insertText \(string) replacementRange \(replacementRange)")
         /*
         let previousCaretPosition = _caret.position
         undoManager?.registerUndo(withTarget: self, handler: { target in
@@ -588,30 +588,30 @@ extension CodeEditView: NSTextInputClient {
     }
 
     public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
-        print("setMarkedText \(string) selectedRange \(selectedRange) replacementRange \(replacementRange)")
+        logger.debug("setMarkedText \(string as! String) selectedRange \(selectedRange) replacementRange \(replacementRange)")
     }
 
     public func unmarkText() {
-        print("unmarkText")
+        logger.debug("unmarkText")
     }
 
     public func selectedRange() -> NSRange {
-        print("selectedRange")
+        logger.debug("selectedRange")
         return NSRange(location: NSNotFound, length: 0)
     }
 
     public func markedRange() -> NSRange {
-        print("markedRange")
+        logger.debug("markedRange")
         return NSRange(location: NSNotFound, length: 0)
     }
 
     public func hasMarkedText() -> Bool {
-        print("hasMarkedText")
+        logger.debug("hasMarkedText")
         return false
     }
 
     public func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
-        print("attributedSubstring forProposedRange \(range)")
+        logger.debug("attributedSubstring forProposedRange \(range)")
         return NSAttributedString()
     }
 
@@ -620,12 +620,12 @@ extension CodeEditView: NSTextInputClient {
     }
 
     public func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
-        print("firstRect forCharacterRange \(range)")
+        logger.debug("firstRect forCharacterRange \(range)")
         return NSRect.zero
     }
 
     public func characterIndex(for point: NSPoint) -> Int {
-        print("characterIndex \(point)")
+        logger.debug("characterIndex \(point.debugDescription)")
         return NSNotFound
         //return 0
     }
