@@ -441,24 +441,31 @@ public final class CodeEditView: NSView {
             let fontSize = font?.pointSize ?? NSFont.systemFontSize
             let indentWidth = indentWrappedLines ? fontSize : 0
 
+            var isWrappedLine = false
             var lineStartIndex: CFIndex = 0
-            var shouldIndentLine = false
             while lineStartIndex < lineString.count {
-                let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth + (shouldIndentLine ? -indentWidth : 0)), Double(pos.y))
+                if lineStartIndex > 0 {
+                    isWrappedLine = true
+                }
+
+                let leadingIndent = isWrappedLine ? indentWidth : 0
+                pos.x = leadingIndent
+
+                let breakIndex = CTTypesetterSuggestClusterBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - leadingIndent), Double(pos.y))
                 let stringRange = CFRange(location: lineStartIndex, length: breakIndex)
                 let ctline = CTTypesetterCreateLineWithOffset(typesetter, stringRange, Double(pos.x))
 
                 var ascent: CGFloat = 0
                 var descent: CGFloat = 0
                 var leading: CGFloat = 0
-                let lineWidth = CGFloat(CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading))
+                let lineWidth = CGFloat(CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading)) + leadingIndent
                 let lineHeight = (ascent + descent + leading) * lineSpacing.rawValue
 
                 // font origin based position
                 _lineLayouts.append(
                     LineLayout(lineNumber: lineIndex,
                                ctline: ctline,
-                               origin: CGPoint(x: shouldIndentLine ? indentWidth : 0, y: pos.y + (ascent + descent)),
+                               origin: CGPoint(x: pos.x, y: pos.y + (ascent + descent)),
                                lineHeight: lineHeight,
                                lineDescent: descent,
                                stringRange: stringRange)
@@ -468,8 +475,6 @@ public final class CodeEditView: NSView {
                 pos.y += lineHeight
 
                 textContentSize.width = max(textContentSize.width, lineWidth)
-                // Indent wrapped lines
-                shouldIndentLine = self.indentWrappedLines
             }
         }
         textContentSize.height = pos.y
