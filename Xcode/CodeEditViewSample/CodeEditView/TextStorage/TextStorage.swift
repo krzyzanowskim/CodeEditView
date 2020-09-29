@@ -24,8 +24,12 @@ public final class TextStorage {
         storageProvider.remove(range: range)
     }
 
-    public subscript(_ position: Position) -> Character? {
+    public func character(at position: Position) -> Character? {
         storageProvider.character(at: position)
+    }
+
+    public func positionOffset(at position: Position) -> Int {
+        storageProvider.positionOffset(at: position)
     }
 
     public subscript(_ range: Swift.Range<Position>) -> Substring? {

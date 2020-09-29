@@ -11,4 +11,6 @@ protocol TextStorageProvider {
     func string(in range: Swift.Range<Position>) -> Substring?
     func string(in range: Swift.ClosedRange<Position>) -> Substring?
     func string(line idx: Int) -> Substring
+    /// Character offset in a document for a position
+    func positionOffset(at position: Position) -> Int
 }
