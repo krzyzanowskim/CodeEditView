@@ -202,6 +202,8 @@ public final class CodeEditView: NSView {
                 moveToEndOfDocument(self)
             case #selector(insertNewline(_:)):
                 insertNewline(self)
+            case #selector(insertLineBreak(_:)):
+                insertLineBreak(self)
             case #selector(insertTab(_:)):
                 insertTab(self)
             default:
@@ -326,6 +328,10 @@ public final class CodeEditView: NSView {
         needsDisplay = true
     }
 
+    public override func insertLineBreak(_ sender: Any?) {
+        insertNewline(sender)
+    }
+
     public override func insertTab(_ sender: Any?) {
         if insertSpacesForTab {
             self.insertText(String([Character](repeating: " ", count: tabSize)), replacementRange: NSRange(location: NSNotFound, length: 0))
@@ -432,10 +438,13 @@ public final class CodeEditView: NSView {
             ] as CFDictionary)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
 
+            let fontSize = font?.pointSize ?? NSFont.systemFontSize
+            let indentWidth = indentWrappedLines ? fontSize : 0
+
             var lineStartIndex: CFIndex = 0
-            var shouldIndentNextLine = false
+            var shouldIndentLine = false
             while lineStartIndex < lineString.count {
-                let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth), Double(pos.y))
+                let breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth + (shouldIndentLine ? -indentWidth : 0)), Double(pos.y))
                 let stringRange = CFRange(location: lineStartIndex, length: breakIndex)
                 let ctline = CTTypesetterCreateLineWithOffset(typesetter, stringRange, Double(pos.x))
 
@@ -449,7 +458,7 @@ public final class CodeEditView: NSView {
                 _lineLayouts.append(
                     LineLayout(lineNumber: lineIndex,
                                ctline: ctline,
-                               origin: CGPoint(x: shouldIndentNextLine ? self.font?.pointSize ?? NSFont.systemFontSize : 0, y: pos.y + (ascent + descent)),
+                               origin: CGPoint(x: shouldIndentLine ? indentWidth : 0, y: pos.y + (ascent + descent)),
                                lineHeight: lineHeight,
                                lineDescent: descent,
                                stringRange: stringRange)
@@ -460,7 +469,7 @@ public final class CodeEditView: NSView {
 
                 textContentSize.width = max(textContentSize.width, lineWidth)
                 // Indent wrapped lines
-                shouldIndentNextLine = self.indentWrappedLines
+                shouldIndentLine = self.indentWrappedLines
             }
         }
         textContentSize.height = pos.y
