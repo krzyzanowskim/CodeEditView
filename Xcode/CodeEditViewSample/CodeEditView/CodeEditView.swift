@@ -484,7 +484,7 @@ public final class CodeEditView: NSView {
 
             // ends at different line, following start line
             if startLineLayout != endLineLayout {
-                selectionWidth = frame.width - startPositionX
+                // selectionWidth = frame.width - startPositionX
                 // TODO: draw selection path
             } else {
                 // ends at the same ctline
