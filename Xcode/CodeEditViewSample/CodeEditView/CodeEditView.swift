@@ -433,21 +433,24 @@ public final class CodeEditView: NSView {
         }
 
         drawSelection(context, dirtyRect: dirtyRect)
-
-        context.saveGState()
-        context.setFillColor(textColor.cgColor)
-
-        // draw text lines
-        for lineLayout in _lineLayouts {
-            context.textPosition = .init(x: lineLayout.origin.x, y: lineLayout.origin.y)
-            CTLineDraw(lineLayout.ctline, context)
-        }
-        context.clip(to: dirtyRect)
-        context.restoreGState()
+        drawLines(context, dirtyRect: dirtyRect)
     }
 
     public override func prepareContent(in rect: NSRect) {
         super.prepareContent(in: rect)
+    }
+
+    private func drawLines(_ context: CGContext, dirtyRect: NSRect) {
+        context.saveGState()
+        context.setFillColor(textColor.cgColor)
+
+        // draw text lines
+        let overscanDirtyRect = dirtyRect.insetBy(dx: -font.boundingRectForFont.width * 4, dy: -font.boundingRectForFont.height * 4)
+        for lineLayout in _lineLayouts where lineLayout.origin.y >= overscanDirtyRect.minY && lineLayout.origin.y <= overscanDirtyRect.maxY {
+            context.textPosition = CGPoint(x: lineLayout.origin.x, y: lineLayout.origin.y)
+            CTLineDraw(lineLayout.ctline, context)
+        }
+        context.restoreGState()
     }
 
     private func drawHighlightedLine(_ context: CGContext, dirtyRect: NSRect) {
