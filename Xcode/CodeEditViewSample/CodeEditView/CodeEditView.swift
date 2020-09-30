@@ -135,7 +135,7 @@ public final class CodeEditView: NSView {
 
     private var _caret: Caret {
         didSet {
-            needsLayout = true
+            layoutCaret()
         }
     }
 
