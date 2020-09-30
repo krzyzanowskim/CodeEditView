@@ -2,50 +2,51 @@ import Foundation
 
 /// Dummy String based storage provider
 class StringTextStorageProvider: TextStorageProvider {
-    private var content: String = ""
+    private var _content: String = "" {
+        didSet {
+            invalidateLinesCache()
+        }
+    }
+    private var _cacheLineRange: [Int: Swift.Range<String.Index>] = [:]
 
     var linesCount: Int {
-        guard !content.isEmpty else {
-            return 0
-        }
-
-        return content.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).count
+        _cacheLineRange.count
     }
 
     func character(at position: Position) -> Character? {
-        let index = content.index(offset(line: position.line), offsetBy: position.character)
-        return content[index]
+        let index = _content.index(offset(line: position.line), offsetBy: position.character)
+        return _content[index]
     }
 
     func insert(string: String, at position: Position) {
-        let index = content.index(offset(line: position.line), offsetBy: position.character)
-        content.insert(contentsOf: string, at: index)
+        let index = _content.index(offset(line: position.line), offsetBy: position.character)
+        _content.insert(contentsOf: string, at: index)
     }
 
     func remove(range: Range) {
-        let startIndex = content.index(offset(line: range.start.line), offsetBy: range.start.character)
-        let endIndex = content.index(offset(line: range.end.line), offsetBy: range.end.character)
-        content.removeSubrange(startIndex...endIndex)
+        let startIndex = _content.index(offset(line: range.start.line), offsetBy: range.start.character)
+        let endIndex = _content.index(offset(line: range.end.line), offsetBy: range.end.character)
+        _content.removeSubrange(startIndex...endIndex)
     }
 
     func string(in range: Swift.Range<Position>) -> Substring? {
-        let startOffset = content.index(offset(line: range.lowerBound.line), offsetBy: range.lowerBound.character)
-        let endOffset = content.index(offset(line: range.upperBound.line), offsetBy: range.upperBound.character)
-        return content[startOffset..<endOffset]
+        let startOffset = _content.index(offset(line: range.lowerBound.line), offsetBy: range.lowerBound.character)
+        let endOffset = _content.index(offset(line: range.upperBound.line), offsetBy: range.upperBound.character)
+        return _content[startOffset..<endOffset]
     }
 
     func string(in range: Swift.ClosedRange<Position>) -> Substring? {
-        let startOffset = content.index(offset(line: range.lowerBound.line), offsetBy: range.lowerBound.character)
-        let endOffset = content.index(offset(line: range.upperBound.line), offsetBy: range.upperBound.character)
-        return content[startOffset...endOffset]
+        let startOffset = _content.index(offset(line: range.lowerBound.line), offsetBy: range.lowerBound.character)
+        let endOffset = _content.index(offset(line: range.upperBound.line), offsetBy: range.upperBound.character)
+        return _content[startOffset...endOffset]
     }
 
     func string(line lineIndex: Int) -> Substring {
-        content[lineRange(line: lineIndex)]
+        _content[lineRange(line: lineIndex)]
     }
 
     func positionOffset(at position: Position) -> Int {
-        let nsrange = NSRange(content.startIndex..<offset(line: position.line), in: content)
+        let nsrange = NSRange(_content.startIndex..<offset(line: position.line), in: _content)
         return nsrange.location + nsrange.length + position.character
     }
 
@@ -54,26 +55,22 @@ class StringTextStorageProvider: TextStorageProvider {
     }
 
     private func lineRange(line lineIndex: Int) -> Swift.Range<String.Index> {
-        var lineStartIndex = content.startIndex
-        var lineEndIndex = content.startIndex
+        _cacheLineRange[lineIndex] ?? _content.startIndex..<_content.endIndex
+    }
+
+    private func invalidateLinesCache() {
+        _cacheLineRange.removeAll(keepingCapacity: true)
+
         var currentLine = 0
-
-        while lineStartIndex <= content.endIndex && currentLine <= lineIndex {
-            if let newlineIndex = content[lineStartIndex...].firstIndex(where: \.isNewline) {
-                lineEndIndex = content.index(after: newlineIndex)
-            } else {
-                lineEndIndex = content.endIndex
-            }
-
-            if currentLine == lineIndex {
-                return lineStartIndex..<lineEndIndex
-            }
-
+        var lineStartIndex = _content.startIndex
+        for currentIndex in _content.indices where _content[currentIndex].isNewline {
+            let lineEndIndex = _content.index(after: currentIndex)
+            _cacheLineRange[currentLine] = lineStartIndex..<lineEndIndex
             currentLine += 1
             lineStartIndex = lineEndIndex
         }
 
-        return content.startIndex..<content.endIndex
+        _cacheLineRange[currentLine] = lineStartIndex..<_content.endIndex
     }
 }
 
