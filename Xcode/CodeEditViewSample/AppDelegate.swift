@@ -18,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.titleVisibility = .visible
         // window.contentView = NSHostingView(rootView: CodeEdit(text: sampleText))
 
+        let sampleText = String.init(decoding: NSDataAsset(name: "sample-2mb-text-file")!.data, as: UTF8.self)
         let codeView = CodeEditView(storage: TextStorage(string: sampleText))
         codeView.autoresizingMask = [.width, .height]
         codeView.lineWrapping = .bounds
@@ -53,7 +54,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-private let sampleText = """
+private let loremIpsum = """
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec cursus mattis nunc, vel rutrum dolor pharetra vel. Quisque vestibulum leo quis turpis rutrum faucibus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Phasellus eleifend ut quam at elementum. Duis sagittis lacus odio, id lacinia nibh dapibus eget. Mauris a orci quis tortor venenatis pellentesque. Ut convallis fermentum efficitur. Cras sodales at elit sed sagittis. Vestibulum consequat bibendum turpis, sit amet ullamcorper ante vestibulum eget. Ut non eros id ex euismod iaculis nec ac quam. Etiam non orci eu massa sagittis tincidunt. Nunc a turpis at lectus dignissim dapibus eget rhoncus risus.
 
 Integer scelerisque egestas felis. Nullam ligula tellus, condimentum eu suscipit id, blandit a leo. Suspendisse suscipit eu libero eget congue. Duis sodales ligula tincidunt diam cursus luctus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Aliquam eros nisl, sodales non tristique eget, scelerisque pellentesque ligula. Etiam luctus facilisis orci vel imperdiet. Vivamus ut suscipit risus. Vestibulum facilisis arcu eget odio dictum laoreet. Aliquam molestie odio vel elit aliquet tincidunt.

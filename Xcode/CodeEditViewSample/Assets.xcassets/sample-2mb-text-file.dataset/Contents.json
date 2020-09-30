@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "sample-2mb-text-file.txt",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
