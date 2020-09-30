@@ -263,7 +263,7 @@ public final class CodeEditView: NSView {
             }
         }
 
-        layoutText()
+        needsLayout = true
         needsDisplay = true
     }
 
@@ -273,7 +273,7 @@ public final class CodeEditView: NSView {
         _storage.remove(range: Range(start: _caret.position, end: _caret.position))
         _caret.position = Position(line: _caret.position.line, character: max(0, _caret.position.character))
 
-        layoutText()
+        needsLayout = true
         needsDisplay = true
     }
 
@@ -402,7 +402,7 @@ public final class CodeEditView: NSView {
         _storage.insert(string: "\n", at: _caret.position)
         _caret.position = Position(line: _caret.position.line + 1, character: 0)
 
-        layoutText()
+        needsLayout = true
         needsDisplay = true
     }
 
@@ -513,7 +513,6 @@ public final class CodeEditView: NSView {
     public override func layout() {
         super.layout()
         layoutText()
-        layoutCaret()
     }
 
     private func layoutCaret() {
@@ -684,7 +683,7 @@ extension CodeEditView: NSTextInputClient {
         _storage.insert(string: string, at: _caret.position)
         _caret.position = Position(line: _caret.position.line, character: _caret.position.character + string.count)
 
-        layoutText()
+        needsLayout = true
         needsDisplay = true
     }
 
