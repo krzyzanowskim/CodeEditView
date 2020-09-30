@@ -581,6 +581,8 @@ public final class CodeEditView: NSView {
                     breakIndex = CTTypesetterSuggestClusterBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - leadingIndent), Double(pos.y))
                 }
                 let stringRange = CFRange(location: lineStartIndex, length: breakIndex)
+
+                // Bottleneck
                 let ctline = CTTypesetterCreateLineWithOffset(typesetter, stringRange, Double(pos.x))
 
                 var ascent: CGFloat = 0

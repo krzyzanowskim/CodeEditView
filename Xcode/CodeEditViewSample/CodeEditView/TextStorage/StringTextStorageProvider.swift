@@ -2,11 +2,7 @@ import Foundation
 
 /// Dummy String based storage provider
 class StringTextStorageProvider: TextStorageProvider {
-    private var _content: String = "" {
-        didSet {
-            invalidateLinesCache()
-        }
-    }
+    private var _content: String = ""
     private var _cacheLineRange: [Int: Swift.Range<String.Index>] = [:]
 
     var linesCount: Int {
@@ -21,12 +17,17 @@ class StringTextStorageProvider: TextStorageProvider {
     func insert(string: String, at position: Position) {
         let index = _content.index(offset(line: position.line), offsetBy: position.character)
         _content.insert(contentsOf: string, at: index)
+        if string.contains(where: \.isNewline) {
+            print("newLine!")
+        }
+        invalidateLinesCache()
     }
 
     func remove(range: Range) {
         let startIndex = _content.index(offset(line: range.start.line), offsetBy: range.start.character)
         let endIndex = _content.index(offset(line: range.end.line), offsetBy: range.end.character)
         _content.removeSubrange(startIndex...endIndex)
+        invalidateLinesCache()
     }
 
     func string(in range: Swift.Range<Position>) -> Substring? {
@@ -61,16 +62,36 @@ class StringTextStorageProvider: TextStorageProvider {
     private func invalidateLinesCache() {
         _cacheLineRange.removeAll(keepingCapacity: true)
 
+        // StringProtocol.enumerateLines is fast! probably because gies with ObjC
+        logger.trace("invalidateLinesCache enumerateLines willStart")
         var currentLine = 0
         var lineStartIndex = _content.startIndex
-        for currentIndex in _content.indices where _content[currentIndex].isNewline {
-            let lineEndIndex = _content.index(after: currentIndex)
-            _cacheLineRange[currentLine] = lineStartIndex..<lineEndIndex
-            currentLine += 1
-            lineStartIndex = lineEndIndex
+        _content.enumerateLines { [unowned self] line, stop in
+            // "1" assume \n and will fail if \r\n
+            // FIXME: Better check what's at the end and use newline length
+            if let lineEndIndex = _content.index(lineStartIndex, offsetBy: line.count + 1, limitedBy: _content.endIndex) {
+                _cacheLineRange[currentLine] = lineStartIndex..<lineEndIndex
+                currentLine += 1
+                lineStartIndex = lineEndIndex
+            }
         }
-
         _cacheLineRange[currentLine] = lineStartIndex..<_content.endIndex
+        logger.trace("invalidateLinesCache enumerateLines didEnd (\(currentLine))")
+
+
+        // FIXME: The loop is quite slow. Iterate over indices is damn slow
+        //        logger.trace("invalidateLinesCache willStart")
+        //        var currentLine = 0
+        //        var lineStartIndex = _content.startIndex
+        //        for currentIndex in _content.indices where _content[currentIndex].isNewline {
+        //            let lineEndIndex = _content.index(after: currentIndex)
+        //            _cacheLineRange[currentLine] = lineStartIndex..<lineEndIndex
+        //            currentLine += 1
+        //            lineStartIndex = lineEndIndex
+        //        }
+        //
+        //        _cacheLineRange[currentLine] = lineStartIndex..<_content.endIndex
+        //        logger.trace("invalidateLinesCache didEnd")
     }
 }
 
