@@ -513,6 +513,7 @@ public final class CodeEditView: NSView {
     public override func layout() {
         super.layout()
         layoutText()
+        layoutCaret()
     }
 
     private func layoutCaret() {
