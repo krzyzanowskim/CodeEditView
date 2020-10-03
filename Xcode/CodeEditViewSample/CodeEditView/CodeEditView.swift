@@ -40,6 +40,7 @@ public final class CodeEditView: NSView {
         /// A point that specifies the x and y values at which line is to be drawn, in user space coordinates.
         /// A line origin based position.
         let origin: CGPoint
+        let lineWidth: CGFloat
         let lineHeight: CGFloat
         let lineDescent: CGFloat
         /// A string range of the line.
@@ -50,6 +51,7 @@ public final class CodeEditView: NSView {
             return lhs.lineNumber == rhs.lineNumber &&
                 lhs.ctline == rhs.ctline &&
                 lhs.origin == rhs.origin &&
+                lhs.lineWidth == rhs.lineWidth &&
                 lhs.lineHeight == rhs.lineHeight &&
                 lhs.lineDescent == rhs.lineDescent &&
                 lhs.stringRange.location == rhs.stringRange.location &&
@@ -823,6 +825,7 @@ public final class CodeEditView: NSView {
                     LineLayout(lineNumber: lineIndex,
                                ctline: ctline,
                                origin: CGPoint(x: pos.x, y: pos.y + (ascent + descent)),
+                               lineWidth: lineWidth,
                                lineHeight: lineHeight,
                                lineDescent: descent,
                                stringRange: stringRange)
@@ -857,6 +860,7 @@ public final class CodeEditView: NSView {
             LineLayout(lineNumber: lineLayout.lineNumber,
                        ctline: lineLayout.ctline,
                        origin: CGPoint(x: lineLayout.origin.x, y: frame.height - lineLayout.origin.y),
+                       lineWidth: lineLayout.lineWidth,
                        lineHeight: lineLayout.lineHeight,
                        lineDescent: lineLayout.lineDescent,
                        stringRange: lineLayout.stringRange)
@@ -891,9 +895,9 @@ public final class CodeEditView: NSView {
     }
 
     private func scrollToVisibleLineLayout(_ lineLayout: LineLayout) {
-        scrollToVisible(CGRect(x: 0,
+        scrollToVisible(CGRect(x: lineLayout.origin.x,
                                y: lineLayout.origin.y - lineLayout.lineDescent,
-                               width: frame.width,
+                               width: CTFontGetBoundingBox(font).width,
                                height: lineLayout.lineHeight + lineLayout.lineDescent))
     }
 }
@@ -934,6 +938,8 @@ extension CodeEditView: NSTextInputClient {
 
         needsLayout = true
         needsDisplay = true
+
+        scrollToVisiblePosition(_caret.position)
     }
 
     public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
