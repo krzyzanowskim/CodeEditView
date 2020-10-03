@@ -491,7 +491,13 @@ public final class CodeEditView: NSView {
 
     public override func insertNewline(_ sender: Any?) {
         unselectText()
-        self.insertText("\n", replacementRange: NSRange(location: NSNotFound, length: 0))
+
+        _storage.insert(string: "\n", at: _caret.position)
+        _caret.position = Position(line: _caret.position.line + 1, character: 0)
+
+        needsLayout = true
+        needsDisplay = true
+
         scrollToVisiblePosition(_caret.position)
     }
 
@@ -878,6 +884,7 @@ extension CodeEditView: NSTextInputClient {
         let visibleCharactersCount = string.count - whitespaceCount
         _caret.position = Position(
             line: _caret.position.line + newLineCount,
+            // FIXME: position depends on the last added line
             character: _caret.position.character + visibleCharactersCount
         )
 
