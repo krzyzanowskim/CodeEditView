@@ -309,6 +309,15 @@ public final class CodeEditView: NSView {
     }
 
     public override func deleteBackward(_ sender: Any?) {
+        if let selectionRange = _textSelection?.range {
+            _storage.remove(range: selectionRange)
+
+            unselectText()
+            needsLayout = true
+            needsDisplay = true
+            return
+        }
+
         unselectText()
 
         let startingCarretPosition = _caret.position
@@ -507,8 +516,6 @@ public final class CodeEditView: NSView {
     }
 
     public override func insertTab(_ sender: Any?) {
-        unselectText()
-
         if insertSpacesForTab {
             self.insertText(String([Character](repeating: " ", count: tabSize)), replacementRange: NSRange(location: NSNotFound, length: 0))
         } else {
@@ -874,6 +881,8 @@ extension CodeEditView: NSTextInputClient {
             logger.info("Ignore control characters 0x10...0x1F")
             return
         }
+
+        unselectText()
 
         logger.debug("insertText \(string) replacementRange \(replacementRange)")
         _storage.insert(string: string, at: _caret.position)
