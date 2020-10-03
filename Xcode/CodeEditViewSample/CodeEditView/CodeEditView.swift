@@ -527,6 +527,7 @@ public final class CodeEditView: NSView {
 
     /// Layout visible text
     private func layoutText() {
+        logger.trace("layoutText willStart")
         // os_log(.debug, "layoutText")
 
         // Let's layout some text. Top Bottom/Left Right
@@ -634,6 +635,7 @@ public final class CodeEditView: NSView {
                        lineDescent: lineLayout.lineDescent,
                        stringRange: lineLayout.stringRange)
         }
+        logger.trace("layoutText didEnd")
     }
 
     // MARK: - Helpers
