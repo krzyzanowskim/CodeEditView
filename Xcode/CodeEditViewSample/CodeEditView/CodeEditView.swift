@@ -310,7 +310,6 @@ public final class CodeEditView: NSView {
     public override func moveUpAndModifySelection(_ sender: Any?) {
         moveAndModifySelection(caretMoveUp)
         needsDisplay = true
-
     }
 
     private func caretMoveDown(_ sender: Any?) {
@@ -336,6 +335,7 @@ public final class CodeEditView: NSView {
         unselectText()
 
         caretMoveDown(sender)
+
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
@@ -564,8 +564,8 @@ public final class CodeEditView: NSView {
                 } else if lineIndex == endSelectedLineIndex {
                     // end - partial selection
                     let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.end.character, nil)
-                    startPositionX = currentLineLayout.origin.x
-                    rectWidth = endCharacterPositionOffset
+                    startPositionX = 0
+                    rectWidth = endCharacterPositionOffset + currentLineLayout.origin.x
                 } else {
                     // x + 1..<y full line selection
                     startPositionX = frame.minX // currentLineLayout.origin.x
