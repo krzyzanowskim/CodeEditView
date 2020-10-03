@@ -262,12 +262,18 @@ public final class CodeEditView: NSView {
     }
 
     @objc func copy(_ sender: Any?) {
-        guard let selectionRange = _textSelection?.range,
-              let selectedString = _storage.string(in: selectionRange) else {
+        guard let selectionRange = _textSelection?.range else {
             return
         }
 
-        updatePasteboard(with: String(selectedString))
+        let selectedString: String
+        if selectionRange.start < selectionRange.end {
+            selectedString = String(_storage.string(in: selectionRange)!)
+        } else {
+            selectedString = String(_storage.string(in: selectionRange.inverted())!)
+        }
+
+        updatePasteboard(with: selectedString)
     }
 
     @objc func paste(_ sender: Any?) {
