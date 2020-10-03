@@ -206,6 +206,8 @@ public final class CodeEditView: NSView {
         inputContext?.handleEvent(event)
     }
 
+    // MARK: - Commands
+
     public override func doCommand(by selector: Selector) {
         switch selector {
             case #selector(deleteBackward(_:)):
@@ -214,12 +216,16 @@ public final class CodeEditView: NSView {
                 deleteForward(self)
             case #selector(moveUp(_:)):
                 moveUp(self)
+            case #selector(moveUpAndModifySelection(_:)):
+                moveUpAndModifySelection(self)
             case #selector(moveDown(_:)):
                 moveDown(self)
             case #selector(moveDownAndModifySelection(_:)):
                 moveDownAndModifySelection(self)
             case #selector(moveLeft(_:)):
                 moveLeft(self)
+            case #selector(moveLeftAndModifySelection(_:)):
+                moveLeftAndModifySelection(self)
             case #selector(moveToLeftEndOfLine(_:)):
                 moveToLeftEndOfLine(self)
             case #selector(moveRight(_:)):
@@ -279,9 +285,7 @@ public final class CodeEditView: NSView {
         needsDisplay = true
     }
 
-    public override func moveUp(_ sender: Any?) {
-        unselectText()
-
+    private func caretMoveUp(_ sender: Any?) {
         let currentLineLayoutIndex = _lineLayouts.firstIndex { lineLayout -> Bool in
             _caret.position.character >= lineLayout.stringRange.location &&
                 _caret.position.character < lineLayout.stringRange.location + lineLayout.stringRange.length &&
@@ -294,8 +298,19 @@ public final class CodeEditView: NSView {
             let distance = min(_caret.position.character - currentLineLayout.stringRange.location, prevLineLayout.stringRange.length - 1)
             _caret.position = Position(line: prevLineLayout.lineNumber, character: prevLineLayout.stringRange.location + distance)
             scrollToVisiblePosition(_caret.position)
-            needsDisplay = true
         }
+    }
+
+    public override func moveUp(_ sender: Any?) {
+        unselectText()
+        caretMoveUp(sender)
+        needsDisplay = true
+    }
+
+    public override func moveUpAndModifySelection(_ sender: Any?) {
+        moveAndModifySelection(caretMoveUp)
+        needsDisplay = true
+
     }
 
     private func caretMoveDown(_ sender: Any?) {
@@ -319,29 +334,18 @@ public final class CodeEditView: NSView {
 
     public override func moveDown(_ sender: Any?) {
         unselectText()
-        
+
         caretMoveDown(sender)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
     public override func moveDownAndModifySelection(_ sender: Any?) {
-        let beforePosition = _caret.position
-        caretMoveDown(sender)
-        let afterPosition = _caret.position
-
-        if let textSelection = _textSelection {
-            _textSelection = SelectionRange(Range(start: textSelection.range.start, end: afterPosition))
-        } else {
-            _textSelection = SelectionRange(Range(start: beforePosition, end: afterPosition))
-        }
-
+        moveAndModifySelection(caretMoveDown)
         needsDisplay = true
     }
 
-    public override func moveLeft(_ sender: Any?) {
-        unselectText()
-
+    private func caretMoveLeft(_ sender: Any?) {
         if _caret.position.character > 0 {
             _caret.position = Position(line: _caret.position.line, character: max(0, _caret.position.character - 1))
         } else {
@@ -351,7 +355,16 @@ public final class CodeEditView: NSView {
                 _caret.position = Position(line: lineNumber, character: prevLineString.count - 1)
             }
         }
+    }
 
+    public override func moveLeft(_ sender: Any?) {
+        unselectText()
+        caretMoveLeft(sender)
+        needsDisplay = true
+    }
+
+    public override func moveLeftAndModifySelection(_ sender: Any?) {
+        moveAndModifySelection(caretMoveLeft)
         needsDisplay = true
     }
 
@@ -379,16 +392,7 @@ public final class CodeEditView: NSView {
     }
 
     public override func moveRightAndModifySelection(_ sender: Any?) {
-        let beforePosition = _caret.position
-        caretMoveRight(sender)
-        let afterPosition = _caret.position
-
-        if let textSelection = _textSelection {
-            _textSelection = SelectionRange(Range(start: textSelection.range.start, end: afterPosition))
-        } else {
-            _textSelection = SelectionRange(Range(start: beforePosition, end: afterPosition))
-        }
-
+        moveAndModifySelection(caretMoveRight)
         needsDisplay = true
     }
 
@@ -441,6 +445,20 @@ public final class CodeEditView: NSView {
         }
     }
 
+    private func moveAndModifySelection(_ move: (_ sender: Any?) -> Void) {
+        let beforePosition = _caret.position
+        move(nil)
+        let afterPosition = _caret.position
+
+        if let textSelection = _textSelection {
+            _textSelection = SelectionRange(Range(start: textSelection.range.start, end: afterPosition))
+        } else {
+            _textSelection = SelectionRange(Range(start: beforePosition, end: afterPosition))
+        }
+    }
+
+    // MARK: - Drawing
+
     public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
@@ -481,10 +499,14 @@ public final class CodeEditView: NSView {
                 _caret.position.character < lineLayout.stringRange.location + lineLayout.stringRange.length
         }
 
+        context.saveGState()
+        defer {
+            context.restoreGState()
+        }
 
         if let idx = currentLineLayoutIndex {
             let lineLayout = _lineLayouts[idx]
-            let lineRect = CGRect(x: 0,
+            let lineRect = CGRect(x: frame.minX,
                                   y: lineLayout.origin.y - lineLayout.lineDescent - 1.5, // 1.5 should be calculated
                                   width: frame.width,
                                   height: lineLayout.lineHeight)
@@ -493,49 +515,64 @@ public final class CodeEditView: NSView {
             let color = NSColor.controlAccentColor.withAlphaComponent(0.1)
             context.setFillColor(color.cgColor)
             context.fill(lineRect)
-            context.restoreGState()
         }
-
     }
 
     private func drawSelection(_ context: CGContext, dirtyRect: NSRect) {
         guard let selectionRange = _textSelection?.range else {
             return
         }
+
         context.saveGState()
-        context.setFillColor(NSColor.selectedTextBackgroundColor.cgColor)
-
-        if let startLineLayout = self.lineLayout(for: selectionRange.start),
-           let endLineLayout = self.lineLayout(for: selectionRange.end)
-        {
-            let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(startLineLayout.ctline, selectionRange.start.character, nil)
-            let startPositionX = startLineLayout.origin.x + startCharacterPositionOffset
-
-            if startLineLayout != endLineLayout,
-               let startLineIndex = _lineLayouts.firstIndex(of: startLineLayout),
-               let endLineIndex = _lineLayouts.firstIndex(of: endLineLayout)
-            {
-                // ends at different line, following start line
-                for lineIndex in startLineIndex...endLineIndex {
-                    logger.debug("lineIndex \(lineIndex)")
-                }
-                // selectionWidth = frame.width - startPositionX
-                // TODO: draw selection path
-            } else {
-                // ends at the same ctline
-                let endPositionOffset = CTLineGetOffsetForStringIndex(startLineLayout.ctline, selectionRange.end.character, nil)
-                let lineRect = CGRect(x: startPositionX,
-                                      y: startLineLayout.origin.y - startLineLayout.lineDescent - 1.5, // 1.5 should be calculated
-                                      width: endPositionOffset - startCharacterPositionOffset,
-                                      height: startLineLayout.lineHeight)
-
-                context.fill(lineRect)
-            }
-        } else {
-            // update layout and attempt to redraw
+        defer {
+            context.restoreGState()
         }
 
-        context.restoreGState()
+        context.setFillColor(NSColor.selectedTextBackgroundColor.cgColor)
+
+        guard let startSelectedLineLayout = self.lineLayout(for: selectionRange.start),
+           let endSelectedLineLayout = self.lineLayout(for: selectionRange.end),
+           let startSelectedLineIndex = _lineLayouts.firstIndex(of: startSelectedLineLayout),
+           let endSelectedLineIndex = _lineLayouts.firstIndex(of: endSelectedLineLayout) else
+        {
+            assertionFailure("update layout and attempt to redraw")
+            return
+        }
+
+        for lineIndex in startSelectedLineIndex...endSelectedLineIndex {
+            let currentLineLayout = _lineLayouts[lineIndex]
+
+            let startPositionX: CGFloat
+            let rectWidth: CGFloat
+
+            if lineIndex == startSelectedLineIndex {
+                // start - partial selection
+                let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.start.character, nil)
+                let endPositionOffset = CTLineGetOffsetForStringIndex(startSelectedLineLayout.ctline, selectionRange.end.character, nil)
+                startPositionX = currentLineLayout.origin.x + startCharacterPositionOffset
+                if startSelectedLineLayout != endSelectedLineLayout {
+                    // selection that ends on another line ends at the end of the view
+                    // not at the end of the line
+                    rectWidth = frame.width - currentLineLayout.origin.x
+                } else {
+                    rectWidth = endPositionOffset - startCharacterPositionOffset
+                }
+            } else if lineIndex == endSelectedLineIndex {
+                // end - partial selection
+                let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.end.character, nil)
+                startPositionX = currentLineLayout.origin.x
+                rectWidth = endCharacterPositionOffset
+            } else {
+                // x + 1..<y full line selection
+                startPositionX = frame.minX // currentLineLayout.origin.x
+                rectWidth = frame.width - currentLineLayout.origin.x
+            }
+
+            context.fill(CGRect(x: startPositionX,
+                                y: currentLineLayout.origin.y - currentLineLayout.lineDescent - 1.5, // 1.5 should be calculated
+                                width: rectWidth,
+                                height: currentLineLayout.lineHeight))
+        }
     }
 
     public override func layout() {
@@ -559,7 +596,7 @@ public final class CodeEditView: NSView {
         // os_log(.debug, "layoutText")
 
         // Let's layout some text. Top Bottom/Left Right
-        // TODO:
+        // TODO: update layout
         // 1. find text range for displayed dirtyRect
         // 2. draw text from the range
         // 3. Layout only lines that meant to be displayed +- overscan
