@@ -44,7 +44,7 @@ public final class TextStorage {
         storageProvider.string(in: range)
     }
 
-    public subscript(line idx: Int) -> Substring {
+    public func string(line idx: Int) -> Substring {
         storageProvider.string(line: idx)
     }
 }

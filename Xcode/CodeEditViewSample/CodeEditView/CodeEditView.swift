@@ -7,6 +7,7 @@ import CoreText
 // TODO:
 //  - Text Checking: NSTextCheckingClient, NSTextCheckingController
 //  - tell the input context when position information for a character range changes, when the text view scrolls, by sending the invalidateCharacterCoordinates message to the input context.
+//  - Selection shouldn't move _caret.position, but _textSelection.end.position
 
 /// Code Edit View
 public final class CodeEditView: NSView {
@@ -290,13 +291,13 @@ public final class CodeEditView: NSView {
     }
 
     public override func selectAll(_ sender: Any?) {
-        let lastLineString = _storage[line: _storage.linesCount - 1]
+        let lastLineString = _storage.string(line: _storage.linesCount - 1)
         _textSelection = SelectionRange(Range(start: Position(line: 0, character: 0), end: Position(line: _storage.linesCount - 1, character: lastLineString.count - 1)))
         needsDisplay = true
     }
 
     public override func selectLine(_ sender: Any?) {
-        _textSelection = SelectionRange(Range(start: Position(line: _caret.position.line, character: 0), end: Position(line: _caret.position.line, character: _storage[line: _caret.position.line].count - 1)))
+        _textSelection = SelectionRange(Range(start: Position(line: _caret.position.line, character: 0), end: Position(line: _caret.position.line, character: _storage.string(line: _caret.position.line).count - 1)))
         needsDisplay = true
     }
 
@@ -329,7 +330,7 @@ public final class CodeEditView: NSView {
             // move to previous line
             let lineNumber = _caret.position.line - 1
             if lineNumber >= 0 {
-                let prevLineString = _storage[line: lineNumber]
+                let prevLineString = _storage.string(line: lineNumber)
                 _caret.position = Position(line: lineNumber, character: prevLineString.count - 1)
                 _storage.remove(range: Range(start: _caret.position, end: startingCarretPosition))
             }
@@ -414,7 +415,7 @@ public final class CodeEditView: NSView {
         } else {
             let lineNumber = _caret.position.line - 1
             if lineNumber >= 0 {
-                let prevLineString = _storage[line: lineNumber]
+                let prevLineString = _storage.string(line: lineNumber)
                 _caret.position = Position(line: lineNumber, character: prevLineString.count - 1)
             }
         }
@@ -445,7 +446,7 @@ public final class CodeEditView: NSView {
     }
 
     private func caretMoveRight(_ sender: Any?) {
-        let currentLineString = _storage[line: _caret.position.line]
+        let currentLineString = _storage.string(line: _caret.position.line)
         if _caret.position.character + 1 < currentLineString.count {
             _caret.position = Position(line: _caret.position.line, character: _caret.position.character + 1)
         } else {
@@ -468,14 +469,14 @@ public final class CodeEditView: NSView {
     public override func moveToRightEndOfLine(_ sender: Any?) {
         unselectText()
 
-        _caret.position = Position(line: _caret.position.line, character: _storage[line: _caret.position.line].count - 1)
+        _caret.position = Position(line: _caret.position.line, character: _storage.string(line: _caret.position.line).count - 1)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
     public override func moveToRightEndOfLineAndModifySelection(_ sender: Any?) {
         moveAndModifySelection { sender in
-            _caret.position = Position(line: _caret.position.line, character: _storage[line: _caret.position.line].count - 1)
+            _caret.position = Position(line: _caret.position.line, character: _storage.string(line: _caret.position.line).count - 1)
         }
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
@@ -492,7 +493,7 @@ public final class CodeEditView: NSView {
     public override func moveToEndOfDocument(_ sender: Any?) {
         unselectText()
 
-        let lastLineString = _storage[line: _storage.linesCount - 1]
+        let lastLineString = _storage.string(line: _storage.linesCount - 1)
         _caret.position = Position(line: _storage.linesCount - 1, character: lastLineString.count - 1)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
@@ -744,7 +745,7 @@ public final class CodeEditView: NSView {
         var pos = CGPoint.zero
 
         for lineIndex in 0..<_storage.linesCount {
-            let lineString = _storage[line: lineIndex]
+            let lineString = _storage.string(line: lineIndex)
 
             let attributedString = CFAttributedStringCreate(nil, lineString as CFString, [
                 kCTFontAttributeName: font,
