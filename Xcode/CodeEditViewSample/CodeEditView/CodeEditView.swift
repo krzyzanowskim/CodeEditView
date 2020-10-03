@@ -565,7 +565,7 @@ public final class CodeEditView: NSView {
             } else {
                 // x + 1..<y full line selection
                 startPositionX = frame.minX // currentLineLayout.origin.x
-                rectWidth = frame.width - currentLineLayout.origin.x
+                rectWidth = frame.width
             }
 
             context.fill(CGRect(x: startPositionX,
