@@ -880,12 +880,10 @@ extension CodeEditView: NSTextInputClient {
 
         // if string contains new line, caret position need to adjust
         let newLineCount = string.reduce(0, { $1.isNewline ? $0 + 1 : $0 })
-        let whitespaceCount = string.reduce(0, { $1.isWhitespace && $1 != "\t" ? $0 + 1 : $0 })
-        let visibleCharactersCount = string.count - whitespaceCount
         _caret.position = Position(
             line: _caret.position.line + newLineCount,
             // FIXME: position depends on the last added line
-            character: _caret.position.character + visibleCharactersCount
+            character: _caret.position.character + string.count
         )
 
         needsLayout = true
