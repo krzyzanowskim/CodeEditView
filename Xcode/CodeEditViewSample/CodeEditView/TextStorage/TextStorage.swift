@@ -32,15 +32,15 @@ public final class TextStorage {
         storageProvider.positionOffset(at: position)
     }
 
-    public subscript(_ range: Range) -> Substring? {
+    public func string(in range: Range) -> Substring? {
         storageProvider.string(in: range.start..<range.end)
     }
 
-    public subscript(_ range: Swift.Range<Position>) -> Substring? {
+    public func string(in range: Swift.Range<Position>) -> Substring? {
         storageProvider.string(in: range)
     }
 
-    public subscript(_ range: Swift.ClosedRange<Position>) -> Substring? {
+    public func string(in range: Swift.ClosedRange<Position>) -> Substring? {
         storageProvider.string(in: range)
     }
 

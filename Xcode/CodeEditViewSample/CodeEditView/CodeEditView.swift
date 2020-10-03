@@ -261,7 +261,7 @@ public final class CodeEditView: NSView {
 
     @objc func copy(_ sender: Any?) {
         guard let selectionRange = _textSelection?.range,
-              let selectedString = _storage[selectionRange] else {
+              let selectedString = _storage.string(in: selectionRange) else {
             return
         }
 
