@@ -446,14 +446,14 @@ public final class CodeEditView: NSView {
     }
 
     private func moveAndModifySelection(_ move: (_ sender: Any?) -> Void) {
-        let beforePosition = _caret.position
+        let beforeMoveCaretPosition = _caret.position
         move(nil)
-        let afterPosition = _caret.position
+        let afterMoveCaretPosition = _caret.position
 
-        if let textSelection = _textSelection {
-            _textSelection = SelectionRange(Range(start: textSelection.range.start, end: afterPosition))
+        if let currentSelectionRange = _textSelection?.range {
+            _textSelection = SelectionRange(Range(start: currentSelectionRange.start, end: afterMoveCaretPosition))
         } else {
-            _textSelection = SelectionRange(Range(start: beforePosition, end: afterPosition))
+            _textSelection = SelectionRange(Range(start: beforeMoveCaretPosition, end: afterMoveCaretPosition))
         }
     }
 
@@ -523,6 +523,8 @@ public final class CodeEditView: NSView {
             return
         }
 
+        logger.debug("drawSelection \(selectionRange)")
+
         context.saveGState()
         defer {
             context.restoreGState()
@@ -539,39 +541,80 @@ public final class CodeEditView: NSView {
             return
         }
 
-        for lineIndex in startSelectedLineIndex...endSelectedLineIndex {
-            let currentLineLayout = _lineLayouts[lineIndex]
+        if startSelectedLineIndex <= endSelectedLineIndex {
+            for lineIndex in startSelectedLineIndex...endSelectedLineIndex {
+                let currentLineLayout = _lineLayouts[lineIndex]
 
-            let startPositionX: CGFloat
-            let rectWidth: CGFloat
+                let startPositionX: CGFloat
+                let rectWidth: CGFloat
 
-            if lineIndex == startSelectedLineIndex {
-                // start - partial selection
-                let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.start.character, nil)
-                let endPositionOffset = CTLineGetOffsetForStringIndex(startSelectedLineLayout.ctline, selectionRange.end.character, nil)
-                startPositionX = currentLineLayout.origin.x + startCharacterPositionOffset
-                if startSelectedLineLayout != endSelectedLineLayout {
-                    // selection that ends on another line ends at the end of the view
-                    // not at the end of the line
-                    rectWidth = frame.width - currentLineLayout.origin.x
+                if lineIndex == startSelectedLineIndex {
+                    // start - partial selection
+                    let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.start.character, nil)
+                    let endPositionOffset = CTLineGetOffsetForStringIndex(startSelectedLineLayout.ctline, selectionRange.end.character, nil)
+                    startPositionX = currentLineLayout.origin.x + startCharacterPositionOffset
+
+                    if startSelectedLineLayout != endSelectedLineLayout {
+                        // selection that ends on another line ends at the end of the view
+                        // not at the end of the line
+                        rectWidth = frame.width - currentLineLayout.origin.x
+                    } else {
+                        rectWidth = endPositionOffset - startCharacterPositionOffset
+                    }
+                } else if lineIndex == endSelectedLineIndex {
+                    // end - partial selection
+                    let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.end.character, nil)
+                    startPositionX = currentLineLayout.origin.x
+                    rectWidth = endCharacterPositionOffset
                 } else {
-                    rectWidth = endPositionOffset - startCharacterPositionOffset
+                    // x + 1..<y full line selection
+                    startPositionX = frame.minX // currentLineLayout.origin.x
+                    rectWidth = frame.width
                 }
-            } else if lineIndex == endSelectedLineIndex {
-                // end - partial selection
-                let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.end.character, nil)
-                startPositionX = currentLineLayout.origin.x
-                rectWidth = endCharacterPositionOffset
-            } else {
-                // x + 1..<y full line selection
-                startPositionX = frame.minX // currentLineLayout.origin.x
-                rectWidth = frame.width
-            }
 
-            context.fill(CGRect(x: startPositionX,
-                                y: currentLineLayout.origin.y - currentLineLayout.lineDescent - 1.5, // 1.5 should be calculated
-                                width: rectWidth,
-                                height: currentLineLayout.lineHeight))
+                context.fill(CGRect(x: startPositionX,
+                                    y: currentLineLayout.origin.y - currentLineLayout.lineDescent - 1.5, // 1.5 should be calculated
+                                    width: rectWidth,
+                                    height: currentLineLayout.lineHeight))
+            }
+        }
+
+        if startSelectedLineIndex > endSelectedLineIndex {
+            for lineIndex in endSelectedLineIndex...startSelectedLineIndex {
+                let currentLineLayout = _lineLayouts[lineIndex]
+
+                let startPositionX: CGFloat
+                let rectWidth: CGFloat
+
+                if lineIndex == startSelectedLineIndex {
+                    // start - partial selection from the beginning to the start selection
+                    let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.start.character, nil)
+                    startPositionX = 0
+                    rectWidth = startCharacterPositionOffset + currentLineLayout.origin.x
+                } else if lineIndex == endSelectedLineIndex {
+                    // end - partial selection from the end to the end of the line
+                    let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.end.character, nil)
+                    let startPositionOffset = CTLineGetOffsetForStringIndex(startSelectedLineLayout.ctline, selectionRange.start.character, nil)
+                    startPositionX = currentLineLayout.origin.x + endCharacterPositionOffset
+
+                    if startSelectedLineLayout != endSelectedLineLayout {
+                        // selection that ends on another line ends at the end of the view
+                        // not at the end of the line
+                        rectWidth = frame.width - currentLineLayout.origin.x
+                    } else {
+                        rectWidth = startPositionOffset - endCharacterPositionOffset
+                    }
+                } else {
+                    // x + 1..<y full line selection
+                    startPositionX = frame.minX // currentLineLayout.origin.x
+                    rectWidth = frame.width
+                }
+
+                context.fill(CGRect(x: startPositionX,
+                                    y: currentLineLayout.origin.y - currentLineLayout.lineDescent - 1.5, // 1.5 should be calculated
+                                    width: rectWidth,
+                                    height: currentLineLayout.lineHeight))
+            }
         }
     }
 
