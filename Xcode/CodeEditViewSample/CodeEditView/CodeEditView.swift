@@ -228,12 +228,16 @@ public final class CodeEditView: NSView {
                 moveLeftAndModifySelection(self)
             case #selector(moveToLeftEndOfLine(_:)):
                 moveToLeftEndOfLine(self)
+            case #selector(moveToLeftEndOfLineAndModifySelection(_:)):
+                moveToLeftEndOfLineAndModifySelection(self)
             case #selector(moveRight(_:)):
                 moveRight(self)
             case #selector(moveRightAndModifySelection(_:)):
                 moveRightAndModifySelection(self)
             case #selector(moveToRightEndOfLine(_:)):
                 moveToRightEndOfLine(self)
+            case #selector(moveToRightEndOfLineAndModifySelection(_:)):
+                moveToRightEndOfLineAndModifySelection(self)
             case #selector(moveToBeginningOfDocument(_:)):
                 moveToBeginningOfDocument(self)
             case #selector(moveToEndOfDocument(_:)):
@@ -253,6 +257,25 @@ public final class CodeEditView: NSView {
         // NSResponder also implements this method, and it does forward uninvokable commands up
         // the responder chain, but a text view should not.
         // super.doCommand(by: selector)
+    }
+
+    public override func selectAll(_ sender: Any?) {
+        let lastLineString = _storage[line: _storage.linesCount - 1]
+        _textSelection = SelectionRange(Range(start: Position(line: 0, character: 0), end: Position(line: _storage.linesCount - 1, character: lastLineString.count - 1)))
+        needsDisplay = true
+    }
+
+    public override func selectLine(_ sender: Any?) {
+        _textSelection = SelectionRange(Range(start: Position(line: _caret.position.line, character: 0), end: Position(line: _caret.position.line, character: _storage[line: _caret.position.line].count - 1)))
+        needsDisplay = true
+    }
+
+    public override func selectParagraph(_ sender: Any?) {
+        // TODO
+    }
+
+    public override func selectWord(_ sender: Any?) {
+        // TODO
     }
 
     public override func deleteBackward(_ sender: Any?) {
@@ -370,8 +393,14 @@ public final class CodeEditView: NSView {
 
     public override func moveToLeftEndOfLine(_ sender: Any?) {
         unselectText()
-
         _caret.position = Position(line: _caret.position.line, character: 0)
+        needsDisplay = true
+    }
+
+    public override func moveToLeftEndOfLineAndModifySelection(_ sender: Any?) {
+        moveAndModifySelection { sender in
+            _caret.position = Position(line: _caret.position.line, character: 0)
+        }
         needsDisplay = true
     }
 
@@ -400,6 +429,13 @@ public final class CodeEditView: NSView {
         unselectText()
 
         _caret.position = Position(line: _caret.position.line, character: _storage[line: _caret.position.line].count - 1)
+        needsDisplay = true
+    }
+
+    public override func moveToRightEndOfLineAndModifySelection(_ sender: Any?) {
+        moveAndModifySelection { sender in
+            _caret.position = Position(line: _caret.position.line, character: _storage[line: _caret.position.line].count - 1)
+        }
         needsDisplay = true
     }
 
