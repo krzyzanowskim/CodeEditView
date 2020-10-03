@@ -278,12 +278,17 @@ public final class CodeEditView: NSView {
     }
 
     @objc func delete(_ sender: Any?) {
-        // Delete selection
         guard let selectionRange = _textSelection?.range else {
             return
         }
 
-        _storage.remove(range: selectionRange)
+        if selectionRange.start > selectionRange.end {
+            _storage.remove(range: selectionRange.inverted())
+            _caret.position = selectionRange.end
+        } else {
+            _storage.remove(range: selectionRange)
+            _caret.position = selectionRange.start
+        }
 
         unselectText()
         needsLayout = true
@@ -310,12 +315,13 @@ public final class CodeEditView: NSView {
     }
 
     public override func deleteBackward(_ sender: Any?) {
-        if let selectionRange = _textSelection?.range {
-            _storage.remove(range: selectionRange)
-
-            unselectText()
+        defer {
             needsLayout = true
             needsDisplay = true
+        }
+
+        if _textSelection != nil {
+            self.delete(sender)
             return
         }
 
@@ -335,9 +341,6 @@ public final class CodeEditView: NSView {
                 _storage.remove(range: Range(start: _caret.position, end: startingCarretPosition))
             }
         }
-
-        needsLayout = true
-        needsDisplay = true
     }
 
     public override func deleteForward(_ sender: Any?) {

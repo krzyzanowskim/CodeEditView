@@ -17,6 +17,10 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible {
     public var description: String {
         "Range(start: \(start), end: \(end))"
     }
+
+    func inverted() -> Self {
+        return Range(start: end, end: start)
+    }
 }
 
 //extension Range: Comparable {
