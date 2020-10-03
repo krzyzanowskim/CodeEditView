@@ -18,7 +18,7 @@ class StringTextStorageProvider: TextStorageProvider {
         let index = _content.index(offset(line: position.line), offsetBy: position.character)
         _content.insert(contentsOf: string, at: index)
         if string.contains(where: \.isNewline) {
-            print("newLine!")
+            logger.debug("newLine!")
         }
         invalidateLinesCache()
     }
@@ -26,7 +26,7 @@ class StringTextStorageProvider: TextStorageProvider {
     func remove(range: Range) {
         let startIndex = _content.index(offset(line: range.start.line), offsetBy: range.start.character)
         let endIndex = _content.index(offset(line: range.end.line), offsetBy: range.end.character)
-        _content.removeSubrange(startIndex...endIndex)
+        _content.removeSubrange(startIndex..<endIndex)
         invalidateLinesCache()
     }
 
@@ -115,12 +115,14 @@ class StringTextStorageProviderTests: XCTestCase {
         storageProvider.insert(string: "test", at: Position(line: 0, character: 0))
         XCTAssertEqual(storageProvider.string(line: 0), "test")
         storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 0)))
+        XCTAssertEqual(storageProvider.string(line: 0), "test")
+        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 1)))
         XCTAssertEqual(storageProvider.string(line: 0), "est")
-        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 0)))
+        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 1)))
         XCTAssertEqual(storageProvider.string(line: 0), "st")
-        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 0)))
+        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 1)))
         XCTAssertEqual(storageProvider.string(line: 0), "t")
-        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 0)))
+        storageProvider.remove(range: Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 1)))
         XCTAssertEqual(storageProvider.string(line: 0), "")
     }
 

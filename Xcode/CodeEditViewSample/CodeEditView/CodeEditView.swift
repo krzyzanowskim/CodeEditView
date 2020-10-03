@@ -259,6 +259,36 @@ public final class CodeEditView: NSView {
         // super.doCommand(by: selector)
     }
 
+    @objc func copy(_ sender: Any?) {
+        guard let selectionRange = _textSelection?.range,
+              let selectedString = _storage[selectionRange] else {
+            return
+        }
+
+        updatePasteboard(with: String(selectedString))
+    }
+
+    @objc func paste(_ sender: Any?) {
+        logger.debug("Paste not implemented")
+    }
+
+    @objc func cut(_ sender: Any?) {
+        logger.debug("Copy not implemented")
+    }
+
+    @objc func delete(_ sender: Any?) {
+        // Delete selection
+        guard let selectionRange = _textSelection?.range else {
+            return
+        }
+
+        _storage.remove(range: selectionRange)
+
+        unselectText()
+        needsLayout = true
+        needsDisplay = true
+    }
+
     public override func selectAll(_ sender: Any?) {
         let lastLineString = _storage[line: _storage.linesCount - 1]
         _textSelection = SelectionRange(Range(start: Position(line: 0, character: 0), end: Position(line: _storage.linesCount - 1, character: lastLineString.count - 1)))
@@ -281,16 +311,18 @@ public final class CodeEditView: NSView {
     public override func deleteBackward(_ sender: Any?) {
         unselectText()
 
+        let startingCarretPosition = _caret.position
+
         if _caret.position.character - 1 >= 0 {
             _caret.position = Position(line: _caret.position.line, character: _caret.position.character - 1)
-            _storage.remove(range: Range(start: _caret.position, end: _caret.position))
+            _storage.remove(range: Range(start: _caret.position, end: startingCarretPosition))
         } else {
             // move to previous line
             let lineNumber = _caret.position.line - 1
             if lineNumber >= 0 {
                 let prevLineString = _storage[line: lineNumber]
                 _caret.position = Position(line: lineNumber, character: prevLineString.count - 1)
-                _storage.remove(range: Range(start: _caret.position, end: _caret.position))
+                _storage.remove(range: Range(start: _caret.position, end: startingCarretPosition))
             }
         }
 
@@ -301,8 +333,7 @@ public final class CodeEditView: NSView {
     public override func deleteForward(_ sender: Any?) {
         unselectText()
 
-        _storage.remove(range: Range(start: _caret.position, end: _caret.position))
-        _caret.position = Position(line: _caret.position.line, character: max(0, _caret.position.character))
+        _storage.remove(range: Range(start: _caret.position, end: Position(line: _caret.position.line, character: _caret.position.character + 1)))
 
         needsLayout = true
         needsDisplay = true
@@ -491,6 +522,8 @@ public final class CodeEditView: NSView {
         } else {
             _textSelection = SelectionRange(Range(start: beforeMoveCaretPosition, end: afterMoveCaretPosition))
         }
+
+        logger.debug("\(self._textSelection!.range)")
     }
 
     // MARK: - Drawing
@@ -783,6 +816,12 @@ public final class CodeEditView: NSView {
     }
 
     // MARK: - Helpers
+
+    private func updatePasteboard(with text: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects([text as NSPasteboardWriting])
+    }
 
     private func unselectText() {
         _textSelection = nil
