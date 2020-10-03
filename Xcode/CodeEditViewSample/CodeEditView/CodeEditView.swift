@@ -31,7 +31,7 @@ public final class CodeEditView: NSView {
         case relaxed = 1.4
     }
 
-    /// Visible line layout. cached values.
+    /// Cached layout. LayoutManager datasource.
     private struct LineLayout: Equatable {
         /// Line index in store. Line number (zero based)
         /// In wrapping scenario, multiple LineLayouts for a single lineIndex.
@@ -150,7 +150,7 @@ public final class CodeEditView: NSView {
 
     private let _storage: TextStorage
 
-    /// Visible lines layout
+    /// Cached layout
     private var _lineLayouts: [LineLayout]
 
     public init(storage: TextStorage) {
@@ -216,6 +216,8 @@ public final class CodeEditView: NSView {
                 moveUp(self)
             case #selector(moveDown(_:)):
                 moveDown(self)
+            case #selector(moveDownAndModifySelection(_:)):
+                moveDownAndModifySelection(self)
             case #selector(moveLeft(_:)):
                 moveLeft(self)
             case #selector(moveToLeftEndOfLine(_:)):
@@ -296,14 +298,12 @@ public final class CodeEditView: NSView {
         }
     }
 
-    public override func moveDown(_ sender: Any?) {
-        unselectText()
-
+    private func caretMoveDown(_ sender: Any?) {
         // Find lineLayout for the current caret position
         let currentLineLayoutIndex = _lineLayouts.firstIndex { lineLayout -> Bool in
             _caret.position.line == lineLayout.lineNumber &&
-            _caret.position.character >= lineLayout.stringRange.location &&
-            _caret.position.character < lineLayout.stringRange.location + lineLayout.stringRange.length
+                _caret.position.character >= lineLayout.stringRange.location &&
+                _caret.position.character < lineLayout.stringRange.location + lineLayout.stringRange.length
         }
 
         if let idx = currentLineLayoutIndex, idx + 1 < _lineLayouts.count {
@@ -314,9 +314,29 @@ public final class CodeEditView: NSView {
             //       the caret offset should preserve between lines, and empty line should not reset the caret offset.
             let distance = min(_caret.position.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length - 1)
             _caret.position = Position(line: nextLineLayout.lineNumber, character: nextLineLayout.stringRange.location + distance)
-            scrollToVisiblePosition(_caret.position)
-            needsDisplay = true
         }
+    }
+
+    public override func moveDown(_ sender: Any?) {
+        unselectText()
+        
+        caretMoveDown(sender)
+        scrollToVisiblePosition(_caret.position)
+        needsDisplay = true
+    }
+
+    public override func moveDownAndModifySelection(_ sender: Any?) {
+        let beforePosition = _caret.position
+        caretMoveDown(sender)
+        let afterPosition = _caret.position
+
+        if let textSelection = _textSelection {
+            _textSelection = SelectionRange(Range(start: textSelection.range.start, end: afterPosition))
+        } else {
+            _textSelection = SelectionRange(Range(start: beforePosition, end: afterPosition))
+        }
+
+        needsDisplay = true
     }
 
     public override func moveLeft(_ sender: Any?) {
@@ -491,8 +511,14 @@ public final class CodeEditView: NSView {
             let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(startLineLayout.ctline, selectionRange.start.character, nil)
             let startPositionX = startLineLayout.origin.x + startCharacterPositionOffset
 
-            // ends at different line, following start line
-            if startLineLayout != endLineLayout {
+            if startLineLayout != endLineLayout,
+               let startLineIndex = _lineLayouts.firstIndex(of: startLineLayout),
+               let endLineIndex = _lineLayouts.firstIndex(of: endLineLayout)
+            {
+                // ends at different line, following start line
+                for lineIndex in startLineIndex...endLineIndex {
+                    logger.debug("lineIndex \(lineIndex)")
+                }
                 // selectionWidth = frame.width - startPositionX
                 // TODO: draw selection path
             } else {
@@ -505,6 +531,8 @@ public final class CodeEditView: NSView {
 
                 context.fill(lineRect)
             }
+        } else {
+            // update layout and attempt to redraw
         }
 
         context.restoreGState()
