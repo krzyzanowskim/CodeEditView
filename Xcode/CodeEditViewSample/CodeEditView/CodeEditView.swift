@@ -261,6 +261,10 @@ public final class CodeEditView: NSView {
         // super.doCommand(by: selector)
     }
 
+    public override func yank(_ sender: Any?) {
+        self.copy(sender)
+    }
+
     @objc func copy(_ sender: Any?) {
         guard let selectionRange = _textSelection?.range else {
             return
@@ -285,7 +289,8 @@ public final class CodeEditView: NSView {
     }
 
     @objc func cut(_ sender: Any?) {
-        logger.debug("Copy not implemented")
+        self.copy(sender)
+        self.delete(sender)
     }
 
     @objc func delete(_ sender: Any?) {
@@ -306,6 +311,18 @@ public final class CodeEditView: NSView {
         needsDisplay = true
     }
 
+    public override func uppercaseWord(_ sender: Any?) {
+        // TODO: uppercaseWord
+    }
+
+    public override func lowercaseWord(_ sender: Any?) {
+        // TODO: lowercaseWord
+    }
+
+    public override func capitalizeWord(_ sender: Any?) {
+        // TODO: capitalizeWord
+    }
+
     public override func selectAll(_ sender: Any?) {
         let lastLineString = _storage.string(line: _storage.linesCount - 1)
         _textSelection = SelectionRange(Range(start: Position(line: 0, character: 0), end: Position(line: _storage.linesCount - 1, character: lastLineString.count - 1)))
@@ -318,11 +335,11 @@ public final class CodeEditView: NSView {
     }
 
     public override func selectParagraph(_ sender: Any?) {
-        // TODO
+        // TODO: selectParagraph
     }
 
     public override func selectWord(_ sender: Any?) {
-        // TODO
+        // TODO: selectWord
     }
 
     public override func insertText(_ insertString: Any) {
