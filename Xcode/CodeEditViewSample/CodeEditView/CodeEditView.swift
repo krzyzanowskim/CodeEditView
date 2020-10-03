@@ -269,7 +269,11 @@ public final class CodeEditView: NSView {
     }
 
     @objc func paste(_ sender: Any?) {
-        logger.debug("Paste not implemented")
+        guard let string = NSPasteboard.general.string(forType: .string) else {
+            return
+        }
+
+        self.insertText(string)
     }
 
     @objc func cut(_ sender: Any?) {
@@ -311,6 +315,13 @@ public final class CodeEditView: NSView {
 
     public override func selectWord(_ sender: Any?) {
         // TODO
+    }
+
+    public override func insertText(_ insertString: Any) {
+        guard let string = insertString as? String else {
+            return
+        }
+        self.insertText(string, replacementRange: NSRange(location: NSNotFound, length: 0))
     }
 
     public override func deleteBackward(_ sender: Any?) {
