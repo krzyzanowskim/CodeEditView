@@ -376,18 +376,19 @@ public final class CodeEditView: NSView {
             let prevLineLayout = _lineLayouts[idx - 1]
             let distance = min(_caret.position.character - currentLineLayout.stringRange.location, prevLineLayout.stringRange.length - 1)
             _caret.position = Position(line: prevLineLayout.lineNumber, character: prevLineLayout.stringRange.location + distance)
-            scrollToVisiblePosition(_caret.position)
         }
     }
 
     public override func moveUp(_ sender: Any?) {
         unselectText()
         caretMoveUp(sender)
+        scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
     public override func moveUpAndModifySelection(_ sender: Any?) {
         moveCaretAndModifySelection(caretMoveUp)
+        scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
@@ -412,15 +413,14 @@ public final class CodeEditView: NSView {
 
     public override func moveDown(_ sender: Any?) {
         unselectText()
-
         caretMoveDown(sender)
-
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
     public override func moveDownAndModifySelection(_ sender: Any?) {
         moveCaretAndModifySelection(caretMoveDown)
+        scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
@@ -439,6 +439,7 @@ public final class CodeEditView: NSView {
     public override func moveLeft(_ sender: Any?) {
         defer {
             unselectText()
+            scrollToVisiblePosition(_caret.position)
             needsDisplay = true
         }
 
@@ -456,12 +457,14 @@ public final class CodeEditView: NSView {
 
     public override func moveLeftAndModifySelection(_ sender: Any?) {
         moveCaretAndModifySelection(caretMoveLeft)
+        scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
     public override func moveToLeftEndOfLine(_ sender: Any?) {
         unselectText()
         _caret.position = Position(line: _caret.position.line, character: 0)
+        scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
@@ -469,6 +472,7 @@ public final class CodeEditView: NSView {
         moveCaretAndModifySelection { sender in
             _caret.position = Position(line: _caret.position.line, character: 0)
         }
+        scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
@@ -484,6 +488,7 @@ public final class CodeEditView: NSView {
     public override func moveRight(_ sender: Any?) {
         defer {
             unselectText()
+            scrollToVisiblePosition(_caret.position)
             needsDisplay = true
         }
 
@@ -503,12 +508,12 @@ public final class CodeEditView: NSView {
 
     public override func moveRightAndModifySelection(_ sender: Any?) {
         moveCaretAndModifySelection(caretMoveRight)
+        scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
     public override func moveToRightEndOfLine(_ sender: Any?) {
         unselectText()
-
         _caret.position = Position(line: _caret.position.line, character: _storage.string(line: _caret.position.line).count - 1)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
@@ -554,6 +559,7 @@ public final class CodeEditView: NSView {
     public override func insertLineBreak(_ sender: Any?) {
         unselectText()
         insertNewline(sender)
+        scrollToVisiblePosition(_caret.position)
     }
 
     public override func insertTab(_ sender: Any?) {
@@ -746,10 +752,10 @@ public final class CodeEditView: NSView {
 
     private func layoutCaret() {
         guard let lineLayout = lineLayout(for: _caret.position) else { return }
-        let positionOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caret.position.character, nil)
-        _caret.view.frame = CGRect(x: lineLayout.origin.x + positionOffset,
+        let characterOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, _caret.position.character, nil)
+        _caret.view.frame = CGRect(x: lineLayout.origin.x + characterOffset,
                                    y: lineLayout.origin.y - lineLayout.lineDescent,
-                                   width: font.boundingRectForFont.width,
+                                   width: CTFontGetBoundingBox(font).width,
                                    height: lineLayout.lineHeight - lineLayout.lineDescent)
     }
 
@@ -891,7 +897,12 @@ public final class CodeEditView: NSView {
         guard let lineLayout = lineLayout(for: position) else {
             return
         }
-        scrollToVisibleLineLayout(lineLayout)
+
+        let characterOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, position.character, nil)
+        scrollToVisible(CGRect(x: lineLayout.origin.x + characterOffset,
+               y: lineLayout.origin.y - lineLayout.lineDescent,
+               width: CTFontGetBoundingBox(font).width,
+               height: lineLayout.lineHeight - lineLayout.lineDescent))
     }
 
     private func scrollToVisibleLineLayout(_ lineLayout: LineLayout) {
