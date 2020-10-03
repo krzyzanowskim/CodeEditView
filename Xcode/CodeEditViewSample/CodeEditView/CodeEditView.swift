@@ -372,7 +372,7 @@ public final class CodeEditView: NSView {
     }
 
     public override func moveUpAndModifySelection(_ sender: Any?) {
-        moveAndModifySelection(caretMoveUp)
+        moveCaretAndModifySelection(caretMoveUp)
         needsDisplay = true
     }
 
@@ -405,7 +405,7 @@ public final class CodeEditView: NSView {
     }
 
     public override func moveDownAndModifySelection(_ sender: Any?) {
-        moveAndModifySelection(caretMoveDown)
+        moveCaretAndModifySelection(caretMoveDown)
         needsDisplay = true
     }
 
@@ -422,13 +422,25 @@ public final class CodeEditView: NSView {
     }
 
     public override func moveLeft(_ sender: Any?) {
-        unselectText()
+        defer {
+            unselectText()
+            needsDisplay = true
+        }
+
+        if let selectionRange = _textSelection?.range {
+            if selectionRange.start > selectionRange.end {
+                _caret.position = selectionRange.end
+            } else {
+                _caret.position = selectionRange.start
+            }
+            return
+        }
+
         caretMoveLeft(sender)
-        needsDisplay = true
     }
 
     public override func moveLeftAndModifySelection(_ sender: Any?) {
-        moveAndModifySelection(caretMoveLeft)
+        moveCaretAndModifySelection(caretMoveLeft)
         needsDisplay = true
     }
 
@@ -439,7 +451,7 @@ public final class CodeEditView: NSView {
     }
 
     public override func moveToLeftEndOfLineAndModifySelection(_ sender: Any?) {
-        moveAndModifySelection { sender in
+        moveCaretAndModifySelection { sender in
             _caret.position = Position(line: _caret.position.line, character: 0)
         }
         needsDisplay = true
@@ -455,14 +467,27 @@ public final class CodeEditView: NSView {
     }
 
     public override func moveRight(_ sender: Any?) {
-        unselectText()
+        defer {
+            unselectText()
+            needsDisplay = true
+        }
+
+        if let selectionRange = _textSelection?.range {
+
+            if selectionRange.start > selectionRange.end {
+                _caret.position = selectionRange.start
+            } else {
+                _caret.position = selectionRange.end
+            }
+
+            return
+        }
 
         caretMoveRight(sender)
-        needsDisplay = true
     }
 
     public override func moveRightAndModifySelection(_ sender: Any?) {
-        moveAndModifySelection(caretMoveRight)
+        moveCaretAndModifySelection(caretMoveRight)
         needsDisplay = true
     }
 
@@ -475,7 +500,7 @@ public final class CodeEditView: NSView {
     }
 
     public override func moveToRightEndOfLineAndModifySelection(_ sender: Any?) {
-        moveAndModifySelection { sender in
+        moveCaretAndModifySelection { sender in
             _caret.position = Position(line: _caret.position.line, character: _storage.string(line: _caret.position.line).count - 1)
         }
         scrollToVisiblePosition(_caret.position)
@@ -525,9 +550,9 @@ public final class CodeEditView: NSView {
         scrollToVisiblePosition(_caret.position)
     }
 
-    private func moveAndModifySelection(_ move: (_ sender: Any?) -> Void) {
+    private func moveCaretAndModifySelection(_ moveCaret: (_ sender: Any?) -> Void) {
         let beforeMoveCaretPosition = _caret.position
-        move(nil)
+        moveCaret(nil)
         let afterMoveCaretPosition = _caret.position
 
         if let currentSelectionRange = _textSelection?.range {
