@@ -460,6 +460,7 @@ public final class CodeEditView: NSView {
         unselectText()
 
         _caret.position = Position(line: _caret.position.line, character: _storage[line: _caret.position.line].count - 1)
+        scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
@@ -467,6 +468,7 @@ public final class CodeEditView: NSView {
         moveAndModifySelection { sender in
             _caret.position = Position(line: _caret.position.line, character: _storage[line: _caret.position.line].count - 1)
         }
+        scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
@@ -489,12 +491,8 @@ public final class CodeEditView: NSView {
 
     public override func insertNewline(_ sender: Any?) {
         unselectText()
-
-        _storage.insert(string: "\n", at: _caret.position)
-        _caret.position = Position(line: _caret.position.line + 1, character: 0)
-
-        needsLayout = true
-        needsDisplay = true
+        self.insertText("\n", replacementRange: NSRange(location: NSNotFound, length: 0))
+        scrollToVisiblePosition(_caret.position)
     }
 
     public override func insertLineBreak(_ sender: Any?) {
@@ -510,6 +508,7 @@ public final class CodeEditView: NSView {
         } else {
             self.insertText("\t", replacementRange: NSRange(location: NSNotFound, length: 0))
         }
+        scrollToVisiblePosition(_caret.position)
     }
 
     private func moveAndModifySelection(_ move: (_ sender: Any?) -> Void) {
@@ -842,7 +841,10 @@ public final class CodeEditView: NSView {
     }
 
     private func scrollToVisibleLineLayout(_ lineLayout: LineLayout) {
-        scrollToVisible(CGRect(x: 0, y: lineLayout.origin.y - lineLayout.lineDescent, width: 0, height: lineLayout.lineHeight + lineLayout.lineDescent))
+        scrollToVisible(CGRect(x: 0,
+                               y: lineLayout.origin.y - lineLayout.lineDescent,
+                               width: frame.width,
+                               height: lineLayout.lineHeight + lineLayout.lineDescent))
     }
 }
 
@@ -869,7 +871,15 @@ extension CodeEditView: NSTextInputClient {
 
         logger.debug("insertText \(string) replacementRange \(replacementRange)")
         _storage.insert(string: string, at: _caret.position)
-        _caret.position = Position(line: _caret.position.line, character: _caret.position.character + string.count)
+
+        // if string contains new line, caret position need to adjust
+        let newLineCount = string.reduce(0, { $1.isNewline ? $0 + 1 : $0 })
+        let whitespaceCount = string.reduce(0, { $1.isWhitespace && $1 != "\t" ? $0 + 1 : $0 })
+        let visibleCharactersCount = string.count - whitespaceCount
+        _caret.position = Position(
+            line: _caret.position.line + newLineCount,
+            character: _caret.position.character + visibleCharactersCount
+        )
 
         needsLayout = true
         needsDisplay = true
