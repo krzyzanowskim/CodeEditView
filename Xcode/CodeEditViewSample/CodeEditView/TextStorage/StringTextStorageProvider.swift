@@ -24,6 +24,10 @@ class StringTextStorageProvider: TextStorageProvider {
     }
 
     func remove(range: Range) {
+        guard !_content.isEmpty else {
+            return
+        }
+
         let startIndex = _content.index(offset(line: range.start.line), offsetBy: range.start.character)
         let endIndex = _content.index(offset(line: range.end.line), offsetBy: range.end.character)
         _content.removeSubrange(startIndex..<endIndex)

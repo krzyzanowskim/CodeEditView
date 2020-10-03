@@ -7,7 +7,6 @@ import CoreText
 // TODO:
 //  - Text Checking: NSTextCheckingClient, NSTextCheckingController
 //  - tell the input context when position information for a character range changes, when the text view scrolls, by sending the invalidateCharacterCoordinates message to the input context.
-//  - Selection shouldn't move _caret.position, but _textSelection.end.position
 
 /// Code Edit View
 public final class CodeEditView: NSView {
@@ -563,8 +562,6 @@ public final class CodeEditView: NSView {
         } else {
             _textSelection = SelectionRange(Range(start: beforeMoveCaretPosition, end: afterMoveCaretPosition))
         }
-
-        logger.debug("\(self._textSelection!.range)")
     }
 
     // MARK: - Drawing
