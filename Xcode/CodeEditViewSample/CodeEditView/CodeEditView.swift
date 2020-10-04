@@ -653,6 +653,8 @@ public final class CodeEditView: NSView {
             context.restoreGState()
         }
 
+        context.setFillColor(NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor)
+
         if let idx = currentLineLayoutIndex {
             let lineLayout = _lineLayouts[idx]
             let lineRect = CGRect(x: frame.minX,
@@ -660,9 +662,6 @@ public final class CodeEditView: NSView {
                                   width: frame.width,
                                   height: lineLayout.lineHeight)
 
-            context.saveGState()
-            let color = NSColor.controlAccentColor.withAlphaComponent(0.1)
-            context.setFillColor(color.cgColor)
             context.fill(lineRect)
         }
     }
@@ -869,7 +868,7 @@ public final class CodeEditView: NSView {
         textContentSize.height = pos.y
 
         // Adjust Width
-        if lineBreakWidth != frame.size.width {
+        if lineBreakWidth > frame.size.width {
             frame.size.width = textContentSize.width
         }
 
