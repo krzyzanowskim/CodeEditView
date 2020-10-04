@@ -94,6 +94,12 @@ public final class CodeEditView: NSView {
         }
     }
 
+    public var showWrappingLine: Bool {
+        didSet {
+            needsDisplay = true
+        }
+    }
+
     public var highlightCurrentLine: Bool {
         didSet {
             needsDisplay = true
@@ -166,6 +172,7 @@ public final class CodeEditView: NSView {
         self.lineWrapping = .bounds
         self.indentWrappedLines = false
         self.wrapWords = true
+        self.showWrappingLine = true
         self.insertSpacesForTab = false
         self.tabSize = 4
         self.highlightCurrentLine = true
@@ -621,10 +628,28 @@ public final class CodeEditView: NSView {
 
         drawSelection(context, dirtyRect: dirtyRect)
         drawLines(context, dirtyRect: dirtyRect)
+        drawWrappingLine(context, dirtyRect: dirtyRect)
     }
 
     public override func prepareContent(in rect: NSRect) {
         super.prepareContent(in: rect)
+    }
+
+    private func drawWrappingLine(_ context: CGContext, dirtyRect: NSRect) {
+        guard showWrappingLine, case .width(let wrapWidth) = self.lineWrapping else {
+            return
+        }
+
+
+        context.saveGState()
+        defer {
+            context.restoreGState()
+        }
+
+        context.setStrokeColor(NSColor.separatorColor.cgColor)
+        context.move(to: CGPoint(x: wrapWidth, y: dirtyRect.minY))
+        context.addLine(to: CGPoint(x: wrapWidth, y: dirtyRect.maxY))
+        context.strokePath()
     }
 
     private func drawLines(_ context: CGContext, dirtyRect: NSRect) {
@@ -868,7 +893,7 @@ public final class CodeEditView: NSView {
         textContentSize.height = pos.y
 
         // Adjust Width
-        if lineBreakWidth > frame.size.width {
+        if lineBreakWidth != frame.size.width {
             frame.size.width = textContentSize.width
         }
 
