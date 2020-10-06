@@ -456,7 +456,7 @@ extension CodeEditView: NSTextInputClient {
     }
 }
 
-// MARK: Commands
+// MARK: - Commands
 
 extension CodeEditView {
 
@@ -690,15 +690,7 @@ extension CodeEditView {
     }
 
     private func caretMoveLeft(_ sender: Any?) {
-        if _caret.position.character > 0 {
-            _caret.position = Position(line: _caret.position.line, character: max(0, _caret.position.character - 1))
-        } else {
-            let lineNumber = _caret.position.line - 1
-            if lineNumber >= 0 {
-                let prevLineString = _storage.string(line: lineNumber)
-                _caret.position = Position(line: lineNumber, character: prevLineString.count - 1)
-            }
-        }
+        _caret.position.move(by: -1, in: _storage)
     }
 
     public override func moveLeft(_ sender: Any?) {
@@ -742,12 +734,7 @@ extension CodeEditView {
     }
 
     private func caretMoveRight(_ sender: Any?) {
-        let currentLineString = _storage.string(line: _caret.position.line)
-        if _caret.position.character + 1 < currentLineString.count {
-            _caret.position = Position(line: _caret.position.line, character: _caret.position.character + 1)
-        } else {
-            moveDown(sender)
-        }
+        _caret.position.move(by: 1, in: _storage)
     }
 
     public override func moveRight(_ sender: Any?) {
