@@ -63,13 +63,18 @@ class LayoutManager {
         var lineSpacing: LineSpacing = .normal
         var wrapWords: Bool = true
         var indentWrappedLines: Bool = true
+
+        static let `default` = Configuration(lineWrapping: .none,
+                                             lineSpacing: .normal,
+                                             wrapWords: true,
+                                             indentWrappedLines: true)
     }
 
     var configuration: Configuration
 
     private var _lineLayouts: [LineLayout]
 
-    init(_ configuration: Configuration = Configuration()) {
+    init(configuration: Configuration = .default) {
         self._lineLayouts = []
         self._lineLayouts.reserveCapacity(500)
 

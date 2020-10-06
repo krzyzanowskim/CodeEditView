@@ -53,16 +53,16 @@ public final class CodeEditView: NSView {
         /// Show wrapping line
         public var showWrappingLine: Bool
         /// The number of spaces a tab is equal to.
-        public var tabSize: Int
+        public var tabSpaceSize: Int
         /// Insert spaces when pressing Tab
         public var insertSpacesForTab: Bool
 
-        init(font: NSFont, textColor: NSColor, highlightCurrentLine: Bool, showWrappingLine: Bool, tabSize: Int, insertSpacesForTab: Bool) {
+        init(font: NSFont, textColor: NSColor, highlightCurrentLine: Bool, showWrappingLine: Bool, tabSpaceSize: Int, insertSpacesForTab: Bool) {
             self.font = font
             self.textColor = textColor
             self.highlightCurrentLine = highlightCurrentLine
             self.showWrappingLine = showWrappingLine
-            self.tabSize = tabSize
+            self.tabSpaceSize = tabSpaceSize
             self.insertSpacesForTab = insertSpacesForTab
         }
 
@@ -70,7 +70,7 @@ public final class CodeEditView: NSView {
                                          textColor: .textColor,
                                          highlightCurrentLine: true,
                                          showWrappingLine: true,
-                                         tabSize: 4,
+                                         tabSpaceSize: 4,
                                          insertSpacesForTab: true)
     }
 
@@ -505,7 +505,7 @@ public final class CodeEditView: NSView {
 
     public override func insertTab(_ sender: Any?) {
         if configuration.insertSpacesForTab {
-            self.insertText(String([Character](repeating: " ", count: configuration.tabSize)), replacementRange: NSRange(location: NSNotFound, length: 0))
+            self.insertText(String([Character](repeating: " ", count: configuration.tabSpaceSize)), replacementRange: NSRange(location: NSNotFound, length: 0))
         } else {
             self.insertText("\t", replacementRange: NSRange(location: NSNotFound, length: 0))
         }
