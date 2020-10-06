@@ -82,12 +82,14 @@ public final class CodeEditView: NSView {
     private let _storage: TextStorage
     private let _layoutManager: LayoutManager
 
-    /// Cached layout
-    //private var _lineLayouts: [LineLayout]
-
     public init(storage: TextStorage, configuration: Configuration = .default) {
         self._storage = storage
-        self._layoutManager = LayoutManager()
+
+        let layoutConfiguration = LayoutManager.Configuration(lineWrapping: .bounds,
+                                                              lineSpacing: .normal,
+                                                              wrapWords: true,
+                                                              indentWrappedLines: true)
+        self._layoutManager = LayoutManager(configuration: layoutConfiguration)
         self._caret = Caret()
 
         self.configuration = configuration
@@ -132,7 +134,331 @@ public final class CodeEditView: NSView {
         inputContext?.handleEvent(event)
     }
 
-    // MARK: - Commands
+
+    // MARK: - Drawing
+
+    public override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+
+        guard let context = NSGraphicsContext.current?.cgContext else {
+            return
+        }
+
+        if _isFirstResponder && configuration.highlightCurrentLine {
+            drawHighlightedLine(context, dirtyRect: dirtyRect)
+        }
+
+        drawSelection(context, dirtyRect: dirtyRect)
+        drawText(context, dirtyRect: dirtyRect)
+        drawWrappingLine(context, dirtyRect: dirtyRect)
+    }
+
+    public override func prepareContent(in rect: NSRect) {
+        super.prepareContent(in: rect)
+    }
+
+    private func drawWrappingLine(_ context: CGContext, dirtyRect: NSRect) {
+        guard configuration.showWrappingLine, case .width(let wrapWidth) = _layoutManager.configuration.lineWrapping else {
+            return
+        }
+
+        context.saveGState()
+        defer {
+            context.restoreGState()
+        }
+
+        context.setStrokeColor(NSColor.separatorColor.cgColor)
+        context.move(to: CGPoint(x: wrapWidth, y: dirtyRect.minY))
+        context.addLine(to: CGPoint(x: wrapWidth, y: dirtyRect.maxY))
+        context.strokePath()
+    }
+
+    private func drawText(_ context: CGContext, dirtyRect: NSRect) {
+        context.saveGState()
+        defer {
+            context.restoreGState()
+        }
+
+        context.textMatrix = CGAffineTransform(scaleX: 1, y: isFlipped ? -1 : 1)
+        context.setFillColor(configuration.textColor.cgColor)
+
+        // Draw text lines for bigger area to avoid frictions.
+        let defaultFont = configuration.font
+        let overscanDirtyRect = dirtyRect.insetBy(dx: -defaultFont.boundingRectForFont.width * 4, dy: -defaultFont.boundingRectForFont.height * 4)
+
+        for lineLayout in _layoutManager.linesLayout(in: overscanDirtyRect) {
+            context.textPosition = CGPoint(x: lineLayout.origin.x, y: lineLayout.origin.y)
+            CTLineDraw(lineLayout.ctline, context)
+        }
+    }
+
+    private func drawHighlightedLine(_ context: CGContext, dirtyRect: NSRect) {
+        guard let caretBounds = _layoutManager.caretBounds(at: _caret.position) else {
+            return
+        }
+
+        context.saveGState()
+        defer {
+            context.restoreGState()
+        }
+
+        context.setFillColor(NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor)
+
+        let lineRect = CGRect(x: frame.minX,
+                              y: caretBounds.origin.y,
+                              width: frame.width,
+                              height: caretBounds.height)
+
+        context.fill(lineRect)
+    }
+
+    private func drawSelection(_ context: CGContext, dirtyRect: NSRect) {
+        guard let selectionRange = _textSelection?.range else {
+            return
+        }
+
+        logger.debug("drawSelection \(selectionRange)")
+
+        context.saveGState()
+        defer {
+            context.restoreGState()
+        }
+
+        context.setFillColor(NSColor.selectedTextBackgroundColor.cgColor)
+
+        guard let startSelectedLineLayout = _layoutManager.lineLayout(at: selectionRange.start),
+           let endSelectedLineLayout = _layoutManager.lineLayout(at: selectionRange.end),
+           let startSelectedLineIndex = _layoutManager.lineLayoutIndex(startSelectedLineLayout),
+           let endSelectedLineIndex = _layoutManager.lineLayoutIndex(endSelectedLineLayout) else
+        {
+            assertionFailure("update layout and attempt to redraw")
+            return
+        }
+
+        if startSelectedLineIndex <= endSelectedLineIndex {
+            for lineIndex in startSelectedLineIndex...endSelectedLineIndex {
+                guard let currentLineLayout = _layoutManager.lineLayout(idx: lineIndex) else {
+                    continue
+                }
+
+                let startPositionX: CGFloat
+                let rectWidth: CGFloat
+
+                if lineIndex == startSelectedLineIndex {
+                    // start - partial selection
+                    let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.start.character, nil)
+                    let endPositionOffset = CTLineGetOffsetForStringIndex(startSelectedLineLayout.ctline, selectionRange.end.character, nil)
+                    startPositionX = currentLineLayout.origin.x + startCharacterPositionOffset
+
+                    if startSelectedLineLayout != endSelectedLineLayout {
+                        // selection that ends on another line ends at the end of the view
+                        // not at the end of the line
+                        rectWidth = frame.width - currentLineLayout.origin.x
+                    } else {
+                        rectWidth = endPositionOffset - startCharacterPositionOffset
+                    }
+                } else if lineIndex == endSelectedLineIndex {
+                    // end - partial selection
+                    let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.end.character, nil)
+                    startPositionX = 0
+                    rectWidth = endCharacterPositionOffset + currentLineLayout.origin.x
+                } else {
+                    // x + 1..<y full line selection
+                    startPositionX = frame.minX // currentLineLayout.origin.x
+                    rectWidth = frame.width
+                }
+
+                let currentLineBounds = _layoutManager.bounds(lineLayout: currentLineLayout)
+                context.fill(CGRect(x: startPositionX,
+                                    y: currentLineBounds.origin.y,
+                                    width: rectWidth,
+                                    height: currentLineBounds.height))
+            }
+        }
+
+        if startSelectedLineIndex > endSelectedLineIndex {
+            for lineIndex in endSelectedLineIndex...startSelectedLineIndex {
+                guard let currentLineLayout = _layoutManager.lineLayout(idx: lineIndex) else {
+                    continue
+                }
+
+                let startPositionX: CGFloat
+                let rectWidth: CGFloat
+
+                if lineIndex == startSelectedLineIndex {
+                    // start - partial selection from the beginning to the start selection
+                    let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.start.character, nil)
+                    startPositionX = 0
+                    rectWidth = startCharacterPositionOffset + currentLineLayout.origin.x
+                } else if lineIndex == endSelectedLineIndex {
+                    // end - partial selection from the end to the end of the line
+                    let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.end.character, nil)
+                    let startPositionOffset = CTLineGetOffsetForStringIndex(startSelectedLineLayout.ctline, selectionRange.start.character, nil)
+                    startPositionX = currentLineLayout.origin.x + endCharacterPositionOffset
+
+                    if startSelectedLineLayout != endSelectedLineLayout {
+                        // selection that ends on another line ends at the end of the view
+                        // not at the end of the line
+                        rectWidth = frame.width - currentLineLayout.origin.x
+                    } else {
+                        rectWidth = startPositionOffset - endCharacterPositionOffset
+                    }
+                } else {
+                    // x + 1..<y full line selection
+                    startPositionX = frame.minX // currentLineLayout.origin.x
+                    rectWidth = frame.width
+                }
+
+                let currentLineBounds = _layoutManager.bounds(lineLayout: currentLineLayout)
+                context.fill(CGRect(x: startPositionX,
+                                    y: currentLineBounds.origin.y,
+                                    width: rectWidth,
+                                    height: currentLineBounds.height))
+            }
+        }
+    }
+
+    public override func layout() {
+        super.layout()
+        layoutText()
+        layoutCaret()
+    }
+
+    private func layoutCaret() {
+        guard let caretBounds = _layoutManager.caretBounds(at: _caret.position) else {
+            return
+        }
+        _caret.view.frame = caretBounds.insetBy(dx: 0, dy: 1)
+    }
+
+    /// Layout visible text
+    private func layoutText() {
+        let textContentSize = _layoutManager.layoutText(storage: _storage,
+                                                        font: configuration.font,
+                                                        frame: visibleRect)
+
+        if frame.size != textContentSize {
+            frame.size = textContentSize
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func updatePasteboard(with text: String) {
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects([text as NSPasteboardWriting])
+    }
+
+    private func unselectText() {
+        _textSelection = nil
+    }
+
+    private func scrollToVisiblePosition(_ position: Position) {
+        guard let caretBounds = _layoutManager.caretBounds(at: position) else {
+            return
+        }
+
+        scrollToVisible(caretBounds)
+    }
+}
+
+// The default implementation of the NSView method inputContext manages
+// an NSTextInputContext instance automatically if the view subclass conforms
+// to the NSTextInputClient protocol.
+extension CodeEditView: NSTextInputClient {
+
+    public func insertText(_ string: Any, replacementRange: NSRange) {
+        guard let string = string as? String else {
+            return
+        }
+
+        guard !string.unicodeScalars.contains(where: { $0.properties.isDefaultIgnorableCodePoint || $0.properties.isNoncharacterCodePoint }) else {
+            logger.info("Ignore bytes: \(Array(string.utf8))")
+            return
+        }
+
+        // Ignore ASCII control characters
+        if string.count == 1 && string.unicodeScalars.drop(while: { (0x10...0x1F).contains($0.value) }).isEmpty {
+            logger.info("Ignore control characters 0x10...0x1F")
+            return
+        }
+
+        unselectText()
+
+        logger.debug("insertText \(string) replacementRange \(replacementRange)")
+        _storage.insert(string: string, at: _caret.position)
+
+        // if string contains new line, caret position need to adjust
+        let newLineCount = string.reduce(0, { $1.isNewline ? $0 + 1 : $0 })
+        _caret.position = Position(
+            line: _caret.position.line + newLineCount,
+            // FIXME: position depends on the last added line
+            character: _caret.position.character + string.count
+        )
+
+        needsLayout = true
+        needsDisplay = true
+
+        scrollToVisiblePosition(_caret.position)
+    }
+
+    public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
+        logger.debug("setMarkedText \(string as! String) selectedRange \(selectedRange) replacementRange \(replacementRange)")
+    }
+
+    public func unmarkText() {
+        logger.debug("unmarkText")
+    }
+
+    public func selectedRange() -> NSRange {
+        logger.debug("selectedRange")
+
+        guard let selectionRange = _textSelection?.range else {
+            return NSRange(location: NSNotFound, length: 0)
+        }
+
+        // _selectionRange -> NSRange
+        let startIndex = _storage.positionOffset(at: selectionRange.start)
+        let endIndex = _storage.positionOffset(at: selectionRange.end)
+
+        return NSRange(location: startIndex, length: endIndex - startIndex)
+    }
+
+    public func markedRange() -> NSRange {
+        logger.debug("markedRange")
+        return NSRange(location: NSNotFound, length: 0)
+    }
+
+    public func hasMarkedText() -> Bool {
+        logger.debug("hasMarkedText")
+        return false
+    }
+
+    public func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
+        logger.debug("attributedSubstring forProposedRange \(range)")
+        return NSAttributedString()
+    }
+
+    public func validAttributesForMarkedText() -> [NSAttributedString.Key] {
+        [.font, .backgroundColor, .foregroundColor]
+    }
+
+    public func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
+        logger.debug("firstRect forCharacterRange \(range)")
+        return NSRect.zero
+    }
+
+    public func characterIndex(for point: NSPoint) -> Int {
+        logger.debug("characterIndex \(point.debugDescription)")
+        return NSNotFound
+        //return 0
+    }
+}
+
+// MARK: Commands
+
+extension CodeEditView {
 
     public override func doCommand(by selector: Selector) {
         switch selector {
@@ -520,325 +846,5 @@ public final class CodeEditView: NSView {
         } else {
             _textSelection = SelectionRange(Range(start: beforeMoveCaretPosition, end: afterMoveCaretPosition))
         }
-    }
-
-    // MARK: - Drawing
-
-    public override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-
-        guard let context = NSGraphicsContext.current?.cgContext else {
-            return
-        }
-
-        if _isFirstResponder && configuration.highlightCurrentLine {
-            drawHighlightedLine(context, dirtyRect: dirtyRect)
-        }
-
-        drawSelection(context, dirtyRect: dirtyRect)
-        drawText(context, dirtyRect: dirtyRect)
-        drawWrappingLine(context, dirtyRect: dirtyRect)
-    }
-
-    public override func prepareContent(in rect: NSRect) {
-        super.prepareContent(in: rect)
-    }
-
-    private func drawWrappingLine(_ context: CGContext, dirtyRect: NSRect) {
-        guard configuration.showWrappingLine, case .width(let wrapWidth) = _layoutManager.configuration.lineWrapping else {
-            return
-        }
-
-        context.saveGState()
-        defer {
-            context.restoreGState()
-        }
-
-        context.setStrokeColor(NSColor.separatorColor.cgColor)
-        context.move(to: CGPoint(x: wrapWidth, y: dirtyRect.minY))
-        context.addLine(to: CGPoint(x: wrapWidth, y: dirtyRect.maxY))
-        context.strokePath()
-    }
-
-    private func drawText(_ context: CGContext, dirtyRect: NSRect) {
-        context.saveGState()
-        defer {
-            context.restoreGState()
-        }
-
-        context.textMatrix = CGAffineTransform(scaleX: 1, y: isFlipped ? -1 : 1)
-        context.setFillColor(configuration.textColor.cgColor)
-
-        // Draw text lines for bigger area to avoid frictions.
-        let defaultFont = configuration.font
-        let overscanDirtyRect = dirtyRect.insetBy(dx: -defaultFont.boundingRectForFont.width * 4, dy: -defaultFont.boundingRectForFont.height * 4)
-
-        for lineLayout in _layoutManager.linesLayout(in: overscanDirtyRect) {
-            context.textPosition = CGPoint(x: lineLayout.origin.x, y: lineLayout.origin.y)
-            CTLineDraw(lineLayout.ctline, context)
-        }
-    }
-
-    private func drawHighlightedLine(_ context: CGContext, dirtyRect: NSRect) {
-        guard let caretBounds = _layoutManager.caretBounds(at: _caret.position) else {
-            return
-        }
-
-        context.saveGState()
-        defer {
-            context.restoreGState()
-        }
-
-        context.setFillColor(NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor)
-
-        let lineRect = CGRect(x: frame.minX,
-                              y: caretBounds.origin.y,
-                              width: frame.width,
-                              height: caretBounds.height)
-
-        context.fill(lineRect)
-    }
-
-    private func drawSelection(_ context: CGContext, dirtyRect: NSRect) {
-        guard let selectionRange = _textSelection?.range else {
-            return
-        }
-
-        logger.debug("drawSelection \(selectionRange)")
-
-        context.saveGState()
-        defer {
-            context.restoreGState()
-        }
-
-        context.setFillColor(NSColor.selectedTextBackgroundColor.cgColor)
-
-        guard let startSelectedLineLayout = _layoutManager.lineLayout(at: selectionRange.start),
-           let endSelectedLineLayout = _layoutManager.lineLayout(at: selectionRange.end),
-           let startSelectedLineIndex = _layoutManager.lineLayoutIndex(startSelectedLineLayout),
-           let endSelectedLineIndex = _layoutManager.lineLayoutIndex(endSelectedLineLayout) else
-        {
-            assertionFailure("update layout and attempt to redraw")
-            return
-        }
-
-        if startSelectedLineIndex <= endSelectedLineIndex {
-            for lineIndex in startSelectedLineIndex...endSelectedLineIndex {
-                guard let currentLineLayout = _layoutManager.lineLayout(idx: lineIndex) else {
-                    continue
-                }
-
-                let startPositionX: CGFloat
-                let rectWidth: CGFloat
-
-                if lineIndex == startSelectedLineIndex {
-                    // start - partial selection
-                    let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.start.character, nil)
-                    let endPositionOffset = CTLineGetOffsetForStringIndex(startSelectedLineLayout.ctline, selectionRange.end.character, nil)
-                    startPositionX = currentLineLayout.origin.x + startCharacterPositionOffset
-
-                    if startSelectedLineLayout != endSelectedLineLayout {
-                        // selection that ends on another line ends at the end of the view
-                        // not at the end of the line
-                        rectWidth = frame.width - currentLineLayout.origin.x
-                    } else {
-                        rectWidth = endPositionOffset - startCharacterPositionOffset
-                    }
-                } else if lineIndex == endSelectedLineIndex {
-                    // end - partial selection
-                    let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.end.character, nil)
-                    startPositionX = 0
-                    rectWidth = endCharacterPositionOffset + currentLineLayout.origin.x
-                } else {
-                    // x + 1..<y full line selection
-                    startPositionX = frame.minX // currentLineLayout.origin.x
-                    rectWidth = frame.width
-                }
-
-                let currentLineBounds = _layoutManager.bounds(lineLayout: currentLineLayout)
-                context.fill(CGRect(x: startPositionX,
-                                    y: currentLineBounds.origin.y,
-                                    width: rectWidth,
-                                    height: currentLineBounds.height))
-            }
-        }
-
-        if startSelectedLineIndex > endSelectedLineIndex {
-            for lineIndex in endSelectedLineIndex...startSelectedLineIndex {
-                guard let currentLineLayout = _layoutManager.lineLayout(idx: lineIndex) else {
-                    continue
-                }
-
-                let startPositionX: CGFloat
-                let rectWidth: CGFloat
-
-                if lineIndex == startSelectedLineIndex {
-                    // start - partial selection from the beginning to the start selection
-                    let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.start.character, nil)
-                    startPositionX = 0
-                    rectWidth = startCharacterPositionOffset + currentLineLayout.origin.x
-                } else if lineIndex == endSelectedLineIndex {
-                    // end - partial selection from the end to the end of the line
-                    let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.end.character, nil)
-                    let startPositionOffset = CTLineGetOffsetForStringIndex(startSelectedLineLayout.ctline, selectionRange.start.character, nil)
-                    startPositionX = currentLineLayout.origin.x + endCharacterPositionOffset
-
-                    if startSelectedLineLayout != endSelectedLineLayout {
-                        // selection that ends on another line ends at the end of the view
-                        // not at the end of the line
-                        rectWidth = frame.width - currentLineLayout.origin.x
-                    } else {
-                        rectWidth = startPositionOffset - endCharacterPositionOffset
-                    }
-                } else {
-                    // x + 1..<y full line selection
-                    startPositionX = frame.minX // currentLineLayout.origin.x
-                    rectWidth = frame.width
-                }
-
-                let currentLineBounds = _layoutManager.bounds(lineLayout: currentLineLayout)
-                context.fill(CGRect(x: startPositionX,
-                                    y: currentLineBounds.origin.y,
-                                    width: rectWidth,
-                                    height: currentLineBounds.height))
-            }
-        }
-    }
-
-    public override func layout() {
-        super.layout()
-        layoutText()
-        layoutCaret()
-    }
-
-    private func layoutCaret() {
-        guard let caretBounds = _layoutManager.caretBounds(at: _caret.position) else {
-            return
-        }
-        _caret.view.frame = caretBounds.insetBy(dx: 0, dy: 1)
-    }
-
-    /// Layout visible text
-    private func layoutText() {
-        let textContentSize = _layoutManager.layoutText(storage: _storage,
-                                                        font: configuration.font,
-                                                        frame: visibleRect)
-
-        if frame.size != textContentSize {
-            frame.size = textContentSize
-        }
-    }
-
-    // MARK: - Helpers
-
-    private func updatePasteboard(with text: String) {
-        let pasteboard = NSPasteboard.general
-        pasteboard.clearContents()
-        pasteboard.writeObjects([text as NSPasteboardWriting])
-    }
-
-    private func unselectText() {
-        _textSelection = nil
-    }
-
-    private func scrollToVisiblePosition(_ position: Position) {
-        guard let caretBounds = _layoutManager.caretBounds(at: position) else {
-            return
-        }
-
-        scrollToVisible(caretBounds)
-    }
-}
-
-// The default implementation of the NSView method inputContext manages
-// an NSTextInputContext instance automatically if the view subclass conforms
-// to the NSTextInputClient protocol.
-extension CodeEditView: NSTextInputClient {
-
-    public func insertText(_ string: Any, replacementRange: NSRange) {
-        guard let string = string as? String else {
-            return
-        }
-
-        guard !string.unicodeScalars.contains(where: { $0.properties.isDefaultIgnorableCodePoint || $0.properties.isNoncharacterCodePoint }) else {
-            logger.info("Ignore bytes: \(Array(string.utf8))")
-            return
-        }
-
-        // Ignore ASCII control characters
-        if string.count == 1 && string.unicodeScalars.drop(while: { (0x10...0x1F).contains($0.value) }).isEmpty {
-            logger.info("Ignore control characters 0x10...0x1F")
-            return
-        }
-
-        unselectText()
-
-        logger.debug("insertText \(string) replacementRange \(replacementRange)")
-        _storage.insert(string: string, at: _caret.position)
-
-        // if string contains new line, caret position need to adjust
-        let newLineCount = string.reduce(0, { $1.isNewline ? $0 + 1 : $0 })
-        _caret.position = Position(
-            line: _caret.position.line + newLineCount,
-            // FIXME: position depends on the last added line
-            character: _caret.position.character + string.count
-        )
-
-        needsLayout = true
-        needsDisplay = true
-
-        scrollToVisiblePosition(_caret.position)
-    }
-
-    public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
-        logger.debug("setMarkedText \(string as! String) selectedRange \(selectedRange) replacementRange \(replacementRange)")
-    }
-
-    public func unmarkText() {
-        logger.debug("unmarkText")
-    }
-
-    public func selectedRange() -> NSRange {
-        logger.debug("selectedRange")
-
-        guard let selectionRange = _textSelection?.range else {
-            return NSRange(location: NSNotFound, length: 0)
-        }
-
-        // _selectionRange -> NSRange
-        let startIndex = _storage.positionOffset(at: selectionRange.start)
-        let endIndex = _storage.positionOffset(at: selectionRange.end)
-
-        return NSRange(location: startIndex, length: endIndex - startIndex)
-    }
-
-    public func markedRange() -> NSRange {
-        logger.debug("markedRange")
-        return NSRange(location: NSNotFound, length: 0)
-    }
-
-    public func hasMarkedText() -> Bool {
-        logger.debug("hasMarkedText")
-        return false
-    }
-
-    public func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
-        logger.debug("attributedSubstring forProposedRange \(range)")
-        return NSAttributedString()
-    }
-
-    public func validAttributesForMarkedText() -> [NSAttributedString.Key] {
-        [.font, .backgroundColor, .foregroundColor]
-    }
-
-    public func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
-        logger.debug("firstRect forCharacterRange \(range)")
-        return NSRect.zero
-    }
-
-    public func characterIndex(for point: NSPoint) -> Int {
-        logger.debug("characterIndex \(point.debugDescription)")
-        return NSNotFound
-        //return 0
     }
 }

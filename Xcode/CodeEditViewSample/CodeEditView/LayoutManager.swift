@@ -63,18 +63,14 @@ class LayoutManager {
         var lineSpacing: LineSpacing = .normal
         var wrapWords: Bool = true
         var indentWrappedLines: Bool = true
-
-        static let `default` = Configuration(lineWrapping: .none,
-                                             lineSpacing: .normal,
-                                             wrapWords: true,
-                                             indentWrappedLines: true)
+        var indentLevel: Int = 2
     }
 
     var configuration: Configuration
 
     private var _lineLayouts: [LineLayout]
 
-    init(configuration: Configuration = .default) {
+    init(configuration: Configuration) {
         self._lineLayouts = []
         self._lineLayouts.reserveCapacity(500)
 
@@ -168,6 +164,7 @@ class LayoutManager {
         }
 
         _lineLayouts.removeAll(keepingCapacity: true)
+        let indentWidth = configuration.indentWrappedLines ? (CTFontGetBoundingBox(font).width * CGFloat(configuration.indentLevel)) : 0
 
         // TopBottom/LeftRight
         var currentPos = CGPoint.zero
@@ -179,8 +176,6 @@ class LayoutManager {
                 kCTForegroundColorFromContextAttributeName: NSNumber(booleanLiteral: true)
             ] as CFDictionary)!
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
-
-            let indentWidth = configuration.indentWrappedLines ? CTFontGetSize(font) : 0
 
             var isWrappedLine = false
             var lineStartIndex: CFIndex = 0
