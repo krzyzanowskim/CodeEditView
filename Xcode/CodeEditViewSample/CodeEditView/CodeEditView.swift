@@ -28,46 +28,6 @@ public final class CodeEditView: NSView {
         }
     }
 
-    public var showWrappingLine: Bool {
-        didSet {
-            needsDisplay = true
-        }
-    }
-
-    public var highlightCurrentLine: Bool {
-        didSet {
-            needsDisplay = true
-        }
-    }
-
-    /// Font
-    public var font: NSFont {
-        didSet {
-            needsLayout = true
-        }
-    }
-
-    /// Text color
-    public var textColor: NSColor = .textColor {
-        didSet {
-            needsDisplay = true
-        }
-    }
-
-    /// Insert spaces when pressing Tab
-    public var insertSpacesForTab: Bool {
-        didSet {
-            needsLayout = true
-        }
-    }
-
-    /// The number of spaces a tab is equal to.
-    public var tabSize: Int {
-        didSet {
-            needsLayout = true
-        }
-    }
-
     private var _caret: Caret {
         didSet {
             layoutCaret()
@@ -83,23 +43,56 @@ public final class CodeEditView: NSView {
         }
     }
 
+    public struct Configuration {
+        /// Default font
+        public var font: NSFont
+        /// Text color
+        public var textColor: NSColor
+        /// Highlight current (caret) line
+        public var highlightCurrentLine: Bool
+        /// Show wrapping line
+        public var showWrappingLine: Bool
+        /// The number of spaces a tab is equal to.
+        public var tabSize: Int
+        /// Insert spaces when pressing Tab
+        public var insertSpacesForTab: Bool
+
+        init(font: NSFont, textColor: NSColor, highlightCurrentLine: Bool, showWrappingLine: Bool, tabSize: Int, insertSpacesForTab: Bool) {
+            self.font = font
+            self.textColor = textColor
+            self.highlightCurrentLine = highlightCurrentLine
+            self.showWrappingLine = showWrappingLine
+            self.tabSize = tabSize
+            self.insertSpacesForTab = insertSpacesForTab
+        }
+
+        public static let `default` = Configuration(font: .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
+                                         textColor: .textColor,
+                                         highlightCurrentLine: true,
+                                         showWrappingLine: true,
+                                         tabSize: 4,
+                                         insertSpacesForTab: true)
+    }
+
+    public var configuration: Configuration {
+        didSet {
+            needsLayout = true
+            needsDisplay = true
+        }
+    }
+
     private let _storage: TextStorage
     private let _layoutManager: LayoutManager
 
     /// Cached layout
     //private var _lineLayouts: [LineLayout]
 
-    public init(storage: TextStorage) {
+    public init(storage: TextStorage, configuration: Configuration = .default) {
         self._storage = storage
         self._layoutManager = LayoutManager()
-
-        self.font = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        self.showWrappingLine = true
-        self.insertSpacesForTab = false
-        self.tabSize = 4
-        self.highlightCurrentLine = true
-
         self._caret = Caret()
+
+        self.configuration = configuration
 
         super.init(frame: .zero)
 
@@ -511,8 +504,8 @@ public final class CodeEditView: NSView {
     }
 
     public override func insertTab(_ sender: Any?) {
-        if insertSpacesForTab {
-            self.insertText(String([Character](repeating: " ", count: tabSize)), replacementRange: NSRange(location: NSNotFound, length: 0))
+        if configuration.insertSpacesForTab {
+            self.insertText(String([Character](repeating: " ", count: configuration.tabSize)), replacementRange: NSRange(location: NSNotFound, length: 0))
         } else {
             self.insertText("\t", replacementRange: NSRange(location: NSNotFound, length: 0))
         }
@@ -540,7 +533,7 @@ public final class CodeEditView: NSView {
             return
         }
 
-        if _isFirstResponder && highlightCurrentLine {
+        if _isFirstResponder && configuration.highlightCurrentLine {
             drawHighlightedLine(context, dirtyRect: dirtyRect)
         }
 
@@ -554,7 +547,7 @@ public final class CodeEditView: NSView {
     }
 
     private func drawWrappingLine(_ context: CGContext, dirtyRect: NSRect) {
-        guard showWrappingLine, case .width(let wrapWidth) = _layoutManager.configuration.lineWrapping else {
+        guard configuration.showWrappingLine, case .width(let wrapWidth) = _layoutManager.configuration.lineWrapping else {
             return
         }
 
@@ -576,10 +569,11 @@ public final class CodeEditView: NSView {
         }
 
         context.textMatrix = CGAffineTransform(scaleX: 1, y: isFlipped ? -1 : 1)
-        context.setFillColor(textColor.cgColor)
+        context.setFillColor(configuration.textColor.cgColor)
 
         // Draw text lines for bigger area to avoid frictions.
-        let overscanDirtyRect = dirtyRect.insetBy(dx: -font.boundingRectForFont.width * 4, dy: -font.boundingRectForFont.height * 4)
+        let defaultFont = configuration.font
+        let overscanDirtyRect = dirtyRect.insetBy(dx: -defaultFont.boundingRectForFont.width * 4, dy: -defaultFont.boundingRectForFont.height * 4)
 
         for lineLayout in _layoutManager.linesLayout(in: overscanDirtyRect) {
             context.textPosition = CGPoint(x: lineLayout.origin.x, y: lineLayout.origin.y)
@@ -723,12 +717,15 @@ public final class CodeEditView: NSView {
         guard let caretBounds = _layoutManager.caretBounds(at: _caret.position) else {
             return
         }
-        _caret.view.frame = caretBounds
+        _caret.view.frame = caretBounds.insetBy(dx: 0, dy: 1)
     }
 
     /// Layout visible text
     private func layoutText() {
-        let textContentSize = _layoutManager.layoutText(storage: _storage, font: font, frame: visibleRect)
+        let textContentSize = _layoutManager.layoutText(storage: _storage,
+                                                        font: configuration.font,
+                                                        frame: visibleRect)
+
         if frame.size != textContentSize {
             frame.size = textContentSize
         }

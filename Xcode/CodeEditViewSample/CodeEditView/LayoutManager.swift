@@ -58,25 +58,25 @@ class LayoutManager {
         case width(_ value: CGFloat = .infinity)
     }
 
-    public struct Configuration {
-        public var lineWrapping: LineWrapping = .none
-        public var lineSpacing: LineSpacing = .normal
-        public var wrapWords: Bool = true
-        public var indentWrappedLines: Bool = true
+    struct Configuration {
+        var lineWrapping: LineWrapping = .none
+        var lineSpacing: LineSpacing = .normal
+        var wrapWords: Bool = true
+        var indentWrappedLines: Bool = true
     }
 
-    public var configuration: Configuration
+    var configuration: Configuration
 
     private var _lineLayouts: [LineLayout]
 
-    public init(_ configuration: Configuration = Configuration()) {
+    init(_ configuration: Configuration = Configuration()) {
         self._lineLayouts = []
         self._lineLayouts.reserveCapacity(500)
 
         self.configuration = configuration
     }
 
-    public func caretBounds(at position: Position) -> CGRect? {
+    func caretBounds(at position: Position) -> CGRect? {
         guard let lineLayout = lineLayout(at: position) else {
             return nil
         }
@@ -89,7 +89,7 @@ class LayoutManager {
                       height: metrics.height + metrics.lineSpacing)
     }
 
-    public func bounds(lineLayout: LineLayout) -> CGRect {
+    func bounds(lineLayout: LineLayout) -> CGRect {
         let metrics = lineLayout.metrics
         let characterOffsetX = CTLineGetOffsetForStringIndex(lineLayout.ctline, 0, nil)
         return CGRect(x: lineLayout.origin.x + characterOffsetX,
@@ -99,7 +99,7 @@ class LayoutManager {
     }
 
     // Index operation
-    public func lineLayout(after lineLayout: LineLayout) -> LineLayout? {
+    func lineLayout(after lineLayout: LineLayout) -> LineLayout? {
         guard let idx = lineLayoutIndex(lineLayout) else {
             return nil
         }
@@ -108,22 +108,22 @@ class LayoutManager {
     }
 
     // Index operation
-    public func lineLayout(before lineLayout: LineLayout) -> LineLayout? {
+    func lineLayout(before lineLayout: LineLayout) -> LineLayout? {
         guard let idx = lineLayoutIndex(lineLayout), idx > 0 else {
             return nil
         }
         return self.lineLayout(idx: idx - 1)
     }
 
-    public func lineLayout(idx: Int) -> LineLayout? {
+    func lineLayout(idx: Int) -> LineLayout? {
         _lineLayouts[idx]
     }
 
-    public func lineLayoutIndex(_ lineLayout: LineLayout) -> Int? {
+    func lineLayoutIndex(_ lineLayout: LineLayout) -> Int? {
         _lineLayouts.firstIndex(of: lineLayout)
     }
 
-    public func lineLayout(at position: Position) -> LineLayout? {
+    func lineLayout(at position: Position) -> LineLayout? {
         _lineLayouts.first { lineLayout -> Bool in
             position.character >= lineLayout.stringRange.location &&
                 position.character < lineLayout.stringRange.location + lineLayout.stringRange.length &&
@@ -131,7 +131,7 @@ class LayoutManager {
         }
     }
 
-    public func linesLayout(in rect: CGRect) -> [LineLayout] {
+    func linesLayout(in rect: CGRect) -> [LineLayout] {
         _lineLayouts.filter { lineLayout in
             lineLayout.origin.y >= rect.minY && lineLayout.origin.y <= rect.maxY
         }
