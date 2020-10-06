@@ -637,57 +637,31 @@ extension CodeEditView {
         needsDisplay = true
     }
 
-    private func caretMoveUp(_ sender: Any?) {
-        guard let currentLineLayout = _layoutManager.lineLayout(at: _caret.position),
-              let prevLineLayout = _layoutManager.lineLayout(before: currentLineLayout) else {
-            return
-        }
-
-        // distance from the beginning of the current line limited by the next line length
-        // TODO: effectively reset caret position to the beginin of the line, while it's not expected
-        //       the caret offset should preserve between lines, and empty line should not reset the caret offset.
-        let distance = min(_caret.position.character - currentLineLayout.stringRange.location, prevLineLayout.stringRange.length - 1)
-        _caret.position = Position(line: prevLineLayout.lineNumber, character: prevLineLayout.stringRange.location + distance)
-    }
-
     public override func moveUp(_ sender: Any?) {
         unselectText()
-        caretMoveUp(sender)
+        _caret.position.moveUpByLine(using: _layoutManager)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
     public override func moveUpAndModifySelection(_ sender: Any?) {
         moveCaretAndModifySelection {
-            caretMoveUp(sender)
+            _caret.position.moveUpByLine(using: _layoutManager)
         }
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
-    private func caretMoveDown(_ sender: Any?) {
-        guard let currentLineLayout = _layoutManager.lineLayout(at: _caret.position),
-              let nextLineLayout = _layoutManager.lineLayout(after: currentLineLayout) else {
-            return
-        }
-
-        // distance from the beginning of the current line limited by the next line length
-        // TODO: effectively reset caret position to the beginin of the line, while it's not expected
-        //       the caret offset should preserve between lines, and empty line should not reset the caret offset.
-        let distance = min(_caret.position.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length - 1)
-        _caret.position = Position(line: nextLineLayout.lineNumber, character: nextLineLayout.stringRange.location + distance)
-    }
-
     public override func moveDown(_ sender: Any?) {
         unselectText()
-        caretMoveDown(sender)
+        _caret.position.moveDownByLine(using: _layoutManager)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
     public override func moveDownAndModifySelection(_ sender: Any?) {
         moveCaretAndModifySelection {
-            caretMoveDown(sender)
+            _caret.position.moveDownByLine(using: _layoutManager)
         }
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
