@@ -21,9 +21,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let sampleText = String.init(decoding: NSDataAsset(name: "sample-text-file")!.data, as: UTF8.self)
         let codeView = CodeEditView(storage: TextStorage(string: sampleText))
         codeView.autoresizingMask = [.width, .height]
-        codeView.lineWrapping = .bounds
-        codeView.indentWrappedLines = true
-        codeView.wrapWords = true
         codeView.highlightCurrentLine = true
 
         let scrollView = NSScrollView()

@@ -30,6 +30,10 @@ final class CaretView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    override var isFlipped: Bool {
+        true
+    }
+
     deinit {
         timer.setEventHandler {}
         timer.cancel()
@@ -64,12 +68,16 @@ final class CaretView: NSView {
     }
 
     private func drawLineStyle(in context: CGContext, dirtyRect: NSRect) {
+        context.saveGState()
         context.setFillColor(NSColor.textColor.cgColor)
         context.fill(CGRect(x: 0, y: 0, width: max(1, frame.width * 0.1), height: bounds.height))
+        context.restoreGState()
     }
 
     private func drawBlockStyle(in context: CGContext, dirtyRect: NSRect) {
+        context.saveGState()
         context.setFillColor(NSColor.textColor.cgColor)
         context.fill(CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height))
+        context.restoreGState()
     }
 }
