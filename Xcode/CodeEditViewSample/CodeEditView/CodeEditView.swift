@@ -658,7 +658,9 @@ extension CodeEditView {
     }
 
     public override func moveUpAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection(caretMoveUp)
+        moveCaretAndModifySelection {
+            caretMoveUp(sender)
+        }
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
@@ -684,13 +686,11 @@ extension CodeEditView {
     }
 
     public override func moveDownAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection(caretMoveDown)
+        moveCaretAndModifySelection {
+            caretMoveDown(sender)
+        }
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
-    }
-
-    private func caretMoveLeft(_ sender: Any?) {
-        _caret.position.move(by: -1, in: _storage)
     }
 
     public override func moveLeft(_ sender: Any?) {
@@ -709,11 +709,13 @@ extension CodeEditView {
             return
         }
 
-        caretMoveLeft(sender)
+        _caret.position.move(by: -1, in: _storage)
     }
 
     public override func moveLeftAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection(caretMoveLeft)
+        moveCaretAndModifySelection {
+            _caret.position.move(by: -1, in: _storage)
+        }
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
@@ -726,15 +728,11 @@ extension CodeEditView {
     }
 
     public override func moveToLeftEndOfLineAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection { sender in
+        moveCaretAndModifySelection {
             _caret.position = Position(line: _caret.position.line, character: 0)
         }
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
-    }
-
-    private func caretMoveRight(_ sender: Any?) {
-        _caret.position.move(by: 1, in: _storage)
     }
 
     public override func moveRight(_ sender: Any?) {
@@ -755,11 +753,13 @@ extension CodeEditView {
             return
         }
 
-        caretMoveRight(sender)
+        _caret.position.move(by: 1, in: _storage)
     }
 
     public override func moveRightAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection(caretMoveRight)
+        moveCaretAndModifySelection {
+            _caret.position.move(by: 1, in: _storage)
+        }
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
@@ -772,7 +772,7 @@ extension CodeEditView {
     }
 
     public override func moveToRightEndOfLineAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection { sender in
+        moveCaretAndModifySelection {
             _caret.position = Position(line: _caret.position.line, character: _storage.string(line: _caret.position.line).count - 1)
         }
         scrollToVisiblePosition(_caret.position)
@@ -823,9 +823,9 @@ extension CodeEditView {
         scrollToVisiblePosition(_caret.position)
     }
 
-    private func moveCaretAndModifySelection(_ moveCaret: (_ sender: Any?) -> Void) {
+    private func moveCaretAndModifySelection(_ moveCaret: () -> Void) {
         let beforeMoveCaretPosition = _caret.position
-        moveCaret(nil)
+        moveCaret()
         let afterMoveCaretPosition = _caret.position
 
         if let currentSelectionRange = _textSelection?.range {
