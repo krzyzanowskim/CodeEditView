@@ -38,32 +38,17 @@ class LayoutManager {
         }
     }
 
-    /// Line spacing
-    enum LineSpacing: CGFloat {
-        /// 0% line spacing
-        case tight = 1.0
-        /// 20% line spacing
-        case normal = 1.2
-        /// 40% line spacing
-        case relaxed = 1.4
-    }
-
-    /// Line wrapping
-    enum LineWrapping {
-        /// No wrapping
-        case none
-        /// Wrap at bounds
-        case bounds
-        /// Wrap at specific width
-        case width(_ value: CGFloat = .infinity)
-    }
-
     struct Configuration {
+        /// Line wrapping mode.
         var lineWrapping: LineWrapping = .none
-        var lineSpacing: LineSpacing = .normal
+        /// Wrap on words.
         var wrapWords: Bool = true
+        /// Indent wrapped lines.
         var indentWrappedLines: Bool = true
+        /// Indentation level.
         var indentLevel: Int = 2
+        /// Line spacing style.
+        var lineSpacing: LineSpacing = .normal
     }
 
     var configuration: Configuration

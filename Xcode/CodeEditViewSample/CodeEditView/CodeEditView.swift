@@ -42,34 +42,31 @@ public final class CodeEditView: NSView {
     }
 
     public struct Configuration {
+        /// Line wrapping mode.
+        public var lineWrapping: LineWrapping = .bounds
+        /// Wrap on words.
+        public var wrapWords: Bool = true
+        /// Indent wrapped lines.
+        public var indentWrappedLines: Bool = true
+        /// Indentation level.
+        public var indentLevel: Int = 2
+        /// Line spacing style.
+        public var lineSpacing: LineSpacing = .normal
+
         /// Default font
-        public var font: NSFont
+        public var font: NSFont = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         /// Text color
-        public var textColor: NSColor
+        public var textColor: NSColor = .textColor
         /// Highlight current (caret) line
-        public var highlightCurrentLine: Bool
+        public var highlightCurrentLine: Bool = true
         /// Show wrapping line
-        public var showWrappingLine: Bool
+        public var showWrappingLine: Bool = false
         /// The number of spaces a tab is equal to.
-        public var tabSpaceSize: Int
+        public var tabSpaceSize: Int = 4
         /// Insert spaces when pressing Tab
-        public var insertSpacesForTab: Bool
+        public var insertSpacesForTab: Bool = true
 
-        init(font: NSFont, textColor: NSColor, highlightCurrentLine: Bool, showWrappingLine: Bool, tabSpaceSize: Int, insertSpacesForTab: Bool) {
-            self.font = font
-            self.textColor = textColor
-            self.highlightCurrentLine = highlightCurrentLine
-            self.showWrappingLine = showWrappingLine
-            self.tabSpaceSize = tabSpaceSize
-            self.insertSpacesForTab = insertSpacesForTab
-        }
-
-        public static let `default` = Configuration(font: .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
-                                         textColor: .textColor,
-                                         highlightCurrentLine: true,
-                                         showWrappingLine: true,
-                                         tabSpaceSize: 4,
-                                         insertSpacesForTab: true)
+        public static let `default` = Configuration()
     }
 
     public var configuration: Configuration {
@@ -85,11 +82,11 @@ public final class CodeEditView: NSView {
     public init(storage: TextStorage, configuration: Configuration = .default) {
         self._storage = storage
 
-        let layoutConfiguration = LayoutManager.Configuration(lineWrapping: .bounds,
-                                                              lineSpacing: .normal,
-                                                              wrapWords: true,
-                                                              indentWrappedLines: true)
-        self._layoutManager = LayoutManager(configuration: layoutConfiguration)
+        self._layoutManager = LayoutManager(configuration: .init(lineWrapping: configuration.lineWrapping,
+                                                                 wrapWords: configuration.wrapWords,
+                                                                 indentWrappedLines: configuration.indentWrappedLines,
+                                                                 indentLevel: configuration.indentLevel,
+                                                                 lineSpacing: configuration.lineSpacing))
         self._caret = Caret()
 
         self.configuration = configuration
