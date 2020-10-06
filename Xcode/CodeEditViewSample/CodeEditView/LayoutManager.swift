@@ -39,7 +39,7 @@ class LayoutManager {
     }
 
     /// Line spacing
-    public enum LineSpacing: CGFloat {
+    enum LineSpacing: CGFloat {
         /// 0% line spacing
         case tight = 1.0
         /// 20% line spacing
@@ -49,7 +49,7 @@ class LayoutManager {
     }
 
     /// Line wrapping
-    public enum LineWrapping {
+    enum LineWrapping {
         /// No wrapping
         case none
         /// Wrap at bounds
@@ -81,6 +81,8 @@ class LayoutManager {
         self.configuration = configuration
     }
 
+    // MARK: - Metrics
+
     func caretBounds(at position: Position) -> CGRect? {
         guard let lineLayout = lineLayout(at: position) else {
             return nil
@@ -96,14 +98,14 @@ class LayoutManager {
 
     func bounds(lineLayout: LineLayout) -> CGRect {
         let metrics = lineLayout.metrics
-        let characterOffsetX = CTLineGetOffsetForStringIndex(lineLayout.ctline, 0, nil)
-        return CGRect(x: lineLayout.origin.x + characterOffsetX,
+        return CGRect(x: lineLayout.origin.x,
                       y: lineLayout.origin.y - metrics.height - (metrics.lineSpacing / 2) + metrics.descent,
                       width: metrics.width,
                       height: metrics.height + metrics.lineSpacing)
     }
 
-    // Index operation
+    // MARK: - Fetch LineLayout
+
     func lineLayout(after lineLayout: LineLayout) -> LineLayout? {
         guard let idx = lineLayoutIndex(lineLayout) else {
             return nil
@@ -112,7 +114,7 @@ class LayoutManager {
         return self.lineLayout(idx: idx + 1)
     }
 
-    // Index operation
+
     func lineLayout(before lineLayout: LineLayout) -> LineLayout? {
         guard let idx = lineLayoutIndex(lineLayout), idx > 0 else {
             return nil
@@ -141,6 +143,8 @@ class LayoutManager {
             lineLayout.origin.y >= rect.minY && lineLayout.origin.y <= rect.maxY
         }
     }
+
+    // MARK: -
 
     func layoutText(storage: TextStorage, font: CTFont, frame: CGRect) -> CGSize {
         logger.trace("layoutText willStart")

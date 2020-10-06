@@ -11,8 +11,6 @@ import CoreText
 /// Code Edit View
 public final class CodeEditView: NSView {
 
-    private typealias LineNumber = Int
-
     private struct Caret {
         var position: Position = .zero
         var displayPosition: Position = .zero
