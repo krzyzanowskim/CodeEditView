@@ -4,18 +4,14 @@ extension Position {
 
     mutating func move(by charactersCount: Int, in textStorage: TextStorage) {
         if charactersCount > 0 {
-            moveAfter(by: UInt(charactersCount), in: textStorage)
+            if let newPosition = position(after: UInt(charactersCount), in: textStorage) {
+                self = newPosition
+            }
         } else if charactersCount < 0 {
-            moveBefore(by: UInt(-charactersCount), in: textStorage)
+            if let newPosition = position(before: UInt(-charactersCount), in: textStorage) {
+                self = newPosition
+            }
         }
-    }
-
-    private mutating func moveAfter(by charactersOffset: UInt, in textStorage: TextStorage) {
-        self = position(after: charactersOffset, in: textStorage) ?? self
-    }
-
-    private mutating func moveBefore(by charactersOffset: UInt, in textStorage: TextStorage) {
-        self = position(before: charactersOffset, in: textStorage) ?? self
     }
 
     /// Return a Position after move by charactersOffset characters forward.
