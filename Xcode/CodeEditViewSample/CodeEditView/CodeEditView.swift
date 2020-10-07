@@ -13,7 +13,6 @@ public final class CodeEditView: NSView {
 
     private struct Caret {
         var position: Position = .zero
-        var displayPosition: Position = .zero
         let view: CaretView = CaretView()
 
         var isHidden: Bool {
@@ -128,7 +127,20 @@ public final class CodeEditView: NSView {
     }
 
     public override func mouseDown(with event: NSEvent) {
-        inputContext?.handleEvent(event)
+        if let inputContext = inputContext, inputContext.handleEvent(event) {
+            return
+        }
+
+        if event.type == .leftMouseDown {
+            let viewLocation = self.convert(event.locationInWindow, from: nil)
+            if let lineLayout = _layoutManager.lineLayout(at: viewLocation) {
+                let characterIndex = CTLineGetStringIndexForPosition(lineLayout.ctline, viewLocation.applying(.init(translationX: -lineLayout.leadingIndentWidth, y: 0)))
+                if characterIndex != kCFNotFound {
+                    _caret.position = Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
+                }
+                needsDisplay = true
+            }
+        }
     }
 
 
@@ -180,8 +192,8 @@ public final class CodeEditView: NSView {
         context.setFillColor(configuration.textColor.cgColor)
 
         // Draw text lines for bigger area to avoid frictions.
-        let defaultFont = configuration.font
-        let overscanDirtyRect = dirtyRect.insetBy(dx: -defaultFont.boundingRectForFont.width * 4, dy: -defaultFont.boundingRectForFont.height * 4)
+        let boundingRectForFont = configuration.font.boundingRectForFont
+        let overscanDirtyRect = dirtyRect.insetBy(dx: -boundingRectForFont.width * 4, dy: -boundingRectForFont.height * 4)
 
         for lineLayout in _layoutManager.linesLayout(in: overscanDirtyRect) {
             context.textPosition = CGPoint(x: lineLayout.origin.x, y: lineLayout.origin.y)

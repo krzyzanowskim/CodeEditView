@@ -23,6 +23,7 @@ class LayoutManager {
         let ctline: CTLine
         /// A point that specifies the x and y values at which line is to be drawn.
         let origin: CGPoint
+        let leadingIndentWidth: CGFloat
         let metrics: Metrics
         /// A string range of the line.
         /// For wrapped line its a fragment of the line.
@@ -121,7 +122,16 @@ class LayoutManager {
 
     func linesLayout(in rect: CGRect) -> [LineLayout] {
         _lineLayouts.filter { lineLayout in
-            lineLayout.origin.y >= rect.minY && lineLayout.origin.y <= rect.maxY
+            rect.contains(lineLayout.origin)
+        }
+    }
+
+    func lineLayout(at point: CGPoint) -> LineLayout? {
+        _lineLayouts.first { lineLayout in
+            let metrics = lineLayout.metrics
+            let lowerBound = lineLayout.origin.y - metrics.height - (metrics.lineSpacing / 2) + metrics.descent
+            let upperBound = lowerBound + metrics.height + metrics.lineSpacing
+            return (lowerBound...upperBound).contains(point.y)
         }
     }
 
@@ -169,14 +179,14 @@ class LayoutManager {
                     isWrappedLine = true
                 }
 
-                let leadingIndent = isWrappedLine ? indentWidth : 0
-                currentPos.x = leadingIndent
+                let leadingIndentWidth = isWrappedLine ? indentWidth : 0
+                currentPos.x = leadingIndentWidth
 
                 let breakIndex: CFIndex
                 if configuration.wrapWords {
-                    breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - leadingIndent), Double(currentPos.y))
+                    breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - leadingIndentWidth), Double(currentPos.y))
                 } else {
-                    breakIndex = CTTypesetterSuggestClusterBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - leadingIndent), Double(currentPos.y))
+                    breakIndex = CTTypesetterSuggestClusterBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - leadingIndentWidth), Double(currentPos.y))
                 }
                 let stringRange = CFRange(location: lineStartIndex, length: breakIndex)
 
@@ -186,7 +196,7 @@ class LayoutManager {
                 var ascent: CGFloat = 0
                 var descent: CGFloat = 0
                 var leading: CGFloat = 0
-                let lineWidth = CGFloat(CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading)) + leadingIndent
+                let lineWidth = CGFloat(CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading)) + leadingIndentWidth
                 let lineHeight = ascent + descent + leading
                 let lineSpacing = (lineHeight * configuration.lineSpacing.rawValue) - lineHeight
 
@@ -195,6 +205,7 @@ class LayoutManager {
                     LineLayout(lineNumber: LineNumber(lineNumber),
                                ctline: ctline,
                                origin: CGPoint(x: currentPos.x, y: currentPos.y + ascent + descent),
+                               leadingIndentWidth: leadingIndentWidth,
                                metrics: Metrics(ascent: ascent,
                                                 descent: descent,
                                                 leading: leading,

@@ -71,9 +71,9 @@
 			isa = PBXGroup;
 			children = (
 				759610142522D8FA002D27A9 /* Logger.swift */,
+				750AC4C924F27D9E004FB229 /* CodeEdit.swift */,
 				7511242724F57808005F82BA /* CaretView.swift */,
 				750AC4C724F27D50004FB229 /* CodeEditView.swift */,
-				750AC4C924F27D9E004FB229 /* CodeEdit.swift */,
 				75BF9629252B2FE700278E62 /* LayoutManager.swift */,
 				7578673A252D2C170040646D /* Position+TextStorage.swift */,
 				7578673E252D37F10040646D /* LineWrapping.swift */,
