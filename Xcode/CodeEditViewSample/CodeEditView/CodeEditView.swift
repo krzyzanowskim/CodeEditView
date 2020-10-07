@@ -174,7 +174,9 @@ public final class CodeEditView: NSView {
         }
 
         if _isFirstResponder && configuration.highlightCurrentLine {
-            drawHighlightedLine(context, dirtyRect: dirtyRect)
+            if _textSelection == nil {
+                drawHighlightedLine(context, dirtyRect: dirtyRect)
+            }
         }
 
         drawSelection(context, dirtyRect: dirtyRect)
@@ -683,7 +685,9 @@ extension CodeEditView {
 
     public override func moveUpAndModifySelection(_ sender: Any?) {
         moveSelection(.up, by: 1)
-        scrollToVisiblePosition(_caret.position)
+        if let endSelectionRange = _textSelection?.range.end {
+            scrollToVisiblePosition(endSelectionRange)
+        }
         needsDisplay = true
     }
 
@@ -704,7 +708,9 @@ extension CodeEditView {
 
     public override func moveDownAndModifySelection(_ sender: Any?) {
         moveSelection(.down, by: 1)
-        scrollToVisiblePosition(_caret.position)
+        if let endSelectionRange = _textSelection?.range.end {
+            scrollToVisiblePosition(endSelectionRange)
+        }
         needsDisplay = true
     }
 
