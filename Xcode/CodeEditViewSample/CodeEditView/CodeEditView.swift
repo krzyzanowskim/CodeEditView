@@ -179,9 +179,15 @@ public final class CodeEditView: NSView {
             }
         }
 
-        drawSelection(context, dirtyRect: dirtyRect)
+        if _textSelection != nil {
+            drawSelection(context, dirtyRect: dirtyRect)
+        }
+
         drawText(context, dirtyRect: dirtyRect)
-        drawWrappingLine(context, dirtyRect: dirtyRect)
+
+        if configuration.showWrappingLine {
+            drawWrappingLine(context, dirtyRect: dirtyRect)
+        }
     }
 
     public override func prepareContent(in rect: NSRect) {
@@ -189,7 +195,7 @@ public final class CodeEditView: NSView {
     }
 
     private func drawWrappingLine(_ context: CGContext, dirtyRect: NSRect) {
-        guard configuration.showWrappingLine, case .width(let wrapWidth) = _layoutManager.configuration.lineWrapping else {
+        guard case .width(let wrapWidth) = _layoutManager.configuration.lineWrapping else {
             return
         }
 
