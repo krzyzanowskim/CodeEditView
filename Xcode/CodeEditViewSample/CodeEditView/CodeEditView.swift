@@ -31,7 +31,12 @@ public final class CodeEditView: NSView {
         }
     }
 
-    private var _textSelection: SelectionRange?
+    /// Current text selection. Single selection range.
+    private var _textSelection: SelectionRange? {
+        didSet {
+            _caret.isHidden = _textSelection != nil
+        }
+    }
 
     /// Whether or not this view is the focused view for its window
     private var _isFirstResponder = false {
@@ -662,6 +667,14 @@ extension CodeEditView {
     }
 
     public override func moveUp(_ sender: Any?) {
+        if let selectionRange = _textSelection?.range {
+            if selectionRange.start > selectionRange.end {
+                _caret.position = selectionRange.end
+            } else {
+                _caret.position = selectionRange.start
+            }
+        }
+
         unselectText()
         _caret.position.moveUpByLine(using: _layoutManager)
         scrollToVisiblePosition(_caret.position)
@@ -669,14 +682,20 @@ extension CodeEditView {
     }
 
     public override func moveUpAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection {
-            _caret.position.moveUpByLine(using: _layoutManager)
-        }
+        moveSelection(.up, by: 1)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
     public override func moveDown(_ sender: Any?) {
+        if let selectionRange = _textSelection?.range {
+            if selectionRange.start > selectionRange.end {
+                _caret.position = selectionRange.start
+            } else {
+                _caret.position = selectionRange.end
+            }
+        }
+
         unselectText()
         _caret.position.moveDownByLine(using: _layoutManager)
         scrollToVisiblePosition(_caret.position)
@@ -684,36 +703,29 @@ extension CodeEditView {
     }
 
     public override func moveDownAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection {
-            _caret.position.moveDownByLine(using: _layoutManager)
-        }
+        moveSelection(.down, by: 1)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
 
     public override func moveLeft(_ sender: Any?) {
-        defer {
-            unselectText()
-            scrollToVisiblePosition(_caret.position)
-            needsDisplay = true
-        }
-
         if let selectionRange = _textSelection?.range {
             if selectionRange.start > selectionRange.end {
                 _caret.position = selectionRange.end
             } else {
                 _caret.position = selectionRange.start
             }
-            return
+        } else {
+            _caret.position.move(by: -1, in: _storage)
         }
 
-        _caret.position.move(by: -1, in: _storage)
+        unselectText()
+        scrollToVisiblePosition(_caret.position)
+        needsDisplay = true
     }
 
     public override func moveLeftAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection {
-            _caret.position.move(by: -1, in: _storage)
-        }
+        moveSelection(.left, by: 1)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
@@ -726,10 +738,14 @@ extension CodeEditView {
     }
 
     public override func moveToLeftEndOfLineAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection {
-            _caret.position = Position(line: _caret.position.line, character: 0)
-        }
-        scrollToVisiblePosition(_caret.position)
+        var startSelectionPosition = _textSelection?.range.start ?? _caret.position
+        let endSelectionPosition = _textSelection?.range.end ?? _caret.position
+
+        // update start
+        startSelectionPosition = Position(line: startSelectionPosition.line, character: 0)
+
+        _textSelection = SelectionRange(Range(start: startSelectionPosition, end: endSelectionPosition))
+        scrollToVisiblePosition(startSelectionPosition)
         needsDisplay = true
     }
 
@@ -741,7 +757,6 @@ extension CodeEditView {
         }
 
         if let selectionRange = _textSelection?.range {
-
             if selectionRange.start > selectionRange.end {
                 _caret.position = selectionRange.start
             } else {
@@ -755,9 +770,7 @@ extension CodeEditView {
     }
 
     public override func moveRightAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection {
-            _caret.position.move(by: 1, in: _storage)
-        }
+        moveSelection(.right, by: 1)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
@@ -770,10 +783,14 @@ extension CodeEditView {
     }
 
     public override func moveToRightEndOfLineAndModifySelection(_ sender: Any?) {
-        moveCaretAndModifySelection {
-            _caret.position = Position(line: _caret.position.line, character: _storage.string(line: _caret.position.line).count - 1)
-        }
-        scrollToVisiblePosition(_caret.position)
+        let startSelectionPosition = _textSelection?.range.start ?? _caret.position
+        var endSelectionPosition = _textSelection?.range.end ?? _caret.position
+
+        // update end
+        endSelectionPosition = Position(line: endSelectionPosition.line, character: _storage.string(line: endSelectionPosition.line).count - 1)
+
+        _textSelection = SelectionRange(Range(start: startSelectionPosition, end: endSelectionPosition))
+        scrollToVisiblePosition(endSelectionPosition)
         needsDisplay = true
     }
 
@@ -821,15 +838,21 @@ extension CodeEditView {
         scrollToVisiblePosition(_caret.position)
     }
 
-    private func moveCaretAndModifySelection(_ moveCaret: () -> Void) {
-        let beforeMoveCaretPosition = _caret.position
-        moveCaret()
-        let afterMoveCaretPosition = _caret.position
+    private func moveSelection(_ direction: MoveDirection, by count: Int) {
+        let startSelectionPosition = _textSelection?.range.start ?? _caret.position
+        var endSelectionPosition = _textSelection?.range.end ?? _caret.position
 
-        if let currentSelectionRange = _textSelection?.range {
-            _textSelection = SelectionRange(Range(start: currentSelectionRange.start, end: afterMoveCaretPosition))
-        } else {
-            _textSelection = SelectionRange(Range(start: beforeMoveCaretPosition, end: afterMoveCaretPosition))
+        switch direction {
+            case .right:
+                endSelectionPosition.move(by: 1, in: _storage)
+            case .left:
+                endSelectionPosition.move(by: -1, in: _storage)
+            case .up:
+                endSelectionPosition.moveUpByLine(using: _layoutManager)
+            case .down:
+                endSelectionPosition.moveDownByLine(using: _layoutManager)
         }
+
+        _textSelection = SelectionRange(Range(start: startSelectionPosition, end: endSelectionPosition))
     }
 }
