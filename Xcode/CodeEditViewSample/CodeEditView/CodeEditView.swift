@@ -136,7 +136,22 @@ public final class CodeEditView: NSView {
             if let lineLayout = _layoutManager.lineLayout(at: viewLocation) {
                 let characterIndex = CTLineGetStringIndexForPosition(lineLayout.ctline, viewLocation.applying(.init(translationX: -lineLayout.leadingIndentWidth, y: 0)))
                 if characterIndex != kCFNotFound {
-                    _caret.position = Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
+                    let eventPosition = Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
+
+                    if event.modifierFlags.contains(.shift) {
+                        logger.debug("Update selection")
+
+                        var range = Range(start: _caret.position, end: eventPosition)
+                        if _caret.position > eventPosition {
+                            range = range.inverted()
+                        }
+
+                        _textSelection = SelectionRange(range)
+                    } else {
+                        logger.debug("Move caret")
+                        unselectText()
+                        _caret.position = eventPosition
+                    }
                 }
                 needsDisplay = true
             }
