@@ -3,6 +3,8 @@ import Foundation
 /// Dummy String based storage provider
 class StringTextStorageProvider: TextStorageProvider {
     private var _content: String = ""
+
+    /// Cache lines and ranges including newline character at the end.
     private var _cacheLineRange: [Int: Swift.Range<String.Index>] = [:]
 
     var linesCount: Int {
@@ -66,13 +68,14 @@ class StringTextStorageProvider: TextStorageProvider {
     private func invalidateLinesCache() {
         _cacheLineRange.removeAll(keepingCapacity: true)
 
-        /* nice try to use Algorithms, but it's slow ~180ms
+        // nice try to use Algorithms, but it's slow ~180ms
+        /*
         logger.trace("invalidateLinesCache chunksOfLines willStart")
         _content.chunksOfLines().enumerated().forEach { chunk in
             _cacheLineRange[chunk.offset] = chunk.element.indices.startIndex..<chunk.element.indices.endIndex
         }
         logger.trace("invalidateLinesCache chunksOfLines didEnd")
-        */
+         */
 
         // Faster than Algorithms version, ~90ms, way slower in debug.
         /*
@@ -91,14 +94,15 @@ class StringTextStorageProvider: TextStorageProvider {
             logger.trace("invalidateLinesCache didEnd")
         }
         */
+
         // StringProtocol.enumerateLines is fast! probably because gies with ObjC
         // This is fastest ~90ms in Debug and Release, but lack proper newlines
         logger.trace("invalidateLinesCache enumerateLines willStart")
         var currentLine = 0
         var lineStartIndex = _content.startIndex
         _content.enumerateLines { [unowned self] line, stop in
-            // "1" assume \n and will fail if \r\n
-            // FIXME: Better check what's at the end and use newline length
+            // \n is 1 character, \r\n is 1 character at _content[lineEndIndex]
+            // hence offset is line.count + 1; that is a line with trailing newline character
             if let lineEndIndex = _content.index(lineStartIndex, offsetBy: line.count + 1, limitedBy: _content.endIndex) {
                 _cacheLineRange[currentLine] = lineStartIndex..<lineEndIndex
                 currentLine += 1
