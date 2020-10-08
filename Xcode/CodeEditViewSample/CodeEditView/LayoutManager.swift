@@ -192,6 +192,11 @@ class LayoutManager {
                 let lineHeight = (ascent + descent + leading).rounded(.awayFromZero)
                 let lineSpacing = (lineHeight * configuration.lineSpacing.rawValue).rounded(.awayFromZero)
 
+                // first line
+                if currentPos == .zero {
+                    currentPos.y = lineSpacing / 2
+                }
+
                 // font origin based position
                 _lineLayouts.append(
                     LineLayout(lineNumber: LineNumber(lineNumber),
