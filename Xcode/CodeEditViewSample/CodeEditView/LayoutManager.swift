@@ -55,10 +55,13 @@ class LayoutManager {
     var configuration: Configuration
 
     private var _lineLayouts: [LineLayout]
+    private var _textStorage: TextStorage
 
-    init(configuration: Configuration) {
+    init(configuration: Configuration, textStorage: TextStorage) {
         self._lineLayouts = []
         self._lineLayouts.reserveCapacity(500)
+
+        self._textStorage = textStorage
 
         self.configuration = configuration
     }
@@ -137,7 +140,7 @@ class LayoutManager {
 
     // MARK: -
 
-    func layoutText(storage: TextStorage, font: CTFont, frame: CGRect) -> CGSize {
+    func layoutText(font: CTFont, frame: CGRect) -> CGSize {
         logger.trace("layoutText willStart")
         // Let's layout some text. Top Bottom/Left Right
         // TODO: update layout
@@ -163,8 +166,8 @@ class LayoutManager {
 
         // TopBottom/LeftRight
         var currentPos = CGPoint.zero
-        for lineNumber in 0..<storage.linesCount {
-            let lineString = storage.string(line: lineNumber)
+        for lineNumber in 0..<_textStorage.linesCount {
+            let lineString = _textStorage.string(line: lineNumber)
 
             let attributedString = CFAttributedStringCreate(nil, lineString as CFString, [
                 kCTFontAttributeName: font,

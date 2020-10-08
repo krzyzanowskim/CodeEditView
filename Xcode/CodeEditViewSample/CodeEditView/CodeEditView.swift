@@ -80,17 +80,18 @@ public final class CodeEditView: NSView {
         }
     }
 
-    private let _storage: TextStorage
+    private let _textStorage: TextStorage
     private let _layoutManager: LayoutManager
 
     public init(storage: TextStorage, configuration: Configuration = .default) {
-        self._storage = storage
+        self._textStorage = storage
 
         self._layoutManager = LayoutManager(configuration: .init(lineWrapping: configuration.lineWrapping,
                                                                  wrapWords: configuration.wrapWords,
                                                                  indentWrappedLines: configuration.indentWrappedLines,
                                                                  indentLevel: configuration.indentLevel,
-                                                                 lineSpacing: configuration.lineSpacing))
+                                                                 lineSpacing: configuration.lineSpacing),
+                                            textStorage: storage)
         self._caret = Caret()
 
         self.configuration = configuration
@@ -371,8 +372,7 @@ public final class CodeEditView: NSView {
 
     /// Layout visible text
     private func layoutText() {
-        let textContentSize = _layoutManager.layoutText(storage: _storage,
-                                                        font: configuration.font,
+        let textContentSize = _layoutManager.layoutText(font: configuration.font,
                                                         frame: visibleRect)
 
         if frame.size != textContentSize {
@@ -425,7 +425,7 @@ extension CodeEditView: NSTextInputClient {
         unselectText()
 
         logger.debug("insertText \(string) replacementRange \(replacementRange)")
-        _storage.insert(string: string, at: _caret.position)
+        _textStorage.insert(string: string, at: _caret.position)
 
         // if string contains new line, caret position need to adjust
         let newLineCount = string.reduce(0, { $1.isNewline ? $0 + 1 : $0 })
@@ -457,8 +457,8 @@ extension CodeEditView: NSTextInputClient {
         }
 
         // _selectionRange -> NSRange
-        let startIndex = _storage.positionOffset(at: selectionRange.start)
-        let endIndex = _storage.positionOffset(at: selectionRange.end)
+        let startIndex = _textStorage.positionOffset(at: selectionRange.start)
+        let endIndex = _textStorage.positionOffset(at: selectionRange.end)
 
         return NSRange(location: startIndex, length: endIndex - startIndex)
     }
@@ -560,9 +560,9 @@ extension CodeEditView {
 
         let selectedString: String
         if selectionRange.start < selectionRange.end {
-            selectedString = String(_storage.string(in: selectionRange)!)
+            selectedString = String(_textStorage.string(in: selectionRange)!)
         } else {
-            selectedString = String(_storage.string(in: selectionRange.inverted())!)
+            selectedString = String(_textStorage.string(in: selectionRange.inverted())!)
         }
 
         updatePasteboard(with: selectedString)
@@ -587,10 +587,10 @@ extension CodeEditView {
         }
 
         if selectionRange.start > selectionRange.end {
-            _storage.remove(range: selectionRange.inverted())
+            _textStorage.remove(range: selectionRange.inverted())
             _caret.position = selectionRange.end
         } else {
-            _storage.remove(range: selectionRange)
+            _textStorage.remove(range: selectionRange)
             _caret.position = selectionRange.start
         }
 
@@ -612,13 +612,13 @@ extension CodeEditView {
     }
 
     public override func selectAll(_ sender: Any?) {
-        let lastLineString = _storage.string(line: _storage.linesCount - 1)
-        _textSelection = SelectionRange(Range(start: Position(line: 0, character: 0), end: Position(line: _storage.linesCount - 1, character: lastLineString.count - 1)))
+        let lastLineString = _textStorage.string(line: _textStorage.linesCount - 1)
+        _textSelection = SelectionRange(Range(start: Position(line: 0, character: 0), end: Position(line: _textStorage.linesCount - 1, character: lastLineString.count - 1)))
         needsDisplay = true
     }
 
     public override func selectLine(_ sender: Any?) {
-        _textSelection = SelectionRange(Range(start: Position(line: _caret.position.line, character: 0), end: Position(line: _caret.position.line, character: _storage.string(line: _caret.position.line).count - 1)))
+        _textSelection = SelectionRange(Range(start: Position(line: _caret.position.line, character: 0), end: Position(line: _caret.position.line, character: _textStorage.string(line: _caret.position.line).count - 1)))
         needsDisplay = true
     }
 
@@ -654,14 +654,14 @@ extension CodeEditView {
 
         if _caret.position.character - 1 >= 0 {
             _caret.position = Position(line: _caret.position.line, character: _caret.position.character - 1)
-            _storage.remove(range: Range(start: _caret.position, end: startingCarretPosition))
+            _textStorage.remove(range: Range(start: _caret.position, end: startingCarretPosition))
         } else {
             // move to previous line
             let lineNumber = _caret.position.line - 1
             if lineNumber >= 0 {
-                let prevLineString = _storage.string(line: lineNumber)
+                let prevLineString = _textStorage.string(line: lineNumber)
                 _caret.position = Position(line: lineNumber, character: prevLineString.count - 1)
-                _storage.remove(range: Range(start: _caret.position, end: startingCarretPosition))
+                _textStorage.remove(range: Range(start: _caret.position, end: startingCarretPosition))
             }
         }
     }
@@ -669,7 +669,7 @@ extension CodeEditView {
     public override func deleteForward(_ sender: Any?) {
         unselectText()
 
-        _storage.remove(range: Range(start: _caret.position, end: Position(line: _caret.position.line, character: _caret.position.character + 1)))
+        _textStorage.remove(range: Range(start: _caret.position, end: Position(line: _caret.position.line, character: _caret.position.character + 1)))
 
         needsLayout = true
         needsDisplay = true
@@ -729,7 +729,7 @@ extension CodeEditView {
                 _caret.position = selectionRange.start
             }
         } else {
-            _caret.position.move(by: -1, in: _storage)
+            _caret.position.move(by: -1, in: _textStorage)
         }
 
         unselectText()
@@ -779,7 +779,7 @@ extension CodeEditView {
             return
         }
 
-        _caret.position.move(by: 1, in: _storage)
+        _caret.position.move(by: 1, in: _textStorage)
     }
 
     public override func moveRightAndModifySelection(_ sender: Any?) {
@@ -790,7 +790,7 @@ extension CodeEditView {
 
     public override func moveToRightEndOfLine(_ sender: Any?) {
         unselectText()
-        _caret.position = Position(line: _caret.position.line, character: _storage.string(line: _caret.position.line).count - 1)
+        _caret.position = Position(line: _caret.position.line, character: _textStorage.string(line: _caret.position.line).count - 1)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
@@ -800,7 +800,7 @@ extension CodeEditView {
         var endSelectionPosition = _textSelection?.range.end ?? _caret.position
 
         // update end
-        endSelectionPosition = Position(line: endSelectionPosition.line, character: _storage.string(line: endSelectionPosition.line).count - 1)
+        endSelectionPosition = Position(line: endSelectionPosition.line, character: _textStorage.string(line: endSelectionPosition.line).count - 1)
 
         _textSelection = SelectionRange(Range(start: startSelectionPosition, end: endSelectionPosition))
         scrollToVisiblePosition(endSelectionPosition)
@@ -818,8 +818,8 @@ extension CodeEditView {
     public override func moveToEndOfDocument(_ sender: Any?) {
         unselectText()
 
-        let lastLineString = _storage.string(line: _storage.linesCount - 1)
-        _caret.position = Position(line: _storage.linesCount - 1, character: lastLineString.count - 1)
+        let lastLineString = _textStorage.string(line: _textStorage.linesCount - 1)
+        _caret.position = Position(line: _textStorage.linesCount - 1, character: lastLineString.count - 1)
         scrollToVisiblePosition(_caret.position)
         needsDisplay = true
     }
@@ -827,7 +827,7 @@ extension CodeEditView {
     public override func insertNewline(_ sender: Any?) {
         unselectText()
 
-        _storage.insert(string: "\n", at: _caret.position)
+        _textStorage.insert(string: "\n", at: _caret.position)
         _caret.position = Position(line: _caret.position.line + 1, character: 0)
 
         needsLayout = true
@@ -857,9 +857,9 @@ extension CodeEditView {
 
         switch direction {
             case .right:
-                endSelectionPosition.move(by: 1, in: _storage)
+                endSelectionPosition.move(by: 1, in: _textStorage)
             case .left:
-                endSelectionPosition.move(by: -1, in: _storage)
+                endSelectionPosition.move(by: -1, in: _textStorage)
             case .up:
                 endSelectionPosition.moveUpByLine(using: _layoutManager)
             case .down:
