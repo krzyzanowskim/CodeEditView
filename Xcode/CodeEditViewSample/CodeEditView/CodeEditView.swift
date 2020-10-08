@@ -139,7 +139,8 @@ public final class CodeEditView: NSView {
         if event.type == .leftMouseDown {
             let viewLocation = self.convert(event.locationInWindow, from: nil)
             if let lineLayout = _layoutManager.lineLayout(at: viewLocation) {
-                let characterIndex = CTLineGetStringIndexForPosition(lineLayout.ctline, viewLocation.applying(.init(translationX: -lineLayout.leadingIndentWidth, y: 0)))
+                let adjustedViewLocation = viewLocation.applying(.init(translationX: -lineLayout.leadingIndentWidth , y: 0))
+                let characterIndex = CTLineGetStringIndexForPosition(lineLayout.ctline, adjustedViewLocation)
                 if characterIndex != kCFNotFound {
                     let eventPosition = Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
 

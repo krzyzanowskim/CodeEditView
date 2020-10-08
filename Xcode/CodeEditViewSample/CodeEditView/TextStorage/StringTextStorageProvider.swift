@@ -66,7 +66,14 @@ class StringTextStorageProvider: TextStorageProvider {
     private func invalidateLinesCache() {
         _cacheLineRange.removeAll(keepingCapacity: true)
 
+        logger.trace("invalidateLinesCache chunksOfLines willStart")
+        _content.chunksOfLines().enumerated().forEach { chunk in
+            _cacheLineRange[chunk.offset] = chunk.element.indices.startIndex..<chunk.element.indices.endIndex
+        }
+        logger.trace("invalidateLinesCache chunksOfLines didEnd")
+
         // StringProtocol.enumerateLines is fast! probably because gies with ObjC
+        /* Didn't test performance, it still may be faster than chunksOfLines
         logger.trace("invalidateLinesCache enumerateLines willStart")
         var currentLine = 0
         var lineStartIndex = _content.startIndex
@@ -81,7 +88,7 @@ class StringTextStorageProvider: TextStorageProvider {
         }
         _cacheLineRange[currentLine] = lineStartIndex..<_content.endIndex
         logger.trace("invalidateLinesCache enumerateLines didEnd (\(currentLine))")
-
+        */
 
         // FIXME: The loop is quite slow. Iterate over indices is damn slow
         //        logger.trace("invalidateLinesCache willStart")
