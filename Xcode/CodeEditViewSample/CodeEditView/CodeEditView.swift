@@ -264,6 +264,7 @@ public final class CodeEditView: NSView {
         }
 
         context.setFillColor(NSColor.selectedTextBackgroundColor.cgColor)
+        context.setShouldAntialias(false)
 
         guard let startSelectedLineLayout = _layoutManager.lineLayout(at: selectionRange.start),
            let endSelectedLineLayout = _layoutManager.lineLayout(at: selectionRange.end),
