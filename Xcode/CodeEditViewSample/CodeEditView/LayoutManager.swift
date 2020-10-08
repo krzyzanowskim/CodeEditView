@@ -33,6 +33,7 @@ class LayoutManager {
             return lhs.lineNumber == rhs.lineNumber &&
                 lhs.ctline == rhs.ctline &&
                 lhs.origin == rhs.origin &&
+                lhs.leadingIndentWidth == rhs.leadingIndentWidth &&
                 lhs.metrics == rhs.metrics &&
                 lhs.stringRange.location == rhs.stringRange.location &&
                 lhs.stringRange.length == rhs.stringRange.length
