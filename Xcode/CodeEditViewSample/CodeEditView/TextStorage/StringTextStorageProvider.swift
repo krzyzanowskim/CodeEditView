@@ -66,14 +66,33 @@ class StringTextStorageProvider: TextStorageProvider {
     private func invalidateLinesCache() {
         _cacheLineRange.removeAll(keepingCapacity: true)
 
+        /* nice try to use Algorithms, but it's slow ~180ms
         logger.trace("invalidateLinesCache chunksOfLines willStart")
         _content.chunksOfLines().enumerated().forEach { chunk in
             _cacheLineRange[chunk.offset] = chunk.element.indices.startIndex..<chunk.element.indices.endIndex
         }
         logger.trace("invalidateLinesCache chunksOfLines didEnd")
+        */
 
+        // Faster than Algorithms version, ~90ms, way slower in debug.
+        /*
+        do {
+            logger.trace("invalidateLinesCache willStart")
+            var currentLine = 0
+            var lineStartIndex = _content.startIndex
+            for currentIndex in _content.indices where _content[currentIndex].isNewline {
+                let lineEndIndex = _content.index(after: currentIndex)
+                _cacheLineRange[currentLine] = lineStartIndex..<lineEndIndex
+                currentLine += 1
+                lineStartIndex = lineEndIndex
+            }
+
+            _cacheLineRange[currentLine] = lineStartIndex..<_content.endIndex
+            logger.trace("invalidateLinesCache didEnd")
+        }
+        */
         // StringProtocol.enumerateLines is fast! probably because gies with ObjC
-        /* Didn't test performance, it still may be faster than chunksOfLines
+        // This is fastest ~90ms in Debug and Release, but lack proper newlines
         logger.trace("invalidateLinesCache enumerateLines willStart")
         var currentLine = 0
         var lineStartIndex = _content.startIndex
@@ -88,21 +107,6 @@ class StringTextStorageProvider: TextStorageProvider {
         }
         _cacheLineRange[currentLine] = lineStartIndex..<_content.endIndex
         logger.trace("invalidateLinesCache enumerateLines didEnd (\(currentLine))")
-        */
-
-        // FIXME: The loop is quite slow. Iterate over indices is damn slow
-        //        logger.trace("invalidateLinesCache willStart")
-        //        var currentLine = 0
-        //        var lineStartIndex = _content.startIndex
-        //        for currentIndex in _content.indices where _content[currentIndex].isNewline {
-        //            let lineEndIndex = _content.index(after: currentIndex)
-        //            _cacheLineRange[currentLine] = lineStartIndex..<lineEndIndex
-        //            currentLine += 1
-        //            lineStartIndex = lineEndIndex
-        //        }
-        //
-        //        _cacheLineRange[currentLine] = lineStartIndex..<_content.endIndex
-        //        logger.trace("invalidateLinesCache didEnd")
     }
 }
 
