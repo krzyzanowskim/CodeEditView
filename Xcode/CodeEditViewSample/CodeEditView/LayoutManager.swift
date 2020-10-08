@@ -6,37 +6,30 @@ class LayoutManager {
 
     typealias LineNumber = Int
 
-    struct Metrics: Equatable {
-        let ascent: CGFloat
-        let descent: CGFloat
-        let leading: CGFloat
-        let width: CGFloat
-        let height: CGFloat
-        let lineSpacing: CGFloat
-    }
-
     /// Cached layout. LayoutManager datasource.
     struct LineLayout: Equatable {
         /// Line index in store. Line number (zero based)
         /// In wrapping scenario, multiple LineLayouts for a single lineIndex.
         let lineNumber: LineNumber
         let ctline: CTLine
-        /// A point that specifies the x and y values at which line is to be drawn.
-        let origin: CGPoint
-        let leadingIndentWidth: CGFloat
-        let metrics: Metrics
+        /// A line origin
+        //let origin: CGPoint
+        /// A line baseline
+        let baseline: CGPoint
+        let bounds: CGRect
+        let lineSpacing: CGFloat
         /// A string range of the line.
         /// For wrapped line its a fragment of the line.
         let stringRange: CFRange
 
         static func == (lhs: Self, rhs: Self) -> Bool {
-            return lhs.lineNumber == rhs.lineNumber &&
-                lhs.ctline == rhs.ctline &&
-                lhs.origin == rhs.origin &&
-                lhs.leadingIndentWidth == rhs.leadingIndentWidth &&
-                lhs.metrics == rhs.metrics &&
-                lhs.stringRange.location == rhs.stringRange.location &&
-                lhs.stringRange.length == rhs.stringRange.length
+            lhs.lineNumber == rhs.lineNumber &&
+            lhs.ctline == rhs.ctline &&
+            lhs.baseline == rhs.baseline &&
+            lhs.bounds == rhs.bounds &&
+            lhs.lineSpacing == rhs.lineSpacing &&
+            lhs.stringRange.location == rhs.stringRange.location &&
+            lhs.stringRange.length == rhs.stringRange.length
         }
     }
 
@@ -74,20 +67,15 @@ class LayoutManager {
             return nil
         }
 
-        let metrics = lineLayout.metrics
         let characterOffsetX = CTLineGetOffsetForStringIndex(lineLayout.ctline, position.character, nil)
-        return CGRect(x: lineLayout.origin.x + characterOffsetX,
-                      y: lineLayout.origin.y - metrics.height - (metrics.lineSpacing / 2) + metrics.descent,
-                      width: 20, //CTFontGetBoundingBox(font).width,
-                      height: metrics.height + metrics.lineSpacing)
+        var rect = bounds(lineLayout: lineLayout).offsetBy(dx: characterOffsetX, dy: 0)
+        // arbitrary number that should be replaced for the font width
+        rect.size.width = 20
+        return rect
     }
 
     func bounds(lineLayout: LineLayout) -> CGRect {
-        let metrics = lineLayout.metrics
-        return CGRect(x: lineLayout.origin.x,
-                      y: lineLayout.origin.y - metrics.height - (metrics.lineSpacing / 2) + metrics.descent,
-                      width: metrics.width,
-                      height: metrics.height + metrics.lineSpacing)
+        lineLayout.bounds
     }
 
     // MARK: - Fetch LineLayout
@@ -126,15 +114,15 @@ class LayoutManager {
 
     func linesLayout(in rect: CGRect) -> [LineLayout] {
         _lineLayouts.filter { lineLayout in
-            rect.contains(lineLayout.origin)
+            rect.intersects(lineLayout.bounds)
         }
     }
 
     func lineLayout(at point: CGPoint) -> LineLayout? {
         _lineLayouts.first { lineLayout in
-            let metrics = lineLayout.metrics
-            let lowerBound = lineLayout.origin.y - metrics.height - (metrics.lineSpacing / 2) + metrics.descent
-            let upperBound = lowerBound + metrics.height + metrics.lineSpacing
+            let visibleLineBounds = lineLayout.bounds.insetBy(dx: 0, dy: -lineLayout.lineSpacing / 2)
+            let lowerBound = visibleLineBounds.origin.y
+            let upperBound = lowerBound.advanced(by: visibleLineBounds.height)
             return (lowerBound...upperBound).contains(point.y)
         }
     }
@@ -183,14 +171,14 @@ class LayoutManager {
                     isWrappedLine = true
                 }
 
-                let leadingIndentWidth = isWrappedLine ? indentWidth : 0
-                currentPos.x = leadingIndentWidth
+                // Indent wrapped line
+                currentPos.x = isWrappedLine ? indentWidth : 0
 
                 let breakIndex: CFIndex
                 if configuration.wrapWords {
-                    breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - leadingIndentWidth), Double(currentPos.y))
+                    breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - currentPos.x), Double(currentPos.y))
                 } else {
-                    breakIndex = CTTypesetterSuggestClusterBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - leadingIndentWidth), Double(currentPos.y))
+                    breakIndex = CTTypesetterSuggestClusterBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - currentPos.x), Double(currentPos.y))
                 }
                 let stringRange = CFRange(location: lineStartIndex, length: breakIndex)
 
@@ -200,22 +188,21 @@ class LayoutManager {
                 var ascent: CGFloat = 0
                 var descent: CGFloat = 0
                 var leading: CGFloat = 0
-                let lineWidth = CGFloat(CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading)) + leadingIndentWidth
-                let lineHeight = ascent + descent + leading
-                let lineSpacing = (lineHeight * configuration.lineSpacing.rawValue) - lineHeight
+                let lineWidth = CGFloat(CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading))
+                let lineHeight = (ascent + descent + leading).rounded(.awayFromZero)
+                let lineSpacing = (lineHeight * configuration.lineSpacing.rawValue).rounded(.awayFromZero)
 
                 // font origin based position
                 _lineLayouts.append(
                     LineLayout(lineNumber: LineNumber(lineNumber),
                                ctline: ctline,
-                               origin: CGPoint(x: currentPos.x, y: currentPos.y + ascent + descent),
-                               leadingIndentWidth: leadingIndentWidth,
-                               metrics: Metrics(ascent: ascent,
-                                                descent: descent,
-                                                leading: leading,
-                                                width: lineWidth,
-                                                height: lineHeight,
-                                                lineSpacing: lineSpacing),
+                               baseline: CGPoint(x: 0, y: ascent),
+                               bounds: CGRect(x: currentPos.x,
+                                              y: currentPos.y,
+                                              width: lineWidth,
+                                              height: lineHeight
+                               ),
+                               lineSpacing: lineSpacing,
                                stringRange: stringRange)
                 )
 
