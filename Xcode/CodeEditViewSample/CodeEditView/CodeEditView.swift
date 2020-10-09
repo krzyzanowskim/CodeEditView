@@ -244,11 +244,10 @@ public final class CodeEditView: NSView {
         context.setFillColor(NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor)
         context.setShouldAntialias(false)
 
-        let lineBounds = _layoutManager.bounds(lineLayout: lineLayout)
         let lineRect = CGRect(x: frame.origin.x,
-                              y: lineBounds.origin.y,
+                              y: lineLayout.bounds.origin.y,
                               width: frame.width,
-                              height: lineBounds.height).insetBy(dx: 0, dy: -lineLayout.lineSpacing / 2)
+                              height: lineLayout.bounds.height).insetBy(dx: 0, dy: -lineLayout.lineSpacing / 2)
 
         context.fill(lineRect)
 
@@ -281,7 +280,7 @@ public final class CodeEditView: NSView {
 
         if startSelectedLineIndex <= endSelectedLineIndex {
             for lineIndex in startSelectedLineIndex...endSelectedLineIndex {
-                guard let currentLineLayout = _layoutManager.lineLayout(idx: lineIndex) else {
+                guard let lineLayout = _layoutManager.lineLayout(idx: lineIndex) else {
                     continue
                 }
 
@@ -290,40 +289,39 @@ public final class CodeEditView: NSView {
 
                 if lineIndex == startSelectedLineIndex {
                     // start - partial selection
-                    let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.start.character, nil)
+                    let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, selectionRange.start.character, nil)
                     let endPositionOffset = CTLineGetOffsetForStringIndex(startSelectedLineLayout.ctline, selectionRange.end.character, nil)
-                    startPositionX = currentLineLayout.bounds.origin.x + startCharacterPositionOffset
+                    startPositionX = lineLayout.bounds.origin.x + startCharacterPositionOffset
 
                     if startSelectedLineLayout != endSelectedLineLayout {
                         // selection that ends on another line ends at the end of the view
                         // not at the end of the line
-                        rectWidth = frame.width - currentLineLayout.bounds.origin.x
+                        rectWidth = frame.width - lineLayout.bounds.origin.x
                     } else {
                         rectWidth = endPositionOffset - startCharacterPositionOffset
                     }
                 } else if lineIndex == endSelectedLineIndex {
                     // end - partial selection
-                    let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.end.character, nil)
+                    let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, selectionRange.end.character, nil)
                     startPositionX = 0
-                    rectWidth = endCharacterPositionOffset + currentLineLayout.bounds.origin.x
+                    rectWidth = endCharacterPositionOffset + lineLayout.bounds.origin.x
                 } else {
                     // x + 1..<y full line selection
                     startPositionX = frame.minX // currentLineLayout.origin.x
                     rectWidth = frame.width
                 }
 
-                let lineBounds = _layoutManager.bounds(lineLayout: currentLineLayout)
                 context.fill(CGRect(x: startPositionX,
-                                    y: lineBounds.origin.y,
+                                    y: lineLayout.bounds.origin.y,
                                     width: rectWidth,
-                                    height: lineBounds.height).insetBy(dx: 0, dy: -currentLineLayout.lineSpacing / 2)
+                                    height: lineLayout.bounds.height).insetBy(dx: 0, dy: -lineLayout.lineSpacing / 2)
                 )
             }
         }
 
         if startSelectedLineIndex > endSelectedLineIndex {
             for lineIndex in endSelectedLineIndex...startSelectedLineIndex {
-                guard let currentLineLayout = _layoutManager.lineLayout(idx: lineIndex) else {
+                guard let lineLayout = _layoutManager.lineLayout(idx: lineIndex) else {
                     continue
                 }
 
@@ -332,19 +330,19 @@ public final class CodeEditView: NSView {
 
                 if lineIndex == startSelectedLineIndex {
                     // start - partial selection from the beginning to the start selection
-                    let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.start.character, nil)
+                    let startCharacterPositionOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, selectionRange.start.character, nil)
                     startPositionX = 0
-                    rectWidth = startCharacterPositionOffset + currentLineLayout.bounds.origin.x
+                    rectWidth = startCharacterPositionOffset + lineLayout.bounds.origin.x
                 } else if lineIndex == endSelectedLineIndex {
                     // end - partial selection from the end to the end of the line
-                    let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(currentLineLayout.ctline, selectionRange.end.character, nil)
+                    let endCharacterPositionOffset = CTLineGetOffsetForStringIndex(lineLayout.ctline, selectionRange.end.character, nil)
                     let startPositionOffset = CTLineGetOffsetForStringIndex(startSelectedLineLayout.ctline, selectionRange.start.character, nil)
-                    startPositionX = currentLineLayout.bounds.origin.x + endCharacterPositionOffset
+                    startPositionX = lineLayout.bounds.origin.x + endCharacterPositionOffset
 
                     if startSelectedLineLayout != endSelectedLineLayout {
                         // selection that ends on another line ends at the end of the view
                         // not at the end of the line
-                        rectWidth = frame.width - currentLineLayout.bounds.origin.x
+                        rectWidth = frame.width - lineLayout.bounds.origin.x
                     } else {
                         rectWidth = startPositionOffset - endCharacterPositionOffset
                     }
@@ -354,11 +352,10 @@ public final class CodeEditView: NSView {
                     rectWidth = frame.width
                 }
 
-                let lineBounds = _layoutManager.bounds(lineLayout: currentLineLayout)
                 context.fill(CGRect(x: startPositionX,
-                                    y: lineBounds.origin.y,
+                                    y: lineLayout.bounds.origin.y,
                                     width: rectWidth,
-                                    height: lineBounds.height).insetBy(dx: 0, dy: -currentLineLayout.lineSpacing / 2)
+                                    height: lineLayout.bounds.height).insetBy(dx: 0, dy: -lineLayout.lineSpacing / 2)
                 )
             }
         }

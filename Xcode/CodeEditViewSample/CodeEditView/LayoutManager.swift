@@ -68,14 +68,10 @@ class LayoutManager {
         }
 
         let characterOffsetX = CTLineGetOffsetForStringIndex(lineLayout.ctline, position.character, nil)
-        var rect = bounds(lineLayout: lineLayout).offsetBy(dx: characterOffsetX, dy: 0)
+        var rect = lineLayout.bounds.offsetBy(dx: characterOffsetX, dy: 0)
         // arbitrary number that should be replaced for the font width
         rect.size.width = 20
         return rect
-    }
-
-    func bounds(lineLayout: LineLayout) -> CGRect {
-        lineLayout.bounds
     }
 
     // MARK: - Fetch LineLayout
