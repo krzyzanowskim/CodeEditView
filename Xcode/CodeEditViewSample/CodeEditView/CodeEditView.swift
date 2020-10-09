@@ -234,6 +234,12 @@ public final class CodeEditView: NSView {
             return
         }
 
+        guard lineLayout.bounds.intersects(dirtyRect) else {
+            return
+        }
+
+        logger.debug("drawHighlightedLine")
+
         context.saveGState()
         context.setFillColor(NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor)
         context.setShouldAntialias(false)
