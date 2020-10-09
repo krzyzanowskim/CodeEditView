@@ -254,16 +254,6 @@ public final class CodeEditView: NSView {
             return
         }
 
-        logger.debug("drawSelection \(selectionRange)")
-
-        context.saveGState()
-        defer {
-            context.restoreGState()
-        }
-
-        context.setFillColor(NSColor.selectedTextBackgroundColor.cgColor)
-        context.setShouldAntialias(false)
-
         guard let startSelectedLineLayout = _layoutManager.lineLayout(at: selectionRange.start),
            let endSelectedLineLayout = _layoutManager.lineLayout(at: selectionRange.end),
            let startSelectedLineIndex = _layoutManager.lineLayoutIndex(startSelectedLineLayout),
@@ -272,6 +262,16 @@ public final class CodeEditView: NSView {
             assertionFailure("update layout and attempt to redraw")
             return
         }
+
+        guard startSelectedLineLayout.bounds.union(endSelectedLineLayout.bounds).intersects(dirtyRect) else {
+            return
+        }
+
+        logger.debug("drawSelection \(selectionRange)")
+
+        context.saveGState()
+        context.setFillColor(NSColor.selectedTextBackgroundColor.cgColor)
+        context.setShouldAntialias(false)
 
         if startSelectedLineIndex <= endSelectedLineIndex {
             for lineIndex in startSelectedLineIndex...endSelectedLineIndex {
@@ -356,6 +356,7 @@ public final class CodeEditView: NSView {
                 )
             }
         }
+        context.restoreGState()
     }
 
     public override func layout() {
