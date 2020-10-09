@@ -1,7 +1,7 @@
 /// Position in a text document expressed as zero-based line and zero-based character offset
 ///
 /// [Langauge Server Specitication Position](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#position)
-public struct Position {
+public struct Position: Hashable, Equatable {
     /// Line position in a document (zero-based).
     public let line: Int
     /// Character offset on a line in a document (zero-based). Assuming that the line is

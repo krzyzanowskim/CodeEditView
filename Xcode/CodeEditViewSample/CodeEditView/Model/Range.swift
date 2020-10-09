@@ -4,7 +4,7 @@ import Foundation
 /// The end position is exclusive. If you want to specify a range that contains
 /// a line including the line ending character(s) then use an end position denoting
 /// the start of the next line.
-public struct Range: CustomDebugStringConvertible, CustomStringConvertible {
+public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hashable, Equatable {
     /// The range's start position.
     public let start: Position
     /// The range's end position.
