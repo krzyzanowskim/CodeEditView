@@ -29,6 +29,7 @@
 		75EB017D24F27BC10056D96A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75EB017C24F27BC10056D96A /* Assets.xcassets */; };
 		75EB018024F27BC10056D96A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 75EB017F24F27BC10056D96A /* Preview Assets.xcassets */; };
 		75EB018324F27BC10056D96A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 75EB018124F27BC10056D96A /* Main.storyboard */; };
+		75F8F4A4253067CA00090B4F /* CFRange+Equatable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F8F4A3253067CA00090B4F /* CFRange+Equatable.swift */; };
 		75FC7BCC2523D073006BB064 /* SelectionRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75FC7BCB2523D073006BB064 /* SelectionRange.swift */; };
 /* End PBXBuildFile section */
 
@@ -59,6 +60,7 @@
 		75EB018224F27BC10056D96A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		75EB018424F27BC10056D96A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		75EB018524F27BC10056D96A /* CodeEditViewSample.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CodeEditViewSample.entitlements; sourceTree = "<group>"; };
+		75F8F4A3253067CA00090B4F /* CFRange+Equatable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CFRange+Equatable.swift"; sourceTree = "<group>"; };
 		75FC7BCB2523D073006BB064 /* SelectionRange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionRange.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -118,6 +120,7 @@
 			children = (
 				7552A6D3252E985C00FD573C /* Chunked.swift */,
 				75DFE205252EA54200AB4795 /* String+chunks.swift */,
+				75F8F4A3253067CA00090B4F /* CFRange+Equatable.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -245,6 +248,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				75786742252D381B0040646D /* LineSpacing.swift in Sources */,
+				75F8F4A4253067CA00090B4F /* CFRange+Equatable.swift in Sources */,
 				750AC4C824F27D50004FB229 /* CodeEditView.swift in Sources */,
 				75BF962A252B2FE700278E62 /* LayoutManager.swift in Sources */,
 				7511242824F57808005F82BA /* CaretView.swift in Sources */,

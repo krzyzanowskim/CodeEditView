@@ -21,6 +21,7 @@ class LayoutManager {
         /// A string range of the line.
         /// For wrapped line its a fragment of the line.
         let stringRange: CFRange
+        var needsLayout: Bool
 
         static func == (lhs: Self, rhs: Self) -> Bool {
             lhs.lineNumber == rhs.lineNumber &&
@@ -28,8 +29,8 @@ class LayoutManager {
             lhs.baseline == rhs.baseline &&
             lhs.bounds == rhs.bounds &&
             lhs.lineSpacing == rhs.lineSpacing &&
-            lhs.stringRange.location == rhs.stringRange.location &&
-            lhs.stringRange.length == rhs.stringRange.length
+            lhs.stringRange == rhs.stringRange &&
+            lhs.needsLayout == rhs.needsLayout
         }
     }
 
@@ -204,7 +205,8 @@ class LayoutManager {
                                               height: lineHeight
                                ),
                                lineSpacing: lineSpacing,
-                               stringRange: stringRange)
+                               stringRange: stringRange,
+                               needsLayout: false)
                 )
 
                 lineStartIndex += breakIndex
