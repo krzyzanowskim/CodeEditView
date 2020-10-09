@@ -130,7 +130,7 @@ class LayoutManager {
     // MARK: -
 
     func layoutText(font: CTFont, frame: CGRect) -> CGSize {
-        logger.trace("layoutText willStart")
+        logger.trace("layoutText willStart, frame: \(NSStringFromRect(frame))")
         // Let's layout some text. Top Bottom/Left Right
         // TODO: update layout
         // 1. find text range for displayed dirtyRect
@@ -176,9 +176,9 @@ class LayoutManager {
 
                 let breakIndex: CFIndex
                 if configuration.wrapWords {
-                    breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - currentPos.x), Double(currentPos.y))
+                    breakIndex = CTTypesetterSuggestLineBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - currentPos.x), Double(currentPos.x))
                 } else {
-                    breakIndex = CTTypesetterSuggestClusterBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - currentPos.x), Double(currentPos.y))
+                    breakIndex = CTTypesetterSuggestClusterBreakWithOffset(typesetter, lineStartIndex, Double(lineBreakWidth - currentPos.x), Double(currentPos.x))
                 }
                 let stringRange = CFRange(location: lineStartIndex, length: breakIndex)
 
@@ -219,7 +219,7 @@ class LayoutManager {
         }
 
         textContentSize.height = currentPos.y
-        logger.trace("layoutText didEnd")
+        logger.trace("layoutText didEnd, contentSize: \(NSStringFromSize(textContentSize))")
         return textContentSize
     }
 }

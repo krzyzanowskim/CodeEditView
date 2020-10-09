@@ -359,9 +359,9 @@ public final class CodeEditView: NSView {
     }
 
     public override func layout() {
-        super.layout()
         layoutText()
         layoutCaret()
+        super.layout()
     }
 
     private func layoutCaret() {
@@ -374,7 +374,7 @@ public final class CodeEditView: NSView {
     /// Layout visible text
     private func layoutText() {
         let textContentSize = _layoutManager.layoutText(font: configuration.font,
-                                                        frame: visibleRect)
+                                                        frame: enclosingScrollView?.documentVisibleRect ?? frame)
 
         if frame.size != textContentSize {
             frame.size = textContentSize
