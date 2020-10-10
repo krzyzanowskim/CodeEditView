@@ -221,7 +221,7 @@ public final class CodeEditView: NSView {
         let boundingRectForFont = configuration.font.boundingRectForFont
         let overscanDirtyRect = dirtyRect.insetBy(dx: -boundingRectForFont.width * 4, dy: -boundingRectForFont.height * 4)
 
-        for lineLayout in _layoutManager.linesLayout(in: overscanDirtyRect) {
+        for lineLayout in _layoutManager.linesLayouts(in: overscanDirtyRect) {
             context.textPosition = lineLayout.bounds.offsetBy(dx: 0, dy: lineLayout.baseline.y).origin
             CTLineDraw(lineLayout.ctline, context)
         }
