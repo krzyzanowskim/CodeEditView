@@ -280,7 +280,7 @@ public final class CodeEditView: NSView {
 
         if startSelectedLineIndex <= endSelectedLineIndex {
             for lineIndex in startSelectedLineIndex...endSelectedLineIndex {
-                guard let lineLayout = _layoutManager.lineLayout(idx: lineIndex) else {
+                guard let lineLayout = _layoutManager.lineLayout(index: lineIndex) else {
                     continue
                 }
 
@@ -321,7 +321,7 @@ public final class CodeEditView: NSView {
 
         if startSelectedLineIndex > endSelectedLineIndex {
             for lineIndex in endSelectedLineIndex...startSelectedLineIndex {
-                guard let lineLayout = _layoutManager.lineLayout(idx: lineIndex) else {
+                guard let lineLayout = _layoutManager.lineLayout(index: lineIndex) else {
                     continue
                 }
 

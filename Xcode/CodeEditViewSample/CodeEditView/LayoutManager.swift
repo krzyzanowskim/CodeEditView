@@ -39,13 +39,11 @@ class LayoutManager {
     var configuration: Configuration
 
     private var _lineLayouts: [LineLayout]
-    private var _invalidLineLayoutIndices: Set<Array<LineLayout>.Index>
     private var _textStorage: TextStorage
 
     init(configuration: Configuration, textStorage: TextStorage) {
         self._lineLayouts = []
         self._lineLayouts.reserveCapacity(500)
-        self._invalidLineLayoutIndices = []
         self._textStorage = textStorage
 
         self.configuration = configuration
@@ -72,7 +70,7 @@ class LayoutManager {
             return nil
         }
 
-        return self.lineLayout(idx: idx + 1)
+        return self.lineLayout(index: idx + 1)
     }
 
 
@@ -80,24 +78,21 @@ class LayoutManager {
         guard let idx = lineLayoutIndex(lineLayout), idx > 0 else {
             return nil
         }
-        return self.lineLayout(idx: idx - 1)
+        return self.lineLayout(index: idx - 1)
     }
 
-    func lineLayout(idx: Int) -> LineLayout? {
-        // TODO: layout if missing
-        guard idx < _lineLayouts.count else {
+    func lineLayout(index: Int) -> LineLayout? {
+        guard index < _lineLayouts.count else {
             return nil
         }
-        return _lineLayouts[idx]
+        return _lineLayouts[index]
     }
 
     func lineLayoutIndex(_ lineLayout: LineLayout) -> Int? {
-        // TODO: try to layout if missing
         _lineLayouts.firstIndex(of: lineLayout)
     }
 
     func lineLayout(at position: Position) -> LineLayout? {
-        // TODO: try to layout if missing
         _lineLayouts.first { lineLayout -> Bool in
             position.character >= lineLayout.stringRange.location &&
                 position.character < lineLayout.stringRange.location + lineLayout.stringRange.length &&
@@ -123,39 +118,22 @@ class LayoutManager {
     }
 
     // so slow. sooo slow. O(n)
-    // Can be fast by change [LineLayout] -> [LineNumber: LineLayout]
-//    func lineLayouts(forLineNumber lineNumber: LineNumber) -> ArraySlice<LayoutManager.LineLayout> {
-//        let predicate: (LineLayout) -> Bool = { $0.lineNumber == lineNumber }
-//
-//        guard let firstIndex = _lineLayouts.firstIndex(where: predicate) else {
-//            return []
-//        }
-//
-//        for i in firstIndex..<_lineLayouts.endIndex {
-//            if !predicate(_lineLayouts[i]) {
-//                return _lineLayouts[firstIndex..<i]
-//            }
-//        }
-//
-//        return []
-//    }
+    func lineLayouts(forLineNumber lineNumber: LineNumber) -> ArraySlice<LayoutManager.LineLayout> {
+        let predicate: (LineLayout) -> Bool = { $0.lineNumber == lineNumber }
 
-    // MARK: -
+        guard let firstIndex = _lineLayouts.firstIndex(where: predicate) else {
+            return []
+        }
 
-    /// Mark line layout invalid. Layout will update on next call to `layoutText`
-//    func invalidateLineLayout(lineLayout: LineLayout) {
-//        _invalidLineLayouts.insert(lineLayout)
-//    }
+        for i in firstIndex..<_lineLayouts.endIndex {
+            if !predicate(_lineLayouts[i]) {
+                return _lineLayouts[firstIndex..<i]
+            }
+        }
 
-//    private func invalidateLayout() {
-//        _lineLayouts.removeAll(keepingCapacity: true)
-//        _invalidLineLayouts.removeAll(keepingCapacity: true)
-//    }
+        return []
+    }
 
-//    /// Mark line layout valid.
-//    func validateLineLayout(lineLayout: LineLayout) {
-//        _invalidLineLayouts.remove(lineLayout)
-//    }
 
     // MARK: -
 
@@ -180,47 +158,16 @@ class LayoutManager {
         let indentWidth = configuration.indentWrappedLines ? (CTFontGetBoundingBox(font).width * CGFloat(configuration.indentLevel)) : 0
 
         // TopBottom/LeftRight
-
-        // invalidate layout lines in the frame (eg. visible region)
-        _lineLayouts.enumerated().filter { (idx, lineLayout) in
-            frame.intersects(lineLayout.bounds)
-        }.forEach { idx, _ in
-            _invalidLineLayoutIndices.insert(idx)
-        }
-
-        var currentPos: CGPoint
-        var firstLineNumber: LineNumber
-        var lastLineNumber: LineNumber
-        let firstInvalidLineLayoutIndex: Int
-        // find first invalid line to layout
-        if !_lineLayouts.isEmpty {
-            /// AT this point _lineLayouts  is not updated, hence the lineNumber is not up to date source to get the range
-            firstInvalidLineLayoutIndex = _invalidLineLayoutIndices.min()!
-
-            let firstInvalidLineLayout = _lineLayouts[firstInvalidLineLayoutIndex]
-            currentPos = firstInvalidLineLayout.bounds.origin
-            firstLineNumber = firstInvalidLineLayout.lineNumber
-
-            let lastInvalidLineLayoutIndex = _invalidLineLayoutIndices.max()!
-            lastLineNumber = _lineLayouts[lastInvalidLineLayoutIndex].lineNumber
-            _lineLayouts.removeSubrange(firstInvalidLineLayoutIndex...lastInvalidLineLayoutIndex)
-        } else {
-            currentPos = .zero
-            firstLineNumber = 0
-            lastLineNumber = _textStorage.linesCount - 1
-            firstInvalidLineLayoutIndex = 0
-            _lineLayouts.removeAll(keepingCapacity: true)
-        }
+        var currentPos: CGPoint = .zero
 
         // estimate text content size
         var textContentSize = CGSize(width: frame.width, height: CGFloat(_textStorage.linesCount) * CTFontGetBoundingBox(font).height)
 
         var lineLayoutsRun: [LineLayout] = []
-        lineLayoutsRun.reserveCapacity(_invalidLineLayoutIndices.count * 4)
+        lineLayoutsRun.reserveCapacity(_lineLayouts.underestimatedCount)
 
-        for lineNumber in firstLineNumber...lastLineNumber {
+        for lineNumber in 0..<_textStorage.linesCount {
             let lineString = _textStorage.string(line: lineNumber)
-            print(lineString)
 
             let attributedString = CFAttributedStringCreate(nil, lineString as CFString, [
                 kCTFontAttributeName: font,
@@ -284,10 +231,7 @@ class LayoutManager {
 
         // TODO: analyze how layout change and apply changes to invisible parts below too
         // by set the Y adjustment value
-
-        _lineLayouts.insert(contentsOf: lineLayoutsRun, at: firstInvalidLineLayoutIndex)
-        // validate layout again
-        _invalidLineLayoutIndices.removeAll()
+        _lineLayouts = lineLayoutsRun
 
         textContentSize.height = max(textContentSize.height, currentPos.y)
         logger.trace("layoutText didEnd, contentSize: \(NSStringFromSize(textContentSize))")
