@@ -23,11 +23,8 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
     }
 }
 
-//extension Range: Comparable {
-//    public static func < (lhs: Range, rhs: Range) -> Bool {
-//        if lhs.start < rhs.start {
-//            return true
-//        }
-//
-//    }
-//}
+extension Range: Comparable {
+    public static func < (lhs: Range, rhs: Range) -> Bool {
+        lhs.start < rhs.start
+    }
+}

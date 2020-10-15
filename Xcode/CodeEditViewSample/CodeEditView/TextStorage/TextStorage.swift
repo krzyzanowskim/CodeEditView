@@ -1,9 +1,11 @@
 import Foundation
+import Combine
 
 /// Text Storage
 /// TODO: notify about updates via delegate or callbacks
 public final class TextStorage {
     private let storageProvider: TextStorageProvider
+    let storageDidChange = PassthroughSubject<Range, Never>()
 
     public var linesCount: Int {
         storageProvider.linesCount
@@ -18,10 +20,12 @@ public final class TextStorage {
 
     public func insert(string: String, at position: Position) {
         storageProvider.insert(string: string, at: position)
+        storageDidChange.send(Range(start: position, end: position))
     }
 
     public func remove(range: Range) {
         storageProvider.remove(range: range)
+        storageDidChange.send(range)
     }
 
     public func character(at position: Position) -> Character? {

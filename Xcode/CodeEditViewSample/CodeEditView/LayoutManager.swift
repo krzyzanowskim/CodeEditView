@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 /// Layout mamager uses Top-bottom, left-right coordinate system to layout lines
 class LayoutManager {
@@ -40,13 +41,24 @@ class LayoutManager {
 
     private var _lineLayouts: [LineLayout]
     private var _textStorage: TextStorage
+    private var _invalidRanges: Set<Range>
+    private var _cancellables: [AnyCancellable]
 
     init(configuration: Configuration, textStorage: TextStorage) {
         self._lineLayouts = []
         self._lineLayouts.reserveCapacity(500)
         self._textStorage = textStorage
+        self._invalidRanges = []
+        self._cancellables = []
 
         self.configuration = configuration
+
+        _cancellables.append(textStorage.storageDidChange.sink(receiveValue: invalidateLayout))
+    }
+
+    private func invalidateLayout(range: Range) {
+        logger.debug("invalidateLayout insert \(range)")
+        _invalidRanges.insert(range)
     }
 
     // MARK: - Metrics
@@ -158,6 +170,9 @@ class LayoutManager {
         let indentWidth = configuration.indentWrappedLines ? (CTFontGetBoundingBox(font).width * CGFloat(configuration.indentLevel)) : 0
 
         // TopBottom/LeftRight
+        // let firstInvalidLineNumber = _invalidRanges.min()?.start.line ?? 0
+        // let lastInvalidLineNumber = _invalidRanges.max()?.end.line ?? 0
+        // var currentPos: CGPoint = lineLayouts(forLineNumber: firstInvalidLineNumber).first?.bounds.origin ?? .zero
         var currentPos: CGPoint = .zero
 
         // estimate text content size
@@ -167,6 +182,17 @@ class LayoutManager {
         lineLayoutsRun.reserveCapacity(_lineLayouts.underestimatedCount)
 
         for lineNumber in 0..<_textStorage.linesCount {
+
+            // WIP: re-layout invalid ranges
+            if _invalidRanges.contains(where: { $0.start.line >= lineNumber && $0.end.line <= lineNumber }) {
+                logger.debug("Invalid line \(lineNumber)")
+            }
+
+            // Store previous lines
+            let oldLineNumberLayouts = lineLayouts(forLineNumber: lineNumber)
+            var newLineNumberLayouts: [LineLayout] = []
+            newLineNumberLayouts.reserveCapacity(oldLineNumberLayouts.count)
+
             let lineString = _textStorage.string(line: lineNumber)
 
             let attributedString = CFAttributedStringCreate(nil, lineString as CFString, [
@@ -220,6 +246,7 @@ class LayoutManager {
                                lineSpacing: lineSpacing,
                                stringRange: stringRange)
 
+                newLineNumberLayouts.append(lineLayout)
                 lineLayoutsRun.append(lineLayout)
 
                 lineStartIndex += breakIndex
@@ -227,6 +254,15 @@ class LayoutManager {
 
                 textContentSize.width = max(textContentSize.width, lineWidth)
             }
+
+            // diff oldLineNumberLayouts -> newLineNumberLayouts
+            //for change in newLineNumberLayouts.difference(from: oldLineNumberLayouts) {
+            //}
+            if !oldLineNumberLayouts.isEmpty && newLineNumberLayouts.count > oldLineNumberLayouts.count {
+                print("wazaaaa \(lineNumber)")
+                // TODO: move everything below by height of the new line
+            }
+
         }
 
         // TODO: analyze how layout change and apply changes to invisible parts below too
