@@ -1,6 +1,10 @@
 import Foundation
 import Combine
 
+// FIXME: Position is newline agnostic, but TextStorage is not! and can't be.
+//        Line should be a string without newline, yet TextStorage need to know
+//        about the newline to properly find a range in a raw buffer
+
 /// Layout mamager uses Top-bottom, left-right coordinate system to layout lines
 class LayoutManager {
 
