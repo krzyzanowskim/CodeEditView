@@ -1,5 +1,6 @@
 /// Position in a text document expressed as zero-based line and zero-based character offset
 ///
+/// Positions are line end character agnostic. So you can not specify a position that denotes \r|\n or \n| where | represents the character offset.
 /// [Langauge Server Specitication Position](https://microsoft.github.io/language-server-protocol/specifications/specification-current/#position)
 public struct Position: Hashable, Equatable {
     /// Line position in a document (zero-based).
