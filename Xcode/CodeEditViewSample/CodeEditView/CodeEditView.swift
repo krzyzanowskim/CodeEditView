@@ -13,21 +13,12 @@ public final class CodeEditView: NSView {
 
     private struct Caret {
         var position: Position = .zero
-        let view: CaretView = CaretView()
-
-        var isHidden: Bool {
-            set {
-                view.isHidden = newValue
-            }
-            get {
-                view.isHidden
-            }
-        }
+        var isHidden: Bool
     }
 
     private var _caret: Caret {
         didSet {
-            layoutCaret()
+            needsDisplay = true
         }
     }
 
@@ -35,13 +26,15 @@ public final class CodeEditView: NSView {
     private var _textSelection: SelectionRange? {
         didSet {
             _caret.isHidden = _textSelection != nil
+            needsDisplay = true
         }
     }
 
     /// Whether or not this view is the focused view for its window
     private var _isFirstResponder = false {
         didSet {
-            self._caret.isHidden = !_isFirstResponder
+            _caret.isHidden = !_isFirstResponder
+            needsDisplay = true
         }
     }
 
@@ -92,14 +85,11 @@ public final class CodeEditView: NSView {
                                                                  indentLevel: configuration.indentLevel,
                                                                  lineSpacing: configuration.lineSpacing),
                                             textStorage: storage)
-        self._caret = Caret()
+        self._caret = Caret(isHidden: true)
 
         self.configuration = configuration
 
         super.init(frame: .zero)
-
-        self.addSubview(_caret.view)
-        _caret.isHidden = true
     }
 
     required init?(coder: NSCoder) {
@@ -132,7 +122,49 @@ public final class CodeEditView: NSView {
         interpretKeyEvents([event])
     }
 
+    public override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+    }
+
+//    public override func mouseDragged(with event: NSEvent) {
+//        defer {
+//            super.mouseDragged(with: event)
+//        }
+//
+//        if let inputContext = inputContext, inputContext.handleEvent(event) {
+//            return
+//        }
+//
+//        if event.type == .leftMouseDragged {
+//            let viewLocation = self.convert(event.locationInWindow, from: nil)
+//            if let lineLayout = _layoutManager.lineLayout(at: viewLocation) {
+//                let adjustedViewLocation = viewLocation.applying(.init(translationX: -lineLayout.bounds.origin.x , y: 0))
+//                let characterIndex = CTLineGetStringIndexForPosition(lineLayout.ctline, adjustedViewLocation)
+//                if characterIndex != kCFNotFound {
+//                    let eventPosition = Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
+//
+//                    if event.modifierFlags.contains(.shift) {
+//                        var range = Range(start: _textSelection?.range.start ?? _caret.position, end: eventPosition)
+//                        if range.start > range.end {
+//                            range = range.inverted()
+//                        }
+//
+//                        _textSelection = SelectionRange(range)
+//                    } else {
+//                        unselectText()
+//                        _caret.position = eventPosition
+//                    }
+//                    needsDisplay = true
+//                }
+//            }
+//        }
+//    }
+
     public override func mouseDown(with event: NSEvent) {
+        defer {
+            super.mouseDown(with: event)
+        }
+
         if let inputContext = inputContext, inputContext.handleEvent(event) {
             return
         }
@@ -146,23 +178,24 @@ public final class CodeEditView: NSView {
                     let eventPosition = Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
 
                     if event.modifierFlags.contains(.shift) {
-                        logger.debug("Update selection")
-
                         var range = Range(start: _caret.position, end: eventPosition)
-                        if _caret.position > eventPosition {
+                        if range.start > range.end {
                             range = range.inverted()
                         }
 
                         _textSelection = SelectionRange(range)
                     } else {
-                        logger.debug("Move caret")
                         unselectText()
                         _caret.position = eventPosition
                     }
+                    needsDisplay = true
                 }
-                needsDisplay = true
             }
         }
+    }
+
+    public override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
     }
 
 
@@ -190,6 +223,8 @@ public final class CodeEditView: NSView {
         if configuration.showWrappingLine {
             drawWrappingLine(context, dirtyRect: dirtyRect)
         }
+
+        drawCaret(context, dirtyRect: dirtyRect)
     }
 
     public override func prepareContent(in rect: NSRect) {
@@ -207,6 +242,28 @@ public final class CodeEditView: NSView {
         context.move(to: CGPoint(x: wrapWidth, y: dirtyRect.minY))
         context.addLine(to: CGPoint(x: wrapWidth, y: dirtyRect.maxY))
         context.strokePath()
+
+        context.restoreGState()
+    }
+
+    private func drawCaret(_ context: CGContext, dirtyRect: NSRect) {
+        guard !_caret.isHidden else {
+            return
+        }
+
+        guard let caretBounds = _layoutManager.caretBounds(at: _caret.position),
+              caretBounds.intersects(dirtyRect) else
+        {
+            return
+        }
+
+        context.saveGState()
+
+        context.setFillColor(configuration.textColor.cgColor)
+        var caretRect = caretBounds
+        caretRect.size.width = 1
+        context.addRect(caretRect)
+        context.fillPath()
 
         context.restoreGState()
     }
@@ -238,7 +295,6 @@ public final class CodeEditView: NSView {
             return
         }
 
-        logger.debug("drawHighlightedLine")
 
         context.saveGState()
         context.setFillColor(NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor)
@@ -250,6 +306,7 @@ public final class CodeEditView: NSView {
                               height: lineLayout.bounds.height).insetBy(dx: 0, dy: -lineLayout.lineSpacing / 2)
 
         context.fill(lineRect)
+        logger.debug("drawHighlightedLine \(NSStringFromRect(lineRect))")
 
         context.restoreGState()
     }
@@ -364,15 +421,7 @@ public final class CodeEditView: NSView {
 
     public override func layout() {
         layoutText()
-        layoutCaret()
         super.layout()
-    }
-
-    private func layoutCaret() {
-        guard let caretBounds = _layoutManager.caretBounds(at: _caret.position) else {
-            return
-        }
-        _caret.view.frame = caretBounds
     }
 
     /// Layout visible text
@@ -474,7 +523,7 @@ extension CodeEditView: NSTextInputClient {
     }
 
     public func hasMarkedText() -> Bool {
-        logger.debug("hasMarkedText")
+        // logger.debug("hasMarkedText")
         return false
     }
 

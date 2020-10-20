@@ -259,7 +259,7 @@ class LayoutManager {
             //for change in newLineNumberLayouts.difference(from: oldLineNumberLayouts) {
             //}
             if !oldLineNumberLayouts.isEmpty && newLineNumberLayouts.count > oldLineNumberLayouts.count {
-                print("wazaaaa \(lineNumber)")
+                // logger.debug("wazaaaa \(lineNumber)")
                 // TODO: move everything below by height of the new line
             }
 

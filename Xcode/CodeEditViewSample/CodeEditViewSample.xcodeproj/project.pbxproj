@@ -14,7 +14,6 @@
 		750AC4D024F283FF004FB229 /* TextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4CF24F283FF004FB229 /* TextStorageProvider.swift */; };
 		750AC4D424F28572004FB229 /* Range.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4D324F28572004FB229 /* Range.swift */; };
 		750AC4DC24F28EC2004FB229 /* RopeTextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */; };
-		7511242824F57808005F82BA /* CaretView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7511242724F57808005F82BA /* CaretView.swift */; };
 		75228D2B25228265005EE0FB /* TestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75228D2A25228261005EE0FB /* TestRunner.swift */; };
 		7552A6D0252E7EC400FD573C /* Direction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7552A6CF252E7EC400FD573C /* Direction.swift */; };
 		7552A6D4252E985C00FD573C /* Chunked.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7552A6D3252E985C00FD573C /* Chunked.swift */; };
@@ -42,7 +41,6 @@
 		750AC4CF24F283FF004FB229 /* TextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextStorageProvider.swift; sourceTree = "<group>"; };
 		750AC4D324F28572004FB229 /* Range.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Range.swift; sourceTree = "<group>"; };
 		750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RopeTextStorageProvider.swift; sourceTree = "<group>"; };
-		7511242724F57808005F82BA /* CaretView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaretView.swift; sourceTree = "<group>"; };
 		75228D2325227BE6005EE0FB /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		75228D2A25228261005EE0FB /* TestRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRunner.swift; sourceTree = "<group>"; };
 		7552A6CF252E7EC400FD573C /* Direction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Direction.swift; sourceTree = "<group>"; };
@@ -83,7 +81,6 @@
 				75DFE204252EA53100AB4795 /* Helpers */,
 				759610142522D8FA002D27A9 /* Logger.swift */,
 				750AC4C924F27D9E004FB229 /* CodeEdit.swift */,
-				7511242724F57808005F82BA /* CaretView.swift */,
 				750AC4C724F27D50004FB229 /* CodeEditView.swift */,
 				75BF9629252B2FE700278E62 /* LayoutManager.swift */,
 				7578673E252D37F10040646D /* LineWrapping.swift */,
@@ -254,7 +251,6 @@
 				75F8F4A4253067CA00090B4F /* CFRange+Equatable.swift in Sources */,
 				750AC4C824F27D50004FB229 /* CodeEditView.swift in Sources */,
 				75BF962A252B2FE700278E62 /* LayoutManager.swift in Sources */,
-				7511242824F57808005F82BA /* CaretView.swift in Sources */,
 				750AC4D024F283FF004FB229 /* TextStorageProvider.swift in Sources */,
 				7552A6D4252E985C00FD573C /* Chunked.swift in Sources */,
 				75EA4C9B24F2B1D700BAA2D9 /* StringTextStorageProvider.swift in Sources */,
