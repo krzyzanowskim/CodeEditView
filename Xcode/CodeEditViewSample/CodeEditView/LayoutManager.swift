@@ -148,7 +148,8 @@ class LayoutManager {
             return nil
         }
 
-        return Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
+        let character = max(0, min(lineLayout.stringRange.location + lineLayout.stringRange.length - 1, characterIndex))
+        return Position(line: lineLayout.lineNumber, character: character) // -1 because newline character. (or is it?)
     }
 
     // so slow. sooo slow. O(n)
