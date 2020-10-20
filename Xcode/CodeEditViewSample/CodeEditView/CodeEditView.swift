@@ -152,9 +152,11 @@ public final class CodeEditView: NSView {
             return
         }
 
-        guard let mouseDownPosition = _layoutManager.position(at: convert(event.locationInWindow, from: nil)) else {
+        let mouseDownLocation = convert(event.locationInWindow, from: nil)
+        guard let mouseDownPosition = _layoutManager.position(at: mouseDownLocation) else {
             return
         }
+
 
         if event.modifierFlags.contains(.shift) {
             // extend selection
