@@ -143,18 +143,6 @@ public final class CodeEditView: NSView {
         NSCursor.iBeam.set()
     }
 
-    public override func mouseEntered(with event: NSEvent) {
-        super.mouseEntered(with: event)
-    }
-
-    public override func mouseExited(with event: NSEvent) {
-        super.mouseExited(with: event)
-    }
-
-    public override func mouseMoved(with event: NSEvent) {
-        super.mouseMoved(with: event)
-    }
-
     public override func mouseDown(with event: NSEvent) {
         defer {
             super.mouseDown(with: event)
@@ -201,11 +189,6 @@ public final class CodeEditView: NSView {
             }
         }
     }
-
-    public override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
-    }
-
 
     // MARK: - Drawing
 
