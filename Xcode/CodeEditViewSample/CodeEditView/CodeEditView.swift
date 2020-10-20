@@ -164,7 +164,7 @@ public final class CodeEditView: NSView {
             return
         }
 
-        guard let mouseDownPosition = self.position(at: convert(event.locationInWindow, from: nil)) else {
+        guard let mouseDownPosition = _layoutManager.position(at: convert(event.locationInWindow, from: nil)) else {
             return
         }
 
@@ -189,7 +189,7 @@ public final class CodeEditView: NSView {
                 case .leftMouseDragged:
                     // extend selection
                     let dragLocation = convert(theEvent.locationInWindow, from: nil)
-                    guard let dragPosition = position(at: dragLocation) else {
+                    guard let dragPosition = _layoutManager.position(at: dragLocation) else {
                         continue
                     }
                     _textSelection = SelectionRange(Range(start: _textSelection?.range.start ?? _caret.position, end: dragPosition))
@@ -443,21 +443,6 @@ public final class CodeEditView: NSView {
     }
 
     // MARK: - Helpers
-
-    private func position(at point: CGPoint) -> Position? {
-        guard let lineLayout = _layoutManager.lineLayout(at: point) else {
-            return nil
-        }
-
-        // adjust line inset offset
-        let insetAdjustedPoint = point.applying(.init(translationX: -lineLayout.bounds.origin.x , y: 0))
-        let characterIndex = CTLineGetStringIndexForPosition(lineLayout.ctline, insetAdjustedPoint)
-        guard characterIndex != kCFNotFound else {
-            return nil
-        }
-
-        return Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
-    }
     
     private func updatePasteboard(with text: String) {
         let pasteboard = NSPasteboard.general

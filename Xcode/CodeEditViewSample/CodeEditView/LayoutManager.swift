@@ -68,6 +68,13 @@ class LayoutManager {
             return nil
         }
 
+        //var characterOffsetX: CGFloat = 0
+        //CTLineEnumerateCaretOffsets(lineLayout.ctline) { (offset, charIndex, leadingEdge, stop) in
+        //    if charIndex == position.character {
+        //        characterOffsetX = CGFloat(offset)
+        //        stop.pointee = true
+        //    }
+        //}
         let characterOffsetX = CTLineGetOffsetForStringIndex(lineLayout.ctline, position.character, nil)
         var rect = lineLayout.bounds.offsetBy(dx: characterOffsetX, dy: 0)
         // arbitrary number that should be replaced for the font width
@@ -127,6 +134,21 @@ class LayoutManager {
         _lineLayouts.filter { lineLayout in
             rect.intersects(lineLayout.bounds)
         }
+    }
+
+    func position(at point: CGPoint) -> Position? {
+        guard let lineLayout = lineLayout(at: point) else {
+            return nil
+        }
+
+        // adjust line inset offset
+        let insetAdjustedPoint = point.applying(.init(translationX: -lineLayout.bounds.origin.x , y: 0))
+        let characterIndex = CTLineGetStringIndexForPosition(lineLayout.ctline, insetAdjustedPoint)
+        guard characterIndex != kCFNotFound else {
+            return nil
+        }
+
+        return Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
     }
 
     // so slow. sooo slow. O(n)
