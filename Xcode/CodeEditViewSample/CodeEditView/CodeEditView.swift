@@ -26,7 +26,6 @@ public final class CodeEditView: NSView {
     private var _textSelection: SelectionRange? {
         didSet {
             _caret.isHidden = _textSelection != nil
-            needsDisplay = true
         }
     }
 
@@ -37,6 +36,9 @@ public final class CodeEditView: NSView {
             needsDisplay = true
         }
     }
+
+    private var _trackingArea: NSTrackingArea?
+
 
     public struct Configuration {
         /// Line wrapping mode.
@@ -122,43 +124,36 @@ public final class CodeEditView: NSView {
         interpretKeyEvents([event])
     }
 
+    public override func updateTrackingAreas() {
+        if let trackingArea = _trackingArea {
+            removeTrackingArea(trackingArea)
+        }
+
+        let trackingArea = NSTrackingArea(rect: frame,
+                                          options: [.activeWhenFirstResponder, .inVisibleRect, .cursorUpdate],
+                                          owner: self,
+                                          userInfo: nil)
+
+        self.addTrackingArea(trackingArea)
+        _trackingArea = trackingArea
+    }
+
+    public override func cursorUpdate(with event: NSEvent) {
+        super.cursorUpdate(with: event)
+        NSCursor.iBeam.set()
+    }
+
+    public override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+    }
+
+    public override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+    }
+
     public override func mouseMoved(with event: NSEvent) {
         super.mouseMoved(with: event)
     }
-
-//    public override func mouseDragged(with event: NSEvent) {
-//        defer {
-//            super.mouseDragged(with: event)
-//        }
-//
-//        if let inputContext = inputContext, inputContext.handleEvent(event) {
-//            return
-//        }
-//
-//        if event.type == .leftMouseDragged {
-//            let viewLocation = self.convert(event.locationInWindow, from: nil)
-//            if let lineLayout = _layoutManager.lineLayout(at: viewLocation) {
-//                let adjustedViewLocation = viewLocation.applying(.init(translationX: -lineLayout.bounds.origin.x , y: 0))
-//                let characterIndex = CTLineGetStringIndexForPosition(lineLayout.ctline, adjustedViewLocation)
-//                if characterIndex != kCFNotFound {
-//                    let eventPosition = Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
-//
-//                    if event.modifierFlags.contains(.shift) {
-//                        var range = Range(start: _textSelection?.range.start ?? _caret.position, end: eventPosition)
-//                        if range.start > range.end {
-//                            range = range.inverted()
-//                        }
-//
-//                        _textSelection = SelectionRange(range)
-//                    } else {
-//                        unselectText()
-//                        _caret.position = eventPosition
-//                    }
-//                    needsDisplay = true
-//                }
-//            }
-//        }
-//    }
 
     public override func mouseDown(with event: NSEvent) {
         defer {
@@ -169,27 +164,40 @@ public final class CodeEditView: NSView {
             return
         }
 
-        if event.type == .leftMouseDown {
-            let viewLocation = self.convert(event.locationInWindow, from: nil)
-            if let lineLayout = _layoutManager.lineLayout(at: viewLocation) {
-                let adjustedViewLocation = viewLocation.applying(.init(translationX: -lineLayout.bounds.origin.x , y: 0))
-                let characterIndex = CTLineGetStringIndexForPosition(lineLayout.ctline, adjustedViewLocation)
-                if characterIndex != kCFNotFound {
-                    let eventPosition = Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
+        guard let mouseDownPosition = self.position(at: convert(event.locationInWindow, from: nil)) else {
+            return
+        }
 
-                    if event.modifierFlags.contains(.shift) {
-                        var range = Range(start: _caret.position, end: eventPosition)
-                        if range.start > range.end {
-                            range = range.inverted()
-                        }
+        if event.modifierFlags.contains(.shift) {
+            // extend selection
+            _textSelection = SelectionRange(Range(start: _textSelection?.range.start ?? _caret.position, end: mouseDownPosition))
+            needsDisplay = true
+        } else {
+            // move caret
+            unselectText()
+            _caret.position = mouseDownPosition
+        }
 
-                        _textSelection = SelectionRange(range)
-                    } else {
-                        unselectText()
-                        _caret.position = eventPosition
+        // Drag selection
+        var keepOn = true
+        while keepOn {
+            guard let theEvent = self.window?.nextEvent(matching: [.leftMouseUp, .leftMouseDragged]) else {
+                continue
+            }
+
+            switch theEvent.type {
+                case .leftMouseDragged:
+                    // extend selection
+                    let dragLocation = convert(theEvent.locationInWindow, from: nil)
+                    guard let dragPosition = position(at: dragLocation) else {
+                        continue
                     }
+                    _textSelection = SelectionRange(Range(start: _textSelection?.range.start ?? _caret.position, end: dragPosition))
                     needsDisplay = true
-                }
+                case .leftMouseUp:
+                    keepOn = false
+                default:
+                    break
             }
         }
     }
@@ -436,6 +444,21 @@ public final class CodeEditView: NSView {
 
     // MARK: - Helpers
 
+    private func position(at point: CGPoint) -> Position? {
+        guard let lineLayout = _layoutManager.lineLayout(at: point) else {
+            return nil
+        }
+
+        // adjust line inset offset
+        let insetAdjustedPoint = point.applying(.init(translationX: -lineLayout.bounds.origin.x , y: 0))
+        let characterIndex = CTLineGetStringIndexForPosition(lineLayout.ctline, insetAdjustedPoint)
+        guard characterIndex != kCFNotFound else {
+            return nil
+        }
+
+        return Position(line: lineLayout.lineNumber, character: max(0, characterIndex - 1)) // -1 because newline character. this is not good
+    }
+    
     private func updatePasteboard(with text: String) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
