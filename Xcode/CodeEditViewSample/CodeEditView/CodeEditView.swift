@@ -196,8 +196,11 @@ public final class CodeEditView: NSView {
                     guard let dragPosition = _layoutManager.position(at: dragLocation) else {
                         continue
                     }
-                    _textSelection = SelectionRange(Range(start: _textSelection?.range.start ?? _caret.position, end: dragPosition))
-                    needsDisplay = true
+                    let newSelection = SelectionRange(Range(start: _textSelection?.range.start ?? _caret.position, end: dragPosition))
+                    if !newSelection.isEmpty {
+                        _textSelection = newSelection
+                        needsDisplay = true
+                    }
                 case .leftMouseUp:
                     keepOn = false
                 default:

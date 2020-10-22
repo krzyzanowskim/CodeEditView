@@ -9,6 +9,10 @@ public class SelectionRange: Hashable, Equatable {
         self.parent = parent
     }
 
+    var isEmpty: Bool {
+        range.start == range.end
+    }
+
     public func hash(into hasher: inout Hasher) {
         hasher.combine(range)
         hasher.combine(parent)
