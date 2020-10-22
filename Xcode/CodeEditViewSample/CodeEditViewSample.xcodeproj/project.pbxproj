@@ -17,6 +17,7 @@
 		75228D2B25228265005EE0FB /* TestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75228D2A25228261005EE0FB /* TestRunner.swift */; };
 		7552A6D0252E7EC400FD573C /* Direction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7552A6CF252E7EC400FD573C /* Direction.swift */; };
 		7552A6D4252E985C00FD573C /* Chunked.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7552A6D3252E985C00FD573C /* Chunked.swift */; };
+		7570D51925421A70004D074C /* BlinkTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7570D51825421A70004D074C /* BlinkTimer.swift */; };
 		7578673B252D2C170040646D /* Position+TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7578673A252D2C170040646D /* Position+TextStorage.swift */; };
 		7578673F252D37F10040646D /* LineWrapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7578673E252D37F10040646D /* LineWrapping.swift */; };
 		75786742252D381B0040646D /* LineSpacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75786741252D381B0040646D /* LineSpacing.swift */; };
@@ -45,6 +46,7 @@
 		75228D2A25228261005EE0FB /* TestRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRunner.swift; sourceTree = "<group>"; };
 		7552A6CF252E7EC400FD573C /* Direction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Direction.swift; sourceTree = "<group>"; };
 		7552A6D3252E985C00FD573C /* Chunked.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Chunked.swift; sourceTree = "<group>"; };
+		7570D51825421A70004D074C /* BlinkTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlinkTimer.swift; sourceTree = "<group>"; };
 		7578673A252D2C170040646D /* Position+TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Position+TextStorage.swift"; sourceTree = "<group>"; };
 		7578673E252D37F10040646D /* LineWrapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineWrapping.swift; sourceTree = "<group>"; };
 		75786741252D381B0040646D /* LineSpacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSpacing.swift; sourceTree = "<group>"; };
@@ -86,6 +88,7 @@
 				7578673E252D37F10040646D /* LineWrapping.swift */,
 				75786741252D381B0040646D /* LineSpacing.swift */,
 				7552A6CF252E7EC400FD573C /* Direction.swift */,
+				7570D51825421A70004D074C /* BlinkTimer.swift */,
 				750AC4D224F2843B004FB229 /* TextStorage */,
 				750AC4D524F28897004FB229 /* Model */,
 			);
@@ -251,6 +254,7 @@
 				75F8F4A4253067CA00090B4F /* CFRange+Equatable.swift in Sources */,
 				750AC4C824F27D50004FB229 /* CodeEditView.swift in Sources */,
 				75BF962A252B2FE700278E62 /* LayoutManager.swift in Sources */,
+				7570D51925421A70004D074C /* BlinkTimer.swift in Sources */,
 				750AC4D024F283FF004FB229 /* TextStorageProvider.swift in Sources */,
 				7552A6D4252E985C00FD573C /* Chunked.swift in Sources */,
 				75EA4C9B24F2B1D700BAA2D9 /* StringTextStorageProvider.swift in Sources */,
