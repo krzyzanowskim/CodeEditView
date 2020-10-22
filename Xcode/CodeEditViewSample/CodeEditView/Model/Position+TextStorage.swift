@@ -2,31 +2,28 @@ import Foundation
 
 extension Position {
 
+    /// Visually move one line down
     mutating func moveDownByLine(using layoutManager: LayoutManager) {
-        guard let currentLineLayout = layoutManager.lineLayout(at: self),
-              let nextLineLayout = layoutManager.lineLayout(after: currentLineLayout) else {
+        guard let currentLineCaretBounds = layoutManager.caretBounds(at: self),
+              let currentLineLayout = layoutManager.lineLayout(at: self),
+              let nextLinePosition = layoutManager.position(at: currentLineCaretBounds.origin.applying(.init(translationX: 0, y: currentLineLayout.bounds.height + currentLineLayout.lineSpacing)))
+        else {
             return
         }
 
-        // distance from the beginning of the current line limited by the next line length
-        // TODO: effectively reset caret position to the beginin of the line, while it's not expected
-        //       the caret offset should preserve between lines, and empty line should not reset the caret offset.
-        let distance = min(self.character - currentLineLayout.stringRange.location, nextLineLayout.stringRange.length - 1)
-        self = Position(line: nextLineLayout.lineNumber, character: nextLineLayout.stringRange.location + distance)
+        self = nextLinePosition
     }
 
+    /// Visually move one line up
     mutating func moveUpByLine(using layoutManager: LayoutManager) {
-        guard let currentLineLayout = layoutManager.lineLayout(at: self),
-              let prevLineLayout = layoutManager.lineLayout(before: currentLineLayout) else {
+        guard let currentLineCaretBounds = layoutManager.caretBounds(at: self),
+              let currentLineLayout = layoutManager.lineLayout(at: self),
+              let prevLinePosition = layoutManager.position(at: currentLineCaretBounds.origin.applying(.init(translationX: 0, y: -(currentLineLayout.bounds.height + currentLineLayout.lineSpacing))))
+        else {
             return
         }
 
-        // distance from the beginning of the current line limited by the next line length
-        // TODO: effectively reset caret position to the beginin of the line, while it's not expected
-        //       the caret offset should preserve between lines, and empty line should not reset the caret offset.
-        let distance = min(self.character - currentLineLayout.stringRange.location, prevLineLayout.stringRange.length - 1)
-        self = Position(line: prevLineLayout.lineNumber, character: prevLineLayout.stringRange.location + distance)
-
+        self = prevLinePosition
     }
 
     /// Move position by number of characters.
