@@ -31,7 +31,7 @@ public final class CodeEditView: NSView {
     /// Current text selection. Single selection range.
     private var _textSelection: SelectionRange? {
         didSet {
-            _caret.isAvailable = _textSelection == nil
+            _caret.isAvailable = _textSelection == nil || (_textSelection != nil && _textSelection!.isEmpty)
         }
     }
 
@@ -200,6 +200,8 @@ public final class CodeEditView: NSView {
                     if !newSelection.isEmpty {
                         _textSelection = newSelection
                         needsDisplay = true
+                    } else {
+                        _textSelection = nil
                     }
                 case .leftMouseUp:
                     keepOn = false
