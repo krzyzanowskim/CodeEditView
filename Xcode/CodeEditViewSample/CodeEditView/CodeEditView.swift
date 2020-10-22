@@ -7,6 +7,7 @@ import CoreText
 // TODO:
 //  - Text Checking: NSTextCheckingClient, NSTextCheckingController
 //  - tell the input context when position information for a character range changes, when the text view scrolls, by sending the invalidateCharacterCoordinates message to the input context.
+//  - Remember maxX of caret and back to the position if there's enough characters in new line
 
 /// Code Edit View
 public final class CodeEditView: NSView {
@@ -25,8 +26,20 @@ public final class CodeEditView: NSView {
 
             // resume after a while
             _caretBlinkTimer.resume()
+
+            // TODO: Move the logic to LayoutManager to maintain last max X caret position
+            //_caretPreferedX = max(_layoutManager.caretBounds(at: _caret.position)?.minX ?? 0, _caretPreferedX ?? 0)
+            //
+            //guard let currentLineCaretBounds = _layoutManager.caretBounds(at: oldValue.position),
+            //      let newLineLayout = _layoutManager.lineLayout(at: _caret.position),
+            //      let newCaretPosition = _layoutManager.position(at: CGPoint(x: max(currentLineCaretBounds.origin.x, _caretPreferedX ?? 0), y: newLineLayout.bounds.origin.y + 10))
+            //else {
+            //    return
+            //}
+            //_caret.position = newCaretPosition
         }
     }
+    // private var _caretPreferedX: CGFloat? // TODO: Move this logic to LayoutManager
 
     /// Current text selection. Single selection range.
     private var _textSelection: SelectionRange? {
