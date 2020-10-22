@@ -13,26 +13,55 @@ public final class CodeEditView: NSView {
 
     private struct Caret {
         var position: Position = .zero
-        var isHidden: Bool
+        var isAvailable: Bool = true
     }
 
-    private var _caret: Caret {
+    private var _caretBlinkDelay: Double // milliseconds
+    private lazy var _caretBlink: DispatchSourceTimer = {
+        let t = DispatchSource.makeTimerSource(queue: .main)
+        t.schedule(deadline: .now() + _caretBlinkDelay, repeating: _caretBlinkDelay)
+        t.setEventHandler() { [unowned self] in
+            if self._caret.isAvailable {
+                self._isCaretVisible.toggle()
+            }
+        }
+        return t
+    }()
+
+    private var _isCaretVisible: Bool {
         didSet {
             needsDisplay = true
+        }
+    }
+    
+    private var _caret: Caret {
+        didSet {
+            _caretBlink.suspend()
+            _isCaretVisible = true
+
+            needsDisplay = true
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(Int(_caretBlinkDelay * 1000))) { [weak self] in
+                guard let self = self else { return }
+                self._caretBlink.schedule(deadline: .now(), repeating: self._caretBlinkDelay)
+                if !self._caretBlink.isCancelled {
+                    self._caretBlink.resume()
+                }
+            }
         }
     }
 
     /// Current text selection. Single selection range.
     private var _textSelection: SelectionRange? {
         didSet {
-            _caret.isHidden = _textSelection != nil
+            _caret.isAvailable = _textSelection == nil
         }
     }
 
     /// Whether or not this view is the focused view for its window
     private var _isFirstResponder = false {
         didSet {
-            _caret.isHidden = !_isFirstResponder
+            _caret.isAvailable = _isFirstResponder
             needsDisplay = true
         }
     }
@@ -87,15 +116,24 @@ public final class CodeEditView: NSView {
                                                                  indentLevel: configuration.indentLevel,
                                                                  lineSpacing: configuration.lineSpacing),
                                             textStorage: storage)
-        self._caret = Caret(isHidden: true)
+        self._caret = Caret()
+        self._isCaretVisible = true
+        self._caretBlinkDelay = 0.55
 
         self.configuration = configuration
 
         super.init(frame: .zero)
+
+        _caretBlink.resume()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    deinit {
+        _caretBlink.setEventHandler(handler: {})
+        _caretBlink.cancel()
     }
 
     public override var acceptsFirstResponder: Bool {
@@ -240,7 +278,7 @@ public final class CodeEditView: NSView {
     }
 
     private func drawCaret(_ context: CGContext, dirtyRect: NSRect) {
-        guard !_caret.isHidden else {
+        guard _caret.isAvailable && _isCaretVisible else {
             return
         }
 
@@ -276,6 +314,7 @@ public final class CodeEditView: NSView {
             CTLineDraw(lineLayout.ctline, context)
         }
 
+        logger.trace("drawText dirtyRect: \(NSStringFromRect(dirtyRect))")
         context.restoreGState()
     }
 
