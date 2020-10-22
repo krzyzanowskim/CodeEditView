@@ -101,7 +101,9 @@ public final class CodeEditView: NSView {
         super.init(frame: .zero)
 
         _caretBlinkTimer.setEventHandler { [unowned self] _ in
-            needsDisplay = true
+            if let caretBounds = _layoutManager.caretBounds(at: _caret.position) {
+                setNeedsDisplay(caretBounds)
+            }
         }
         _caretBlinkTimer.resume()
     }
