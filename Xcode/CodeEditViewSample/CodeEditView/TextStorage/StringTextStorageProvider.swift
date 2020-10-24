@@ -11,11 +11,6 @@ class StringTextStorageProvider: TextStorageProvider {
         _cacheLineRange.count
     }
 
-    func character(at position: Position) -> Character? {
-        let index = _content.index(offset(line: position.line), offsetBy: position.character)
-        return _content[index]
-    }
-
     func insert(string: String, at position: Position) {
         let index = _content.index(offset(line: position.line), offsetBy: position.character)
         _content.insert(contentsOf: string, at: index)
@@ -52,9 +47,24 @@ class StringTextStorageProvider: TextStorageProvider {
         _content[lineRange(line: lineIndex)]
     }
 
+    func character(at position: Position) -> Character? {
+        let index = _content.index(offset(line: position.line), offsetBy: position.character)
+        return _content[index]
+    }
+
     func characterIndex(at position: Position) -> Int {
         let nsrange = NSRange(_content.startIndex..<offset(line: position.line), in: _content)
         return nsrange.location + nsrange.length + position.character
+    }
+
+    func position(atCharacterIndex characterIndex: Int) -> Position? {
+        let stringCharacterIndex = _content.index(_content.startIndex, offsetBy: characterIndex)
+        guard let foundLine = _cacheLineRange.first(where: { $0.value.contains(stringCharacterIndex) }) else {
+            return nil
+        }
+
+        let distance = _content.distance(from: foundLine.value.lowerBound, to: stringCharacterIndex)
+        return Position(line: foundLine.key, character: distance)
     }
 
     private func offset(line lineIndex: Int) -> String.Index {

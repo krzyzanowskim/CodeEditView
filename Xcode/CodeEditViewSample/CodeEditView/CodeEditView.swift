@@ -277,8 +277,6 @@ public final class CodeEditView: NSView {
         }
 
         drawCaret(context, dirtyRect: dirtyRect)
-
-        logger.trace("draw dirtyRect: \(NSStringFromRect(dirtyRect))")
     }
 
     public override func prepareContent(in rect: NSRect) {
@@ -529,8 +527,11 @@ extension CodeEditView: NSTextInputClient {
             return
         }
 
-        unselectText()
 
+        // delete selected area
+        delete(self)
+
+        // insert text
         logger.debug("insertText \(string) replacementRange \(replacementRange)")
         _textStorage.insert(string: string, at: _caret.position)
 
@@ -548,8 +549,13 @@ extension CodeEditView: NSTextInputClient {
         scrollToVisiblePosition(_caret.position)
     }
 
+    /// Called by the input manager to set text which might be combined with further input to form the final text (e.g. composition of ^ and a to â).
     public func setMarkedText(_ string: Any, selectedRange: NSRange, replacementRange: NSRange) {
-        logger.debug("setMarkedText \(string as! String) selectedRange \(selectedRange) replacementRange \(replacementRange)")
+        guard let string = string as? String else {
+            return
+        }
+
+        logger.debug("setMarkedText \(string) selectedRange \(selectedRange) replacementRange \(replacementRange)")
     }
 
     public func unmarkText() {
@@ -560,7 +566,9 @@ extension CodeEditView: NSTextInputClient {
         logger.debug("selectedRange")
 
         guard let selectionRange = _textSelection?.range else {
-            return NSRange(location: NSNotFound, length: 0)
+            // Return caret position to make the mark selection working
+            let caretCharacterIndex = _textStorage.characterIndex(at: _caret.position)
+            return NSRange(location: caretCharacterIndex, length: 0)
         }
 
         // _selectionRange -> NSRange
@@ -590,8 +598,13 @@ extension CodeEditView: NSTextInputClient {
     }
 
     public func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {
-        logger.debug("firstRect forCharacterRange \(range)")
-        return NSRect.zero
+        guard let position = _textStorage.position(atCharacterIndex: range.location),
+           let caretBounds = _layoutManager.caretBounds(at: position),
+           let rect = window?.convertToScreen(convert(caretBounds, to: nil)) else {
+            return .zero
+        }
+
+        return rect
     }
 
     public func characterIndex(for point: NSPoint) -> Int {

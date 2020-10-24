@@ -13,4 +13,5 @@ protocol TextStorageProvider {
     func string(line idx: Int) -> Substring
     /// Character offset in a document for a position
     func characterIndex(at position: Position) -> Int
+    func position(atCharacterIndex: Int) -> Position?
 }
