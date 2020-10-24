@@ -112,6 +112,7 @@ public final class CodeEditView: NSView {
         self.configuration = configuration
 
         super.init(frame: .zero)
+        self.canDrawConcurrently = true
 
         _caretBlinkTimer.setEventHandler { [unowned self] _ in
             if let caretBounds = _layoutManager.caretBounds(at: _caret.position) {
@@ -135,6 +136,10 @@ public final class CodeEditView: NSView {
 
     public override var isFlipped: Bool {
         true
+    }
+
+    public override var wantsDefaultClipping: Bool {
+        false
     }
 
     public override func becomeFirstResponder() -> Bool {
@@ -224,10 +229,28 @@ public final class CodeEditView: NSView {
         }
     }
 
+    public override func menu(for event: NSEvent) -> NSMenu? {
+        // TODO: Move cursor
+        let menu = NSMenu()
+        menu.addItem(withTitle: "Cut", action: #selector(cut(_:)), keyEquivalent: "").keyEquivalentModifierMask = [.command]
+        menu.addItem(withTitle: "Copy", action: #selector(copy(_:)), keyEquivalent: "").keyEquivalentModifierMask = [.command]
+        menu.addItem(withTitle: "Paste", action: #selector(paste(_:)), keyEquivalent: "").keyEquivalentModifierMask = [.command]
+        return menu
+    }
+
     // MARK: - Drawing
 
     public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
+
+//        var rects: UnsafePointer<NSRect>?
+//        var count = Int()
+//
+//        getRectsBeingDrawn(&rects, count: &count)
+//        print(count)
+//        for i in 0..<count {
+//            print(rects![i])
+//        }
 
         guard let context = NSGraphicsContext.current?.cgContext else {
             return
@@ -250,6 +273,8 @@ public final class CodeEditView: NSView {
         }
 
         drawCaret(context, dirtyRect: dirtyRect)
+
+        logger.trace("draw dirtyRect: \(NSStringFromRect(dirtyRect))")
     }
 
     public override func prepareContent(in rect: NSRect) {
@@ -308,7 +333,6 @@ public final class CodeEditView: NSView {
             CTLineDraw(lineLayout.ctline, context)
         }
 
-        logger.trace("drawText dirtyRect: \(NSStringFromRect(dirtyRect))")
         context.restoreGState()
     }
 
@@ -332,7 +356,6 @@ public final class CodeEditView: NSView {
                               height: lineLayout.bounds.height).insetBy(dx: 0, dy: -lineLayout.lineSpacing / 2)
 
         context.fill(lineRect)
-        logger.debug("drawHighlightedLine \(NSStringFromRect(lineRect))")
 
         context.restoreGState()
     }

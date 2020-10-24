@@ -13,6 +13,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.center()
+        window.allowsConcurrentViewDrawing = true
         window.setFrameAutosaveName("Main Window")
         window.titlebarAppearsTransparent = false
         window.titleVisibility = .visible
@@ -73,4 +74,3 @@ private let loremIpsum = """
 
 10. Pellentesque ac lectus justo. Pellentesque eu tellus sed odio venenatis scelerisque. Aliquam vitae magna purus. Sed a pretium nulla. Interdum et malesuada fames ac ante ipsum primis in faucibus. Aliquam convallis lacinia augue at consequat. Mauris dignissim magna ex, vel ultrices sem sodales non.
 """
-
