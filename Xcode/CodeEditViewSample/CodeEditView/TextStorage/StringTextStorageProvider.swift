@@ -52,7 +52,7 @@ class StringTextStorageProvider: TextStorageProvider {
         _content[lineRange(line: lineIndex)]
     }
 
-    func positionOffset(at position: Position) -> Int {
+    func characterIndex(at position: Position) -> Int {
         let nsrange = NSRange(_content.startIndex..<offset(line: position.line), in: _content)
         return nsrange.location + nsrange.length + position.character
     }
@@ -148,7 +148,7 @@ class StringTextStorageProviderTests: XCTestCase {
     func testPositionOffset() {
         let storageProvider = StringTextStorageProvider()
         storageProvider.insert(string: "test\ntest2\ntest3", at: Position(line: 0, character: 0))
-        let index = storageProvider.positionOffset(at: Position(line: 2, character: 2))
+        let index = storageProvider.characterIndex(at: Position(line: 2, character: 2))
         XCTAssertEqual(index, 13)
     }
 }

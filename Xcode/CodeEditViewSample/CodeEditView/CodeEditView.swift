@@ -564,8 +564,8 @@ extension CodeEditView: NSTextInputClient {
         }
 
         // _selectionRange -> NSRange
-        let startIndex = _textStorage.positionOffset(at: selectionRange.start)
-        let endIndex = _textStorage.positionOffset(at: selectionRange.end)
+        let startIndex = _textStorage.characterIndex(at: selectionRange.start)
+        let endIndex = _textStorage.characterIndex(at: selectionRange.end)
 
         return NSRange(location: startIndex, length: endIndex - startIndex)
     }
@@ -595,9 +595,11 @@ extension CodeEditView: NSTextInputClient {
     }
 
     public func characterIndex(for point: NSPoint) -> Int {
-        logger.debug("characterIndex \(point.debugDescription)")
-        return NSNotFound
-        //return 0
+        guard let position = _layoutManager.position(at: point) else {
+            return NSNotFound
+        }
+
+        return _textStorage.characterIndex(at: position)
     }
 }
 

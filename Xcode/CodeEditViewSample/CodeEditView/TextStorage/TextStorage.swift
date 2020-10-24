@@ -32,8 +32,8 @@ public final class TextStorage {
         storageProvider.character(at: position)
     }
 
-    public func positionOffset(at position: Position) -> Int {
-        storageProvider.positionOffset(at: position)
+    public func characterIndex(at position: Position) -> Int {
+        storageProvider.characterIndex(at: position)
     }
 
     public func string(in range: Range) -> Substring? {
