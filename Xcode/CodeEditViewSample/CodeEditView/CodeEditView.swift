@@ -189,7 +189,6 @@ public final class CodeEditView: NSView {
             return
         }
 
-
         if event.modifierFlags.contains(.shift) {
             // extend selection
             _textSelection = SelectionRange(Range(start: _textSelection?.range.start ?? _caret.position, end: mouseDownPosition))
@@ -230,7 +229,12 @@ public final class CodeEditView: NSView {
     }
 
     public override func menu(for event: NSEvent) -> NSMenu? {
-        // TODO: Move cursor
+        let mouseDownLocation = convert(event.locationInWindow, from: nil)
+        guard let mouseDownPosition = _layoutManager.position(at: mouseDownLocation) else {
+            return nil
+        }
+        _caret.position = mouseDownPosition
+
         let menu = NSMenu()
         menu.addItem(withTitle: "Cut", action: #selector(cut(_:)), keyEquivalent: "").keyEquivalentModifierMask = [.command]
         menu.addItem(withTitle: "Copy", action: #selector(copy(_:)), keyEquivalent: "").keyEquivalentModifierMask = [.command]
