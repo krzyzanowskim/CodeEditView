@@ -15,7 +15,7 @@
 		750AC4D424F28572004FB229 /* Range.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4D324F28572004FB229 /* Range.swift */; };
 		750AC4DC24F28EC2004FB229 /* RopeTextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */; };
 		75228D2B25228265005EE0FB /* TestRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75228D2A25228261005EE0FB /* TestRunner.swift */; };
-		7552A6D0252E7EC400FD573C /* Direction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7552A6CF252E7EC400FD573C /* Direction.swift */; };
+		7552A6D0252E7EC400FD573C /* MoveDirection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7552A6CF252E7EC400FD573C /* MoveDirection.swift */; };
 		7552A6D4252E985C00FD573C /* Chunked.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7552A6D3252E985C00FD573C /* Chunked.swift */; };
 		7570D51925421A70004D074C /* BlinkTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7570D51825421A70004D074C /* BlinkTimer.swift */; };
 		7578673B252D2C170040646D /* Position+TextStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7578673A252D2C170040646D /* Position+TextStorage.swift */; };
@@ -44,7 +44,7 @@
 		750AC4DB24F28EC2004FB229 /* RopeTextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RopeTextStorageProvider.swift; sourceTree = "<group>"; };
 		75228D2325227BE6005EE0FB /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Platforms/MacOSX.platform/Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		75228D2A25228261005EE0FB /* TestRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestRunner.swift; sourceTree = "<group>"; };
-		7552A6CF252E7EC400FD573C /* Direction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Direction.swift; sourceTree = "<group>"; };
+		7552A6CF252E7EC400FD573C /* MoveDirection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoveDirection.swift; sourceTree = "<group>"; };
 		7552A6D3252E985C00FD573C /* Chunked.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Chunked.swift; sourceTree = "<group>"; };
 		7570D51825421A70004D074C /* BlinkTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlinkTimer.swift; sourceTree = "<group>"; };
 		7578673A252D2C170040646D /* Position+TextStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Position+TextStorage.swift"; sourceTree = "<group>"; };
@@ -84,11 +84,9 @@
 				759610142522D8FA002D27A9 /* Logger.swift */,
 				750AC4C924F27D9E004FB229 /* CodeEdit.swift */,
 				750AC4C724F27D50004FB229 /* CodeEditView.swift */,
-				75BF9629252B2FE700278E62 /* LayoutManager.swift */,
-				7578673E252D37F10040646D /* LineWrapping.swift */,
-				75786741252D381B0040646D /* LineSpacing.swift */,
-				7552A6CF252E7EC400FD573C /* Direction.swift */,
+				7552A6CF252E7EC400FD573C /* MoveDirection.swift */,
 				7570D51825421A70004D074C /* BlinkTimer.swift */,
+				754888DF2547A90D0082A59D /* LayoutManager */,
 				750AC4D224F2843B004FB229 /* TextStorage */,
 				750AC4D524F28897004FB229 /* Model */,
 			);
@@ -115,6 +113,16 @@
 				75FC7BCB2523D073006BB064 /* SelectionRange.swift */,
 			);
 			path = Model;
+			sourceTree = "<group>";
+		};
+		754888DF2547A90D0082A59D /* LayoutManager */ = {
+			isa = PBXGroup;
+			children = (
+				75786741252D381B0040646D /* LineSpacing.swift */,
+				7578673E252D37F10040646D /* LineWrapping.swift */,
+				75BF9629252B2FE700278E62 /* LayoutManager.swift */,
+			);
+			path = LayoutManager;
 			sourceTree = "<group>";
 		};
 		75DFE204252EA53100AB4795 /* Helpers */ = {
@@ -271,7 +279,7 @@
 				75DFE206252EA54200AB4795 /* String+chunks.swift in Sources */,
 				75FC7BCC2523D073006BB064 /* SelectionRange.swift in Sources */,
 				75EB017924F27BC10056D96A /* AppDelegate.swift in Sources */,
-				7552A6D0252E7EC400FD573C /* Direction.swift in Sources */,
+				7552A6D0252E7EC400FD573C /* MoveDirection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

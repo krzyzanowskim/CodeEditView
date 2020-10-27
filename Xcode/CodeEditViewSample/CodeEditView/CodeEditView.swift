@@ -119,7 +119,7 @@ public final class CodeEditView: NSView {
         self.canDrawConcurrently = true
 
         _caretBlinkTimer.setEventHandler { [unowned self] _ in
-            if let caretBounds = _layoutManager.caretBounds(at: _caret.position) {
+            if _caret.isAvailable, let caretBounds = _layoutManager.caretBounds(at: _caret.position) {
                 setNeedsDisplay(caretBounds)
             }
         }
@@ -575,10 +575,6 @@ extension CodeEditView: NSTextInputClient {
         }
 
         logger.debug("setMarkedText \(string) selectedRange \(selectedRange) replacementRange \(replacementRange)")
-    }
-
-    private func removeMarkedText() {
-
     }
 
     public func unmarkText() {
