@@ -48,6 +48,10 @@ public final class CodeEditView: NSView {
         }
     }
 
+    /// NSTextInputClient marked text range.
+    // TODO: Needs more work. the range is never set.
+    private var _markedRange: NSRange
+
     /// Whether or not this view is the focused view for its window
     private var _isFirstResponder = false {
         didSet {
@@ -57,7 +61,6 @@ public final class CodeEditView: NSView {
     }
 
     private var _trackingArea: NSTrackingArea?
-
 
     public struct Configuration {
         /// Line wrapping mode.
@@ -108,6 +111,7 @@ public final class CodeEditView: NSView {
                                             textStorage: storage)
         self._caret = Caret()
         self._caretBlinkTimer = BlinkTimer()
+        self._markedRange = NSRange(location: NSNotFound, length: 0)
 
         self.configuration = configuration
 
@@ -506,6 +510,8 @@ public final class CodeEditView: NSView {
     }
 }
 
+// MARK: - NSTextInputClient
+
 // The default implementation of the NSView method inputContext manages
 // an NSTextInputContext instance automatically if the view subclass conforms
 // to the NSTextInputClient protocol.
@@ -527,13 +533,20 @@ extension CodeEditView: NSTextInputClient {
             return
         }
 
-
         // delete selected area
         delete(self)
 
         // insert text
         logger.debug("insertText \(string) replacementRange \(replacementRange)")
-        _textStorage.insert(string: string, at: _caret.position)
+        if replacementRange.location != NSNotFound {
+            let start = _textStorage.position(atCharacterIndex: replacementRange.location)!
+            let end = _textStorage.position(atCharacterIndex: replacementRange.location + replacementRange.length)!
+            _textStorage.remove(range: Range(start: start, end: end))
+            _textStorage.insert(string: string, at: start)
+            _caret.position = start
+        } else {
+            _textStorage.insert(string: string, at: _caret.position)
+        }
 
         // if string contains new line, caret position need to adjust
         let newLineCount = string.reduce(0, { $1.isNewline ? $0 + 1 : $0 })
@@ -555,11 +568,23 @@ extension CodeEditView: NSTextInputClient {
             return
         }
 
+        // (??) If there is no marked text, the current selection is replaced.
+        // If there is no selection, the string is inserted at the insertion point.
+        if selectedRange.location != NSNotFound {
+            insertText(string, replacementRange: replacementRange)
+        }
+
         logger.debug("setMarkedText \(string) selectedRange \(selectedRange) replacementRange \(replacementRange)")
     }
 
+    private func removeMarkedText() {
+
+    }
+
     public func unmarkText() {
+        // When it is called? This API needs more investigation
         logger.debug("unmarkText")
+        _markedRange = NSRange(location: NSNotFound, length: 0)
     }
 
     public func selectedRange() -> NSRange {
@@ -579,13 +604,11 @@ extension CodeEditView: NSTextInputClient {
     }
 
     public func markedRange() -> NSRange {
-        logger.debug("markedRange")
-        return NSRange(location: NSNotFound, length: 0)
+        _markedRange
     }
 
     public func hasMarkedText() -> Bool {
-        // logger.debug("hasMarkedText")
-        return false
+        _markedRange.location != NSNotFound
     }
 
     public func attributedSubstring(forProposedRange range: NSRange, actualRange: NSRangePointer?) -> NSAttributedString? {
@@ -594,7 +617,7 @@ extension CodeEditView: NSTextInputClient {
     }
 
     public func validAttributesForMarkedText() -> [NSAttributedString.Key] {
-        [.font, .backgroundColor, .foregroundColor]
+        []
     }
 
     public func firstRect(forCharacterRange range: NSRange, actualRange: NSRangePointer?) -> NSRect {

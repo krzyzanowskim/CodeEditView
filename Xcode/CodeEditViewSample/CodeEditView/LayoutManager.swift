@@ -212,7 +212,7 @@ class LayoutManager {
 
             // WIP: re-layout invalid ranges
             if _invalidRanges.contains(where: { $0.start.line >= lineNumber && $0.end.line <= lineNumber }) {
-                logger.debug("Invalid line \(lineNumber)")
+                logger.debug("Invalid line layout: \(lineNumber)")
             }
 
             // Store previous lines
