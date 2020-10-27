@@ -336,7 +336,18 @@ public final class CodeEditView: NSView {
 
         for lineLayout in _layoutManager.linesLayouts(in: overscanDirtyRect) {
             context.textPosition = lineLayout.bounds.offsetBy(dx: 0, dy: lineLayout.baseline.y).origin
-            CTLineDraw(lineLayout.ctline, context)
+
+            //CTLineDraw(lineLayout.ctline, context)
+            for run in CTLineGetGlyphRuns(lineLayout.ctline) as? [CTRun] ?? [] {
+                guard let glyphsPtr = CTRunGetGlyphsPtr(run), let positionsPtr = CTRunGetPositionsPtr(run) else {
+                    continue
+                }
+
+                let attributes = CTRunGetAttributes(run) as! [CFString: Any]
+                let font = attributes[kCTFontAttributeName] as! CTFont
+
+                CTFontDrawGlyphs(font, glyphsPtr, positionsPtr, CTRunGetGlyphCount(run), context)
+            }
         }
 
         context.restoreGState()
