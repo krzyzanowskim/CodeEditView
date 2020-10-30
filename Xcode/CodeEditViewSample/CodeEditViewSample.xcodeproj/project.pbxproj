@@ -23,6 +23,7 @@
 		75786742252D381B0040646D /* LineSpacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75786741252D381B0040646D /* LineSpacing.swift */; };
 		759610152522D8FA002D27A9 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759610142522D8FA002D27A9 /* Logger.swift */; };
 		75BF962A252B2FE700278E62 /* LayoutManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75BF9629252B2FE700278E62 /* LayoutManager.swift */; };
+		75C9F0B2254B59C6001851F8 /* StringAttribute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C9F0B1254B59C6001851F8 /* StringAttribute.swift */; };
 		75DB055E2532560100945220 /* CoreGraphics+Hasher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DB055D2532560100945220 /* CoreGraphics+Hasher.swift */; };
 		75DFE206252EA54200AB4795 /* String+chunks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DFE205252EA54200AB4795 /* String+chunks.swift */; };
 		75EA4C9B24F2B1D700BAA2D9 /* StringTextStorageProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75EA4C9A24F2B1D700BAA2D9 /* StringTextStorageProvider.swift */; };
@@ -52,6 +53,7 @@
 		75786741252D381B0040646D /* LineSpacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineSpacing.swift; sourceTree = "<group>"; };
 		759610142522D8FA002D27A9 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		75BF9629252B2FE700278E62 /* LayoutManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutManager.swift; sourceTree = "<group>"; };
+		75C9F0B1254B59C6001851F8 /* StringAttribute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringAttribute.swift; sourceTree = "<group>"; };
 		75DB055D2532560100945220 /* CoreGraphics+Hasher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CoreGraphics+Hasher.swift"; sourceTree = "<group>"; };
 		75DFE205252EA54200AB4795 /* String+chunks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+chunks.swift"; sourceTree = "<group>"; };
 		75EA4C9A24F2B1D700BAA2D9 /* StringTextStorageProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringTextStorageProvider.swift; sourceTree = "<group>"; };
@@ -107,6 +109,7 @@
 		750AC4D524F28897004FB229 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				75C9F0B1254B59C6001851F8 /* StringAttribute.swift */,
 				750AC4CB24F28293004FB229 /* Position.swift */,
 				7578673A252D2C170040646D /* Position+TextStorage.swift */,
 				750AC4D324F28572004FB229 /* Range.swift */,
@@ -267,6 +270,7 @@
 				7552A6D4252E985C00FD573C /* Chunked.swift in Sources */,
 				75EA4C9B24F2B1D700BAA2D9 /* StringTextStorageProvider.swift in Sources */,
 				7578673B252D2C170040646D /* Position+TextStorage.swift in Sources */,
+				75C9F0B2254B59C6001851F8 /* StringAttribute.swift in Sources */,
 				750AC4D424F28572004FB229 /* Range.swift in Sources */,
 				750AC4DC24F28EC2004FB229 /* RopeTextStorageProvider.swift in Sources */,
 				750AC4CA24F27D9E004FB229 /* CodeEdit.swift in Sources */,

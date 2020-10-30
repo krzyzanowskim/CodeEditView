@@ -23,8 +23,8 @@ class LayoutManager {
         let baseline: CGPoint
         let bounds: CGRect
         let lineSpacing: CGFloat
-        /// A string range of the line.
-        /// For wrapped line its a fragment of the line.
+        /// A string range of the line, related to the real line (lineNumber).
+        /// For soft wrapped line its a fragment of the line.
         let stringRange: CFRange
     }
 
@@ -222,11 +222,45 @@ class LayoutManager {
 
             let lineString = _textStorage.string(line: lineNumber)
 
-            let attributedString = CFAttributedStringCreate(nil, lineString as CFString, [
-                kCTFontAttributeName: font,
-                kCTForegroundColorFromContextAttributeName: NSNumber(booleanLiteral: true)
-            ] as CFDictionary)!
-            let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
+            let attributedString = CFAttributedStringCreateMutable(nil, 0)
+            do {
+                CFAttributedStringBeginEditing(attributedString)
+                CFAttributedStringReplaceString(attributedString, CFRange(), lineString as CFString)
+                let attributedStringLength = CFAttributedStringGetLength(attributedString)
+
+                CFAttributedStringSetAttribute(attributedString, CFRange(location: 0, length: attributedStringLength), kCTFontAttributeName, font)
+                // CFAttributedStringSetAttribute(attributedString, CFRange(location: 0, length: attributedStringLength), kCTForegroundColorFromContextAttributeName, NSNumber(booleanLiteral: true))
+
+                // Apply attributes to NSAttibutedString used by typesetter
+                do {
+                    // Range applies to this line
+                    for (range, attributes) in _textStorage._attributedRanges where lineNumber >= range.start.line && lineNumber <= range.end.line {
+                        let startCharacterIndex = _textStorage.characterIndex(at: range.start)
+                        let endCharacterIndex = _textStorage.characterIndex(at: range.end)
+                        let rangeLength = endCharacterIndex - startCharacterIndex // TODO: really need to fetch string to get the value? I don't think so
+
+                        let cfrange: CFRange
+                        if lineNumber == range.start.line {
+                            // first line
+                            cfrange = CFRange(location: range.start.character, length: max(0, min(attributedStringLength - range.start.character, rangeLength)))
+                        } else if lineNumber == range.end.line {
+                            // last line
+                            cfrange = CFRange(location: 0, length: max(0, min(attributedStringLength, range.end.character)))
+                        } else {
+                            // in between
+                            cfrange = CFRange(location: 0, length: max(0, attributedStringLength))
+                        }
+
+                        if let value = attributes[\String.AttributeKey.foreground] {
+                            let foregroundColor = value as! CGColor
+                            CFAttributedStringSetAttribute(attributedString, cfrange, kCTForegroundColorAttributeName, foregroundColor)
+                        }
+                    }
+                }
+                CFAttributedStringEndEditing(attributedString)
+            }
+
+            let typesetter = CTTypesetterCreateWithAttributedString(attributedString!)
 
             var isWrappedLine = false
             var lineStartIndex: CFIndex = 0

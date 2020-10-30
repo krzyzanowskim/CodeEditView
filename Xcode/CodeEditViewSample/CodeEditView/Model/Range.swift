@@ -10,6 +10,18 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
     /// The range's end position.
     public let end: Position
 
+    static let zero = Range(start: .zero, end: .zero)
+
+    init(start: Position, end: Position) {
+        self.start = start
+        self.end = end
+    }
+
+    init(_ position: Position) {
+        self.start = position
+        self.end = position
+    }
+
     public var debugDescription: String {
         "Range(start: \(start), end: \(end))"
     }
@@ -20,6 +32,18 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
 
     func inverted() -> Self {
         return Range(start: end, end: start)
+    }
+
+    func intersects(_ otherRange: Range) -> Bool {
+        if otherRange.end < start {
+            return false
+        }
+
+        if otherRange.start > end {
+            return false
+        }
+
+        return true
     }
 }
 

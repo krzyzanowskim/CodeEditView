@@ -337,17 +337,30 @@ public final class CodeEditView: NSView {
         for lineLayout in _layoutManager.linesLayouts(in: overscanDirtyRect) {
             context.textPosition = lineLayout.bounds.offsetBy(dx: 0, dy: lineLayout.baseline.y).origin
 
-            //CTLineDraw(lineLayout.ctline, context)
-            for run in CTLineGetGlyphRuns(lineLayout.ctline) as? [CTRun] ?? [] {
-                guard let glyphsPtr = CTRunGetGlyphsPtr(run), let positionsPtr = CTRunGetPositionsPtr(run) else {
-                    continue
-                }
+            // CRLineDraw is enough for now, but for more sophisticated attributes
+            // We may need to use CTRun. But only if it's needed.
+            CTLineDraw(lineLayout.ctline, context)
 
-                let attributes = CTRunGetAttributes(run) as! [CFString: Any]
-                let font = attributes[kCTFontAttributeName] as! CTFont
-
-                CTFontDrawGlyphs(font, glyphsPtr, positionsPtr, CTRunGetGlyphCount(run), context)
-            }
+            //for run in CTLineGetGlyphRuns(lineLayout.ctline) as? [CTRun] ?? [] {
+            //    guard let glyphsPtr = CTRunGetGlyphsPtr(run), let positionsPtr = CTRunGetPositionsPtr(run) else {
+            //        continue
+            //    }
+            //
+            //    guard let attributes = CTRunGetAttributes(run) as? [CFString: Any] else {
+            //        continue
+            //    }
+            //
+            //    context.saveGState()
+            //
+            //    if let attribute = attributes[kCTForegroundColorAttributeName] {
+            //        let foregroundColor = attribute as! CGColor
+            //        context.setFillColor(foregroundColor)
+            //    }
+            //
+            //    CTFontDrawGlyphs(configuration.font, glyphsPtr, positionsPtr, CTRunGetGlyphCount(run), context)
+            //
+            //    context.restoreGState()
+            //}
         }
 
         context.restoreGState()
