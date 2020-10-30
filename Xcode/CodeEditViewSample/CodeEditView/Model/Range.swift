@@ -11,7 +11,7 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
     /// The end position is exclusive.
     public let end: Position
 
-    static let zero = Range(start: .zero, end: .zero)
+    static let zero = Range(start: .zero, end: Position(line: 0, character: 1))
 
     init(start: Position, end: Position) {
         self.start = start

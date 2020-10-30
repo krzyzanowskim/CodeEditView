@@ -21,6 +21,7 @@ public final class TextStorage {
     }
 
     public func insert(string: String, at position: Position) {
+        // TODO: adjust attributes
         _storageProvider.insert(string: string, at: position)
         storageDidChange.send(Range(position))
     }
