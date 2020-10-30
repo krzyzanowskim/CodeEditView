@@ -2,6 +2,8 @@ import CoreGraphics
 import CoreText
 import Cocoa
 
+public typealias StringAttribute = Dictionary<PartialKeyPath<String.AttributeKey>, Any>
+
 public extension String {
 
     struct AttributeKey {
@@ -9,6 +11,7 @@ public extension String {
         let font: CTFont
     }
 
+    /*
     struct Attribute<Key, Value>: Hashable where Key: KeyPath<String.AttributeKey, Value>, Value: Hashable {
 
         private let key: Key
@@ -19,4 +22,5 @@ public extension String {
             self.value = value
         }
     }
+     */
 }

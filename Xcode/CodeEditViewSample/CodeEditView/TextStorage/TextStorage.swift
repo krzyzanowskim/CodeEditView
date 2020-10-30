@@ -5,7 +5,8 @@ import Cocoa
 /// Text Storage
 /// TODO: notify about updates via delegate or callbacks
 public final class TextStorage {
-    internal var _attributedRanges: [Range: [PartialKeyPath<String.AttributeKey>: Any]] = [:]
+    /// String attributed and ranges. Range -> Attibute
+    public var attributedRanges: Dictionary<Range, StringAttribute>
     private let _storageProvider: TextStorageProvider
     let storageDidChange = PassthroughSubject<Range, Never>()
 
@@ -15,6 +16,7 @@ public final class TextStorage {
 
     public init(string: String = "") {
         _storageProvider = StringTextStorageProvider()
+        attributedRanges = [:]
         if !string.isEmpty {
             insert(string: string, at: Position(line: 0, character: 0))
         }
@@ -62,21 +64,11 @@ public final class TextStorage {
     public func add<Value>(_ attribute: KeyPath<String.AttributeKey, Value>, _ value: Value, _ range: Range) {
         // TODO: Once attribute is set (added) layout manager should update affected line
         //       with an updated attributed string.
-        if var attributes = _attributedRanges[range] {
+        if var attributes = attributedRanges[range] {
             attributes[attribute] = value
-            _attributedRanges[range] = attributes
+            attributedRanges[range] = attributes
         } else {
-            _attributedRanges[range] = [attribute: value]
+            attributedRanges[range] = [attribute: value]
         }
-    }
-
-    public func attribute<Value>(_ attribute: KeyPath<String.AttributeKey, Value>, in range: Range) -> (Value, Range)? {
-        for (r, attributes) in _attributedRanges where r.intersects(range) {
-            guard let anyValue = attributes[\String.AttributeKey.foreground] else {
-                continue
-            }
-            return (anyValue as! Value, r)
-        }
-        return nil
     }
 }

@@ -221,51 +221,8 @@ class LayoutManager {
             newLineNumberLayouts.reserveCapacity(oldLineNumberLayouts.count)
 
             let lineString = _textStorage.string(line: lineNumber)
-
-            let attributedString = CFAttributedStringCreateMutable(nil, 0)
-            do {
-                CFAttributedStringBeginEditing(attributedString)
-                CFAttributedStringReplaceString(attributedString, CFRange(), lineString as CFString)
-                let attributedStringLength = CFAttributedStringGetLength(attributedString)
-
-                CFAttributedStringSetAttribute(attributedString, CFRange(location: 0, length: attributedStringLength), kCTFontAttributeName, font)
-                // CFAttributedStringSetAttribute(attributedString, CFRange(location: 0, length: attributedStringLength), kCTForegroundColorFromContextAttributeName, NSNumber(booleanLiteral: true))
-
-                // Apply attributes to NSAttibutedString used by typesetter
-                do {
-                    // Range applies to this line
-                    for (range, attributes) in _textStorage._attributedRanges where lineNumber >= range.start.line && lineNumber <= range.end.line {
-                        let cfrange: CFRange
-                        if lineNumber == range.start.line {
-                            // first line
-                            let rangeCharacterLength: Int
-                            if range.start.line == range.end.line {
-                                rangeCharacterLength = range.end.character - range.start.character
-                            } else {
-                                // slow path
-                                let startCharacterIndex = _textStorage.characterIndex(at: range.start)
-                                let endCharacterIndex = _textStorage.characterIndex(at: range.end)
-                                rangeCharacterLength = endCharacterIndex - startCharacterIndex // TODO: really need to fetch string to get the value? I don't think so
-                            }
-                            cfrange = CFRange(location: range.start.character, length: max(0, min(attributedStringLength - range.start.character, rangeCharacterLength)))
-                        } else if lineNumber == range.end.line {
-                            // last line
-                            cfrange = CFRange(location: 0, length: max(0, min(attributedStringLength, range.end.character)))
-                        } else {
-                            // in between
-                            cfrange = CFRange(location: 0, length: max(0, attributedStringLength))
-                        }
-
-                        if let value = attributes[\String.AttributeKey.foreground] {
-                            let foregroundColor = value as! CGColor
-                            CFAttributedStringSetAttribute(attributedString, cfrange, kCTForegroundColorAttributeName, foregroundColor)
-                        }
-                    }
-                }
-                CFAttributedStringEndEditing(attributedString)
-            }
-
-            let typesetter = CTTypesetterCreateWithAttributedString(attributedString!)
+            let attributedString = createAttributedString(lineNumber: lineNumber, lineString: lineString, defaultFont: font)
+            let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
 
             var isWrappedLine = false
             var lineStartIndex: CFIndex = 0
@@ -339,6 +296,50 @@ class LayoutManager {
         logger.trace("layoutText didEnd, contentSize: \(NSStringFromSize(textContentSize))")
 
         return textContentSize
+    }
+
+    private func createAttributedString(lineNumber: LineNumber, lineString: String.SubSequence, defaultFont: NSFont) -> CFMutableAttributedString {
+        let attributedString = CFAttributedStringCreateMutable(nil, 0)!
+        CFAttributedStringBeginEditing(attributedString)
+        CFAttributedStringReplaceString(attributedString, CFRange(), lineString as CFString)
+        let attributedStringLength = CFAttributedStringGetLength(attributedString)
+
+        // default font
+        CFAttributedStringSetAttribute(attributedString, CFRange(location: 0, length: attributedStringLength), kCTFontAttributeName, defaultFont)
+        // CFAttributedStringSetAttribute(attributedString, CFRange(location: 0, length: attributedStringLength), kCTForegroundColorFromContextAttributeName, NSNumber(booleanLiteral: true))
+
+        // Apply attributes to NSAttibutedString used by typesetter
+        // Range applies to this line
+        for (range, attributes) in _textStorage.attributedRanges where lineNumber >= range.start.line && lineNumber <= range.end.line {
+            let cfrange: CFRange
+            if lineNumber == range.start.line {
+                // first line
+                let rangeCharacterLength: Int
+                if range.start.line == range.end.line {
+                    rangeCharacterLength = range.end.character - range.start.character
+                } else {
+                    // slow path
+                    let startCharacterIndex = _textStorage.characterIndex(at: range.start)
+                    let endCharacterIndex = _textStorage.characterIndex(at: range.end)
+                    rangeCharacterLength = endCharacterIndex - startCharacterIndex // TODO: really need to fetch string to get the value? I don't think so
+                }
+                cfrange = CFRange(location: range.start.character, length: max(0, min(attributedStringLength - range.start.character, rangeCharacterLength)))
+            } else if lineNumber == range.end.line {
+                // last line
+                cfrange = CFRange(location: 0, length: max(0, min(attributedStringLength, range.end.character)))
+            } else {
+                // in between
+                cfrange = CFRange(location: 0, length: max(0, attributedStringLength))
+            }
+
+            // Apply attributes
+            if let value = attributes[\String.AttributeKey.foreground] {
+                let foregroundColor = value as! CGColor
+                CFAttributedStringSetAttribute(attributedString, cfrange, kCTForegroundColorAttributeName, foregroundColor)
+            }
+        }
+        CFAttributedStringEndEditing(attributedString)
+        return attributedString
     }
 }
 
