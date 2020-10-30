@@ -321,7 +321,7 @@ class LayoutManager {
                     // slow path
                     let startCharacterIndex = _textStorage.characterIndex(at: range.start)
                     let endCharacterIndex = _textStorage.characterIndex(at: range.end)
-                    rangeCharacterLength = endCharacterIndex - startCharacterIndex // TODO: really need to fetch string to get the value? I don't think so
+                    rangeCharacterLength = endCharacterIndex - startCharacterIndex
                 }
                 cfrange = CFRange(location: range.start.character, length: max(0, min(attributedStringLength - range.start.character, rangeCharacterLength)))
             } else if lineNumber == range.end.line {
