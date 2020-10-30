@@ -8,6 +8,7 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
     /// The range's start position.
     public let start: Position
     /// The range's end position.
+    /// The end position is exclusive.
     public let end: Position
 
     static let zero = Range(start: .zero, end: .zero)

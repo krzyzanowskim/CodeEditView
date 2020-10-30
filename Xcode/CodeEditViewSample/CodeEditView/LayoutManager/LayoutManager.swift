@@ -235,14 +235,19 @@ class LayoutManager {
                 do {
                     // Range applies to this line
                     for (range, attributes) in _textStorage._attributedRanges where lineNumber >= range.start.line && lineNumber <= range.end.line {
-                        let startCharacterIndex = _textStorage.characterIndex(at: range.start)
-                        let endCharacterIndex = _textStorage.characterIndex(at: range.end)
-                        let rangeLength = endCharacterIndex - startCharacterIndex // TODO: really need to fetch string to get the value? I don't think so
-
                         let cfrange: CFRange
                         if lineNumber == range.start.line {
                             // first line
-                            cfrange = CFRange(location: range.start.character, length: max(0, min(attributedStringLength - range.start.character, rangeLength)))
+                            let rangeCharacterLength: Int
+                            if range.start.line == range.end.line {
+                                rangeCharacterLength = range.end.character - range.start.character
+                            } else {
+                                // slow path
+                                let startCharacterIndex = _textStorage.characterIndex(at: range.start)
+                                let endCharacterIndex = _textStorage.characterIndex(at: range.end)
+                                rangeCharacterLength = endCharacterIndex - startCharacterIndex // TODO: really need to fetch string to get the value? I don't think so
+                            }
+                            cfrange = CFRange(location: range.start.character, length: max(0, min(attributedStringLength - range.start.character, rangeCharacterLength)))
                         } else if lineNumber == range.end.line {
                             // last line
                             cfrange = CFRange(location: 0, length: max(0, min(attributedStringLength, range.end.character)))

@@ -59,6 +59,8 @@ public final class TextStorage {
     }
 
     public func add<Value>(_ attribute: KeyPath<String.AttributeKey, Value>, _ value: Value, _ range: Range) {
+        // TODO: Once attribute is set (added) layout manager should update affected line
+        //       with an updated attributed string.
         if var attributes = _attributedRanges[range] {
             attributes[attribute] = value
             _attributedRanges[range] = attributes
