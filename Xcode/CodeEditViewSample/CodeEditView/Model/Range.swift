@@ -18,9 +18,10 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
         self.end = end
     }
 
+    @available(*, deprecated, message: "deprecated")
     init(_ position: Position) {
         self.start = position
-        self.end = position
+        self.end = Position(line: position.line, character: position.character + 1)
     }
 
     public var debugDescription: String {
@@ -36,7 +37,11 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
     }
 
     func intersects(_ otherRange: Range) -> Bool {
-        (otherRange.start > start && otherRange.start < end) || (otherRange.end > start && otherRange.end < end)
+        if otherRange == self {
+            return true
+        }
+
+        return (otherRange.start > start && otherRange.start < end) || (otherRange.end > start && otherRange.end < end)
     }
 }
 
@@ -45,3 +50,65 @@ extension Range: Comparable {
         lhs.start < rhs.start
     }
 }
+
+// MARK - Tests
+
+#if canImport(XCTest)
+import XCTest
+
+class RangeTests: XCTestCase {
+
+    func testIntersection() {
+        XCTAssertTrue(
+            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+                .intersects(Range(start: Position(line: 0, character: 101), end: Position(line: 0, character: 199)))
+        )
+
+        XCTAssertTrue(
+            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+                .intersects(Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200)))
+        )
+
+        XCTAssertTrue(
+            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+                .intersects(Range(start: Position(line: 0, character: 50), end: Position(line: 0, character: 150)))
+        )
+
+        XCTAssertTrue(
+            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+                .intersects(Range(start: Position(line: 0, character: 150), end: Position(line: 0, character: 250)))
+        )
+
+        XCTAssertTrue(
+            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+                .intersects(Range(start: Position(line: 0, character: 150), end: Position(line: 0, character: 200)))
+        )
+
+        XCTAssertTrue(
+            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+                .intersects(Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 150)))
+        )
+
+//        XCTAssertTrue(
+//            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+//                .intersects(Range(start: Position(line: 0, character: 50), end: Position(line: 0, character: 100)))
+//        )
+//
+//        XCTAssertTrue(
+//            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+//                .intersects(Range(start: Position(line: 0, character: 200), end: Position(line: 0, character: 250)))
+//        )
+
+        XCTAssertFalse(
+            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+                .intersects(Range(start: Position(line: 0, character: 50), end: Position(line: 0, character: 90)))
+        )
+
+        XCTAssertFalse(
+            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+                .intersects(Range(start: Position(line: 0, character: 250), end: Position(line: 0, character: 300)))
+        )
+
+    }
+}
+#endif

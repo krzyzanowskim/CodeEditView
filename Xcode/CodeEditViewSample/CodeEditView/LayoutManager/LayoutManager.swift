@@ -135,7 +135,7 @@ class LayoutManager {
 
     func linesLayouts(in rect: CGRect) -> [LineLayout] {
         // TODO: try to layout if missing
-        _lineLayouts.filter { lineLayout in
+        _lineLayouts.lazy.filter { lineLayout in
             rect.intersects(lineLayout.bounds)
         }
     }
@@ -316,7 +316,7 @@ class LayoutManager {
                 // first line
                 let rangeCharacterLength: Int
                 if range.start.line == range.end.line {
-                    rangeCharacterLength = max(0, range.end.character - 1) - max(0, range.start.character) // - 1 because end is exclusive
+                    rangeCharacterLength = range.end.character - range.start.character
                 } else {
                     // slow path
                     let startCharacterIndex = _textStorage.characterIndex(at: range.start)

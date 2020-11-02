@@ -128,15 +128,16 @@ public final class CodeEditView: NSView {
 
         #if DEBUG
         // Range.end is exclusive
-        // _textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 4)))
+//        _textStorage.add(\.foreground, NSColor.systemTeal, Range(start: Position(line: 0, character: 1), end: Position(line: 0, character: 4)))
+//         _textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 4)))
 
-        _textStorage.add(\.foreground, NSColor.systemRed, Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 3)))
-        _textStorage.add(\.foreground, NSColor.systemTeal, Range(start: Position(line: 0, character: 2), end: Position(line: 0, character: 8)))
-        _textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 0, character: 7), end: Position(line: 0, character: 14)))
+        _textStorage.add(\.foreground, NSColor.systemRed, Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 2)))
+        _textStorage.add(\.foreground, NSColor.systemTeal, Range(start: Position(line: 0, character: 2), end: Position(line: 0, character: 5)))
+        _textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 0, character: 5), end: Position(line: 0, character: 14)))
 
-        _textStorage.add(\.foreground, NSColor.systemBrown, Range(start: Position(line: 2, character: 0), end: Position(line: 2, character: 3)))
+        _textStorage.add(\.foreground, NSColor.systemBrown, Range(start: Position(line: 2, character: 0), end: Position(line: 2, character: 2)))
         _textStorage.add(\.foreground, NSColor.systemTeal, Range(start: Position(line: 2, character: 2), end: Position(line: 2, character: 8)))
-        _textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 2, character: 7), end: Position(line: 2, character: 14)))
+        _textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 2, character: 8), end: Position(line: 2, character: 14)))
 
         _textStorage.add(\.foreground, NSColor.systemIndigo, Range(start: Position(line: 4, character: 0), end: Position(line: 6, character: 100)))
         #endif
@@ -833,9 +834,9 @@ extension CodeEditView {
 
         let startingCarretPosition = _caret.position
 
-        if _caret.position.character - 1 >= 0 {
-            _caret.position = Position(line: _caret.position.line, character: _caret.position.character - 1)
-            _textStorage.remove(range: Range(start: _caret.position, end: startingCarretPosition))
+        if let oneCharBeforePosition = _caret.position.position(before: 1, in: _textStorage) {
+            _caret.position = oneCharBeforePosition
+            _textStorage.remove(range: Range(start: oneCharBeforePosition, end: startingCarretPosition))
         } else {
             // move to previous line
             let lineNumber = _caret.position.line - 1
