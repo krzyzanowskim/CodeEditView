@@ -316,17 +316,17 @@ class LayoutManager {
                 // first line
                 let rangeCharacterLength: Int
                 if range.start.line == range.end.line {
-                    rangeCharacterLength = range.end.character - range.start.character
+                    rangeCharacterLength = max(0, range.end.character - 1) - max(0, range.start.character) // - 1 because end is exclusive
                 } else {
                     // slow path
                     let startCharacterIndex = _textStorage.characterIndex(at: range.start)
-                    let endCharacterIndex = _textStorage.characterIndex(at: range.end)
+                    let endCharacterIndex = max(0, _textStorage.characterIndex(at: range.end) - 1) // - 1 because end is exclusive
                     rangeCharacterLength = endCharacterIndex - startCharacterIndex
                 }
                 cfrange = CFRange(location: range.start.character, length: max(0, min(attributedStringLength - range.start.character, rangeCharacterLength)))
             } else if lineNumber == range.end.line {
                 // last line
-                cfrange = CFRange(location: 0, length: max(0, min(attributedStringLength, range.end.character)))
+                cfrange = CFRange(location: 0, length: max(0, min(attributedStringLength, range.end.character - 1)))
             } else {
                 // in between
                 cfrange = CFRange(location: 0, length: max(0, attributedStringLength))

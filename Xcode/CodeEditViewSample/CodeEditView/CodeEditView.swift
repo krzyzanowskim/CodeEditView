@@ -48,8 +48,8 @@ public final class CodeEditView: NSView {
         }
     }
 
+    #warning("Needs more work. the range is never set.")
     /// NSTextInputClient marked text range.
-    // TODO: Needs more work. the range is never set.
     private var _markedRange: NSRange
 
     /// Whether or not this view is the focused view for its window
@@ -124,6 +124,22 @@ public final class CodeEditView: NSView {
             }
         }
         _caretBlinkTimer.resume()
+
+
+        #if DEBUG
+        // Range.end is exclusive
+        // _textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 4)))
+
+        _textStorage.add(\.foreground, NSColor.systemRed, Range(start: Position(line: 0, character: 0), end: Position(line: 0, character: 3)))
+        _textStorage.add(\.foreground, NSColor.systemTeal, Range(start: Position(line: 0, character: 2), end: Position(line: 0, character: 8)))
+        _textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 0, character: 7), end: Position(line: 0, character: 14)))
+
+        _textStorage.add(\.foreground, NSColor.systemBrown, Range(start: Position(line: 2, character: 0), end: Position(line: 2, character: 3)))
+        _textStorage.add(\.foreground, NSColor.systemTeal, Range(start: Position(line: 2, character: 2), end: Position(line: 2, character: 8)))
+        _textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 2, character: 7), end: Position(line: 2, character: 14)))
+
+        _textStorage.add(\.foreground, NSColor.systemIndigo, Range(start: Position(line: 4, character: 0), end: Position(line: 6, character: 100)))
+        #endif
     }
 
     required init?(coder: NSCoder) {
@@ -765,15 +781,15 @@ extension CodeEditView {
     }
 
     public override func uppercaseWord(_ sender: Any?) {
-        // TODO: uppercaseWord
+        #warning("uppercaseWord")
     }
 
     public override func lowercaseWord(_ sender: Any?) {
-        // TODO: lowercaseWord
+        #warning("lowercaseWord")
     }
 
     public override func capitalizeWord(_ sender: Any?) {
-        // TODO: capitalizeWord
+        #warning("capitalizeWord")
     }
 
     public override func selectAll(_ sender: Any?) {
@@ -788,11 +804,11 @@ extension CodeEditView {
     }
 
     public override func selectParagraph(_ sender: Any?) {
-        // TODO: selectParagraph
+        #warning("selectParagraph")
     }
 
     public override func selectWord(_ sender: Any?) {
-        // TODO: selectWord
+        #warning("selectWord")
     }
 
     public override func insertText(_ insertString: Any) {

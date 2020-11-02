@@ -36,15 +36,7 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
     }
 
     func intersects(_ otherRange: Range) -> Bool {
-        if otherRange.end < start {
-            return false
-        }
-
-        if otherRange.start > end {
-            return false
-        }
-
-        return true
+        (otherRange.start > start && otherRange.start < end) || (otherRange.end > start && otherRange.end < end)
     }
 }
 

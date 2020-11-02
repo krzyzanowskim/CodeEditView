@@ -39,11 +39,11 @@ extension Position {
 
     func moved(by charactersCount: Int, in textStorage: TextStorage) -> Self? {
         if charactersCount > 0 {
-            if let newPosition = position(after: UInt(charactersCount), in: textStorage) {
+            if let newPosition = position(after: charactersCount, in: textStorage) {
                 return newPosition
             }
         } else if charactersCount < 0 {
-            if let newPosition = position(before: UInt(-charactersCount), in: textStorage) {
+            if let newPosition = position(before: -charactersCount, in: textStorage) {
                 return newPosition
             }
         }
@@ -55,7 +55,7 @@ extension Position {
     ///   - charactersOffset: Characters count to move.
     ///   - textStorage: TextStorage to use.
     /// - Returns: New position, or nil when it's out of bounds.
-    func position(after charactersOffset: UInt, in textStorage: TextStorage) -> Position? {
+    func position(after charactersOffset: Int, in textStorage: TextStorage) -> Position? {
         var currentLinePosition = self
         var consumedCount = 0
 
@@ -81,7 +81,7 @@ extension Position {
     ///   - charactersOffset: Characters count to move.
     ///   - textStorage: TextStorage to use.
     /// - Returns: New position, or nil when it's out of bounds.
-    func position(before charactersOffset: UInt, in textStorage: TextStorage) -> Position? {
+    func position(before charactersOffset: Int, in textStorage: TextStorage) -> Position? {
         var currentLinePosition = self
         var consumedCount = 0
 

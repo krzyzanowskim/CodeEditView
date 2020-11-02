@@ -7,8 +7,8 @@ import Cocoa
 public final class TextStorage {
     /// String attributed and ranges. Range -> Attibute
     public var attributedRanges: Dictionary<Range, StringAttribute>
+    public let storageDidChange = PassthroughSubject<Range, Never>()
     private let _storageProvider: TextStorageProvider
-    let storageDidChange = PassthroughSubject<Range, Never>()
 
     public var linesCount: Int {
         _storageProvider.linesCount
@@ -23,9 +23,50 @@ public final class TextStorage {
     }
 
     public func insert(string: String, at position: Position) {
-        // TODO: adjust attributes
+        //_adjustAttributedRanges(willInsert: string, at: position)
         _storageProvider.insert(string: string, at: position)
+        _attributedRanges(afterDidInsert: string, at: position)
         storageDidChange.send(Range(position))
+    }
+
+    /// Adjust attributed ranges after new string is added to the storage
+    private func _attributedRanges(afterDidInsert string: String, at position: Position) {
+
+        // Split ranges exactly at "position".
+        // remember: Range.end is exclusive
+        for (range, attributes) in attributedRanges where range.intersects(Range(position)) {
+            logger.debug("split attributed range \(range)")
+
+            // remove current range
+            attributedRanges.removeValue(forKey: range)
+
+            // and replace with two new ranges
+
+            // lower
+            let lowerRange = Range(
+                start: range.start,
+                end: position.position(after: 1, in: self) ?? position
+            )
+
+            // and upper
+            let upperRange = Range(
+                start: position,
+                end: Position(line: range.end.line, character: range.end.character)
+            )
+
+            attributedRanges[lowerRange] = attributes
+            attributedRanges[upperRange] = attributes
+        }
+
+        // Move following ranges, at the same line, forward by string.count
+        for (range, attributes) in attributedRanges where range.start >= position && range.start.line == position.line {
+            if let newStart = range.start.position(after: string.count, in: self),
+               let newEnd = range.end.position(after: string.count, in: self)
+            {
+                attributedRanges.removeValue(forKey: range)
+                attributedRanges[Range(start: newStart, end: newEnd)] = attributes
+            }
+        }
     }
 
     public func remove(range: Range) {
@@ -71,4 +112,65 @@ public final class TextStorage {
             attributedRanges[range] = [attribute: value]
         }
     }
+
+    // MARK: - Private
+
+    /// Adjust attributes past insertion point.
+    /// Split existing range at `position` if exists
+//    private func _adjustAttributedRanges(willInsert string: String, at position: Position) {
+////        if string.contains(where: \.isNewline) {
+////            // there's new line, abort the ship! escape, there's no hope.
+////
+////            // Newline affects affected lines
+////            // Position is at the end on the "previous" line, and
+////            // we need to adjust attributes following, in the about-to-created new line
+////            for (oldRange, attributes) in attributedRanges where oldRange.intersects(Range(position)) {
+////                attributedRanges.removeValue(forKey: oldRange)
+////                let newRange = Range(
+////                    start: Position(line: oldRange.start.line + 1, character: oldRange.start.character),
+////                    end: Position(line: oldRange.end.line + 1, character: oldRange.end.character)
+////                )
+////                attributedRanges[newRange] = attributes
+////            }
+////        }
+//
+//        for (range, attributes) in attributedRanges where range.intersects(Range(position)) {
+//            logger.debug("split attributed range \(range)")
+//
+//            // remove current range
+//            attributedRanges.removeValue(forKey: range)
+//
+//            // and replace with two new ranges
+//
+//            // lower
+//            let lowerRange = Range(
+//                start: range.start,
+//                end: position
+//            )
+//
+//            // and upper
+//            let upperRange = Range(
+//                start: position, //.position(after: string.count, in: self)!,
+//                end: range.end.position(after: max(0, string.count - 1), in: self)!
+//            )
+//
+//            attributedRanges[lowerRange] = attributes
+//            attributedRanges[upperRange] = attributes
+//        }
+//
+//        // now move following ranges by string.count
+//        // but only in the same line as we grow the line.
+//        // Unless this is a line break, then TODO
+//        // (It would be way easier to deal with an offset instead Position
+//
+//        // !may need to slice range at position.character
+//        for (range, attributes) in attributedRanges where range.start >= position && range.start.line == position.line {
+//            if let newStart = range.start.moved(by: string.count, in: self),
+//               let newEnd = range.end.moved(by: string.count, in: self)
+//            {
+//                attributedRanges.removeValue(forKey: range)
+//                attributedRanges[Range(start: newStart, end: newEnd)] = attributes
+//            }
+//        }
+//    }
 }

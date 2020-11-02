@@ -7,4 +7,8 @@
 
 import OSLog
 
-let logger = Logger(subsystem: "CodeEditView", category: "")
+#if DEBUG
+let logger = Logger()
+#else
+let logger = Logger(OSLog.disabled)
+#endif
