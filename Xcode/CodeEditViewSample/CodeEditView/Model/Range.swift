@@ -89,15 +89,15 @@ class RangeTests: XCTestCase {
                 .intersects(Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 150)))
         )
 
-//        XCTAssertTrue(
-//            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
-//                .intersects(Range(start: Position(line: 0, character: 50), end: Position(line: 0, character: 100)))
-//        )
-//
-//        XCTAssertTrue(
-//            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
-//                .intersects(Range(start: Position(line: 0, character: 200), end: Position(line: 0, character: 250)))
-//        )
+        XCTAssertFalse(
+            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+                .intersects(Range(start: Position(line: 0, character: 50), end: Position(line: 0, character: 100)))
+        )
+
+        XCTAssertFalse(
+            Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
+                .intersects(Range(start: Position(line: 0, character: 200), end: Position(line: 0, character: 250)))
+        )
 
         XCTAssertFalse(
             Range(start: Position(line: 0, character: 100), end: Position(line: 0, character: 200))
