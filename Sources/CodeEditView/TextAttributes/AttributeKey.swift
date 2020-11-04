@@ -2,8 +2,6 @@ import CoreGraphics
 import CoreText
 import Cocoa
 
-public typealias StringAttribute = Dictionary<PartialKeyPath<String.AttributeKey>, Any>
-
 public extension String {
 
     struct AttributeKey {

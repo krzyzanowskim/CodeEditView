@@ -6,7 +6,7 @@ import Cocoa
 /// TODO: notify about updates via delegate or callbacks
 public final class TextStorage {
     /// String attributed and ranges. Range -> Attibute
-    public var attributedRanges: Dictionary<Range, StringAttribute>
+    public var attributedRanges: Dictionary<Range, TextAttribute>
     public let storageDidChange = PassthroughSubject<Range, Never>()
     private let _storageProvider: TextStorageProvider
 
