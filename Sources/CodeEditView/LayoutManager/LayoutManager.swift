@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import Cocoa
 
 // FIXME: Position is newline agnostic, but TextStorage is not! and can't be.
 //        Line should be a string without newline, yet TextStorage need to know
@@ -342,17 +343,4 @@ class LayoutManager {
         return attributedString
     }
 }
-
-// MARK - Tests
-
-#if canImport(XCTest)
-import XCTest
-
-class TextLayoytTests: XCTestCase {
-
-    func testProvider() {
-
-    }
-}
-#endif
 

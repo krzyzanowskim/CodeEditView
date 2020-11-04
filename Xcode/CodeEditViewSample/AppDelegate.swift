@@ -1,5 +1,6 @@
 import Cocoa
 import SwiftUI
+import CodeEditView
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -7,6 +8,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow!
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+
         window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 480, height: 300),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
@@ -37,15 +39,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         window.contentView = scrollView
         window.makeKeyAndOrderFront(nil)
-
-        if UserDefaults.standard.bool(forKey: "run-tests") {
-            do {
-                try TestRunner.run()
-            } catch let error {
-                fatalError(error.localizedDescription)
-            }
-        }
-
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
