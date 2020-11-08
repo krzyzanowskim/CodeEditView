@@ -311,7 +311,7 @@ class LayoutManager {
 
         // Apply attributes to NSAttibutedString used by typesetter
         // Range applies to this line
-        for (range, attributes) in _textStorage.attributedRanges where lineNumber >= range.start.line && lineNumber <= range.end.line {
+        for (range, attributes) in _textStorage._textAttributes.ranges where lineNumber >= range.start.line && lineNumber <= range.end.line {
             let cfrange: CFRange
             if lineNumber == range.start.line {
                 // first line
