@@ -18,6 +18,11 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
         self.end = end
     }
 
+    init(_ range: Swift.Range<Position>) {
+        self.start = range.lowerBound
+        self.end = range.upperBound
+    }
+
     @available(*, deprecated, message: "deprecated")
     init(_ position: Position) {
         self.start = position
@@ -36,12 +41,12 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
         return Range(start: end, end: start)
     }
 
-    func intersects(_ otherRange: Range) -> Bool {
-        if otherRange == self {
-            return true
-        }
+    func clamped(to otherRange: Range) -> Range {
+        Range((start..<end).clamped(to: (otherRange.start..<otherRange.end)))
+    }
 
-        return (otherRange.start > start && otherRange.start < end) || (otherRange.end > start && otherRange.end < end)
+    func overlaps(_ otherRange: Range) -> Bool {
+        (start..<end).overlaps(otherRange.start..<otherRange.end)
     }
 }
 

@@ -1,7 +1,6 @@
 import Foundation
 
 extension Position {
-
     /// Visually move one line down
     mutating func moveDownByLine(using layoutManager: LayoutManager) {
         guard let currentLineCaretBounds = layoutManager.caretBounds(at: self),
