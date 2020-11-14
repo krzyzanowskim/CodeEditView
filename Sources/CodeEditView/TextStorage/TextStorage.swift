@@ -29,8 +29,8 @@ public final class TextStorage {
     }
 
     public func remove(range: Range) {
-        _textAttributes.adjustAttributedRanges(willRemoveRange: range, in: self)
         _storageProvider.remove(range: range)
+        _textAttributes.adjustAttributedRanges(didRemoveRange: range, in: self)
         storageDidChange.send(range)
     }
 
