@@ -24,7 +24,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //         let sampleText = String.init(decoding: NSDataAsset(name: "sample-2mb-text-file")!.data, as: UTF8.self)
         let sampleText = String(decoding: NSDataAsset(name: "sample-text-file")!.data, as: UTF8.self)
 //        let sampleText = loremIpsum
-        let codeView = CodeEditView(storage: TextStorage(string: sampleText))
+
+        let textStorage = TextStorage(string: sampleText)
+        // Range.end is exclusive
+        textStorage.add(\.foreground, NSColor.systemBrown, Range(start: Position(line: 0, character: 1), end: Position(line: 0, character: 4)))
+        textStorage.add(\.foreground, NSColor.systemTeal, Range(start: Position(line: 0, character: 4), end: Position(line: 0, character: 7)))
+        textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 0, character: 7), end: Position(line: 0, character: 14)))
+
+        textStorage.add(\.foreground, NSColor.systemBrown, Range(start: Position(line: 2, character: 0), end: Position(line: 2, character: 2)))
+        textStorage.add(\.foreground, NSColor.systemTeal, Range(start: Position(line: 2, character: 2), end: Position(line: 2, character: 8)))
+        textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 2, character: 8), end: Position(line: 2, character: 14)))
+
+        textStorage.add(\.foreground, NSColor.systemIndigo, Range(start: Position(line: 4, character: 0), end: Position(line: 6, character: 100)))
+
+        let codeView = CodeEditView(storage: textStorage)
         codeView.autoresizingMask = [.width, .height]
 
         let scrollView = NSScrollView()

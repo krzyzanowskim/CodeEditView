@@ -4,9 +4,9 @@ import Cocoa
 
 public extension String {
 
-    struct AttributeKey {
-        let foreground: NSColor
-        let font: CTFont
+    public struct AttributeKey {
+        public let foreground: NSColor
+        public let font: CTFont
     }
 
     /*

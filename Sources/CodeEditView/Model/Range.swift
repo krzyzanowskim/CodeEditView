@@ -13,12 +13,12 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
 
     static let zero = Range(start: .zero, end: Position(line: 0, character: 1))
 
-    init(start: Position, end: Position) {
+    public init(start: Position, end: Position) {
         self.start = start
         self.end = end
     }
 
-    init(_ range: Swift.Range<Position>) {
+    public init(_ range: Swift.Range<Position>) {
         self.start = range.lowerBound
         self.end = range.upperBound
     }

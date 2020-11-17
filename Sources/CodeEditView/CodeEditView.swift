@@ -124,20 +124,6 @@ public final class CodeEditView: NSView {
             }
         }
         _caretBlinkTimer.resume()
-
-
-        #if DEBUG
-        // Range.end is exclusive
-        _textStorage.add(\.foreground, NSColor.systemBrown, Range(start: Position(line: 0, character: 1), end: Position(line: 0, character: 4)))
-        _textStorage.add(\.foreground, NSColor.systemTeal, Range(start: Position(line: 0, character: 4), end: Position(line: 0, character: 7)))
-        _textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 0, character: 7), end: Position(line: 0, character: 14)))
-
-        _textStorage.add(\.foreground, NSColor.systemBrown, Range(start: Position(line: 2, character: 0), end: Position(line: 2, character: 2)))
-        _textStorage.add(\.foreground, NSColor.systemTeal, Range(start: Position(line: 2, character: 2), end: Position(line: 2, character: 8)))
-        _textStorage.add(\.foreground, NSColor.systemOrange, Range(start: Position(line: 2, character: 8), end: Position(line: 2, character: 14)))
-
-        _textStorage.add(\.foreground, NSColor.systemIndigo, Range(start: Position(line: 4, character: 0), end: Position(line: 6, character: 100)))
-        #endif
     }
 
     required init?(coder: NSCoder) {

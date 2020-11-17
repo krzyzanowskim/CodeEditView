@@ -10,7 +10,12 @@ public struct Position: Hashable, Equatable {
     /// `character` and `character + 1`.
     public let character: Int
 
-    static let zero = Position(line: 0, character: 0)
+    public static let zero = Position(line: 0, character: 0)
+
+    public init(line: Int, character: Int) {
+        self.line = line
+        self.character = character
+    }
 }
 
 extension Position: Comparable {
