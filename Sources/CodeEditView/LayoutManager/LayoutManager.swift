@@ -177,7 +177,7 @@ class LayoutManager {
 
     // MARK: -
 
-    func layoutText(font: CTFont, frame: CGRect) -> CGSize {
+    func layoutText(font: CTFont, color: CGColor, frame: CGRect) -> CGSize {
         logger.trace("layoutText willStart, frame: \(NSStringFromRect(frame))")
         // Let's layout some text. Top Bottom/Left Right
         // TODO: update layout
@@ -222,7 +222,7 @@ class LayoutManager {
             newLineNumberLayouts.reserveCapacity(oldLineNumberLayouts.count)
 
             let lineString = _textStorage.string(line: lineNumber)
-            let attributedString = createAttributedString(lineNumber: lineNumber, lineString: lineString, defaultFont: font)
+            let attributedString = createAttributedString(lineNumber: lineNumber, lineString: lineString, defaultFont: font, defaultColor: color)
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
 
             var isWrappedLine = false
@@ -299,7 +299,7 @@ class LayoutManager {
         return textContentSize
     }
 
-    private func createAttributedString(lineNumber: LineNumber, lineString: String.SubSequence, defaultFont: NSFont) -> CFMutableAttributedString {
+    private func createAttributedString(lineNumber: LineNumber, lineString: String.SubSequence, defaultFont: NSFont, defaultColor: CGColor) -> CFMutableAttributedString {
         let attributedString = CFAttributedStringCreateMutable(nil, 0)!
         CFAttributedStringBeginEditing(attributedString)
         CFAttributedStringReplaceString(attributedString, CFRange(), lineString as CFString)
@@ -307,7 +307,8 @@ class LayoutManager {
 
         // default font
         CFAttributedStringSetAttribute(attributedString, CFRange(location: 0, length: attributedStringLength), kCTFontAttributeName, defaultFont)
-        // CFAttributedStringSetAttribute(attributedString, CFRange(location: 0, length: attributedStringLength), kCTForegroundColorFromContextAttributeName, NSNumber(booleanLiteral: true))
+        // default color
+        CFAttributedStringSetAttribute(attributedString, CFRange(location: 0, length: attributedStringLength), kCTForegroundColorAttributeName, defaultColor)
 
         // Apply attributes to NSAttibutedString used by typesetter
         // Range applies to this line

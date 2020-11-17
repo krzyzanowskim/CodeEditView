@@ -48,6 +48,10 @@ public struct Range: CustomDebugStringConvertible, CustomStringConvertible, Hash
     func overlaps(_ otherRange: Range) -> Bool {
         (start..<end).overlaps(otherRange.start..<otherRange.end)
     }
+
+    func contains(_ position: Position) -> Bool {
+        (start..<end).contains(position)
+    }
 }
 
 extension Range: Comparable {

@@ -21,16 +21,18 @@ public final class TextStorage {
     }
 
     public func insert(string: String, at position: Position) {
-        _storageProvider.insert(string: string, at: position)
-        _textAttributes.adjustAttributedRanges(afterDidInsert: string, at: position, in: self)
+        _textAttributes.processRangeInsert(string, at: position, in: self) {
+            _storageProvider.insert(string: string, at: position)
+        }
         if let endPosition = position.position(after: 1, in: self) {
             storageDidChange.send(Range(start: position, end: endPosition))
         }
     }
 
     public func remove(range: Range) {
-        _storageProvider.remove(range: range)
-        _textAttributes.adjustAttributedRanges(didRemoveRange: range, in: self)
+        _textAttributes.processRangeRemove(range, in: self) {
+            _storageProvider.remove(range: range)
+        }
         storageDidChange.send(range)
     }
 
