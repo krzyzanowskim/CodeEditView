@@ -35,7 +35,7 @@ final class TextAttributes {
         // Not the fastest, but hey! quick and dirty, remember?
         let affectedRanges = ranges.reduce(into: [Swift.Range<Int>: TextAttribute]()) { (result, element) in
             let range = textStorage.characterIndex(at: element.key.start)..<textStorage.characterIndex(at: element.key.end)
-            if range.startIndex > startIndex {
+            if range.startIndex > endIndex || range.contains(startIndex) || range.contains(endIndex) {
                 result[range] = element.value
                 ranges.removeValue(forKey: element.key)
             }
@@ -44,14 +44,21 @@ final class TextAttributes {
         // Update storage
         updateOperation()
 
-        let updatedRanges = affectedRanges.map { (range, attribute) in
-            ((range.startIndex - delta)..<(range.endIndex - delta), attribute)
+        let updatedRanges = affectedRanges.compactMap { (range, attribute) -> (Swift.Range<Int>, TextAttribute)? in
+            let low = max(range.startIndex - delta, startIndex)
+            let high = max(range.endIndex - delta, startIndex)
+            guard low != high else {
+                return nil
+            }
+
+            return (low..<high, attribute)
         }
 
         // rebuild ranges, BUT after storage modification!
         for (characterRange, attr) in updatedRanges {
             guard let newStart = textStorage.position(atCharacterIndex: characterRange.startIndex),
-                  let newEnd = textStorage.position(atCharacterIndex: characterRange.endIndex)
+                  let newEnd = textStorage.position(atCharacterIndex: characterRange.endIndex),
+                  newStart != newEnd
             else {
                 continue
             }
@@ -61,6 +68,7 @@ final class TextAttributes {
     }
 
     /// Adjust attributed ranges after new string is added to the storage
+    // TODO: processRangeRemove and processRangeInsert is the same and can be refactored in one function
     func processRangeInsert(_ string: String, at position: Position, in textStorage: TextStorage, updateOperation: () -> Void) {
         let startIndex = textStorage.characterIndex(at: position)
         let delta = string.count

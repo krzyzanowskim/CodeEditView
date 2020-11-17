@@ -58,7 +58,9 @@ class StringTextStorageProvider: TextStorageProvider {
     }
 
     func position(atCharacterIndex characterIndex: Int) -> Position? {
-        let stringCharacterIndex = _content.index(_content.startIndex, offsetBy: characterIndex, limitedBy: _content.endIndex)!
+        guard let stringCharacterIndex = _content.index(_content.startIndex, offsetBy: characterIndex, limitedBy: _content.endIndex) else {
+            return nil
+        }
         guard let foundLine = _cacheLineRange.first(where: { $0.value.contains(stringCharacterIndex) }) else {
             return nil
         }
