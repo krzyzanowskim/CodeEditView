@@ -6,12 +6,15 @@ import Cocoa
 /// TODO: notify about updates via delegate or callbacks
 public final class TextStorage {
     public let storageDidChange = PassthroughSubject<Range, Never>()
-    internal let _textAttributes = TextAttributes() // TODO private
+
+    internal let _textAttributes = TextAttributes() // TODO: Private
     private let _storageProvider: TextStorageProvider
 
     public var linesCount: Int {
         _storageProvider.linesCount
     }
+
+    public var shouldUpdateAttributedRangesAutomatically = false
 
     public init(string: String = "") {
         _storageProvider = StringTextStorageProvider()
@@ -30,7 +33,11 @@ public final class TextStorage {
     }
 
     public func remove(range: Range) {
-        _textAttributes.processRangeRemove(range, in: self) {
+        if shouldUpdateAttributedRangesAutomatically {
+            _textAttributes.processRangeRemove(range, in: self) {
+                _storageProvider.remove(range: range)
+            }
+        } else {
             _storageProvider.remove(range: range)
         }
         storageDidChange.send(range)

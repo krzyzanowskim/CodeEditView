@@ -17,8 +17,8 @@ public final class CodeEditView: NSView {
         var isAvailable: Bool = true
     }
 
-    private var _caretBlinkTimer: BlinkTimer
-    private var _caret: Caret {
+    private var _caretBlinkTimer: BlinkTimer = BlinkTimer()
+    private var _caret: Caret = Caret() {
         didSet {
             _caretBlinkTimer.suspend()
 
@@ -50,7 +50,7 @@ public final class CodeEditView: NSView {
 
     #warning("Needs more work. the range is never set.")
     /// NSTextInputClient marked text range.
-    private var _markedRange: NSRange
+    private var _markedRange: NSRange = NSRange(location: NSNotFound, length: 0)
 
     /// Whether or not this view is the focused view for its window
     private var _isFirstResponder = false {
@@ -90,7 +90,7 @@ public final class CodeEditView: NSView {
         public static let `default` = Configuration()
     }
 
-    public var configuration: Configuration {
+    public var configuration: Configuration = .default {
         didSet {
             needsLayout = true
             needsDisplay = true
@@ -108,26 +108,35 @@ public final class CodeEditView: NSView {
                                                                  indentWrappedLines: configuration.indentWrappedLines,
                                                                  indentLevel: configuration.indentLevel,
                                                                  lineSpacing: configuration.lineSpacing),
-                                            textStorage: storage)
-        self._caret = Caret()
-        self._caretBlinkTimer = BlinkTimer()
-        self._markedRange = NSRange(location: NSNotFound, length: 0)
-
+                                            textStorage: _textStorage)
         self.configuration = configuration
 
         super.init(frame: .zero)
         self.canDrawConcurrently = true
+        setupCaretBlinkTimer()
+    }
 
+    required init?(coder: NSCoder) {
+        self._textStorage = TextStorage()
+        self._layoutManager = LayoutManager(configuration: .init(lineWrapping: configuration.lineWrapping,
+                                                                 wrapWords: configuration.wrapWords,
+                                                                 indentWrappedLines: configuration.indentWrappedLines,
+                                                                 indentLevel: configuration.indentLevel,
+                                                                 lineSpacing: configuration.lineSpacing),
+                                            textStorage: _textStorage)
+
+        super.init(coder: coder)
+        self.canDrawConcurrently = true
+        setupCaretBlinkTimer()
+    }
+
+    private func setupCaretBlinkTimer() {
         _caretBlinkTimer.setEventHandler { [unowned self] _ in
             if _caret.isAvailable, let caretBounds = _layoutManager.caretBounds(at: _caret.position) {
                 setNeedsDisplay(caretBounds)
             }
         }
         _caretBlinkTimer.resume()
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 
     public override var acceptsFirstResponder: Bool {

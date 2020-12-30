@@ -26,7 +26,6 @@ final class TextAttributes {
     /// Everything else is mindblown.
     func processRangeRemove(_ removeRange: Range, in textStorage: TextStorage, updateOperation: () -> Void) {
         _splitAttributedRanges(at: removeRange.start)
-//        _splitAttributedRanges(at: removeRange.end)
 
         let startIndex = textStorage.characterIndex(at: removeRange.start)
         let endIndex = textStorage.characterIndex(at: removeRange.end)
