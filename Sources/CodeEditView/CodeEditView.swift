@@ -381,10 +381,11 @@ public final class CodeEditView: NSView {
             return
         }
 
-        guard lineLayout.bounds.intersects(dirtyRect) else {
-            return
-        }
-
+        // This is a noble idea, but won't work here.
+        // It is possible that the other drawing pass (different rect). will overdraw this region with a background.
+        // guard lineLayout.bounds.intersects(dirtyRect) else {
+        //    return
+        // }
 
         context.saveGState()
         context.setFillColor(NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor)
@@ -396,7 +397,6 @@ public final class CodeEditView: NSView {
                               height: lineLayout.bounds.height).insetBy(dx: 0, dy: -lineLayout.lineSpacing / 2)
 
         context.fill(lineRect)
-
         context.restoreGState()
     }
 
@@ -414,9 +414,11 @@ public final class CodeEditView: NSView {
             return
         }
 
-        guard startSelectedLineLayout.bounds.union(endSelectedLineLayout.bounds).intersects(dirtyRect) else {
-            return
-        }
+        // This is a noble idea, but won't work here.
+        // It is possible that the other drawing pass (different rect). will overdraw this region with a background.
+        // guard startSelectedLineLayout.bounds.union(endSelectedLineLayout.bounds).intersects(dirtyRect) else {
+        //    return
+        // }
 
         logger.debug("drawSelection \(selectionRange)")
 
