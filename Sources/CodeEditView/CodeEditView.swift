@@ -14,7 +14,7 @@ public final class CodeEditView: NSView {
 
     private struct Caret {
         var position: Position = .zero
-        var isAvailable: Bool = true
+        var isAvailable: Bool = false
     }
 
     private var _caretBlinkTimer: BlinkTimer = BlinkTimer()
@@ -44,7 +44,7 @@ public final class CodeEditView: NSView {
     /// Current text selection. Single selection range.
     private var _textSelection: SelectionRange? {
         didSet {
-            _caret.isAvailable = _textSelection == nil || (_textSelection != nil && _textSelection!.isEmpty)
+            _caret.isAvailable = _isFirstResponder && (_textSelection == nil || (_textSelection != nil && _textSelection!.isEmpty))
         }
     }
 
@@ -63,6 +63,8 @@ public final class CodeEditView: NSView {
     private var _trackingArea: NSTrackingArea?
 
     public struct Configuration {
+        /// Whether the text view allow the user to edit text.
+        public var isEditable: Bool = true
         /// Line wrapping mode.
         public var lineWrapping: LineWrapping = .bounds
         /// Show wrapping line
@@ -140,7 +142,7 @@ public final class CodeEditView: NSView {
     }
 
     public override var acceptsFirstResponder: Bool {
-        true
+        configuration.isEditable
     }
 
     public override var preservesContentDuringLiveResize: Bool {
