@@ -50,6 +50,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         scrollView.contentView = clipView
         scrollView.documentView = codeView
 
+        // scrollView.automaticallyAdjustsContentInsets = true
+        let rulerView = EditorRulerView(scrollView: scrollView)
+        scrollView.verticalRulerView = rulerView
+        scrollView.hasVerticalRuler = true
+        scrollView.rulersVisible = true
+
         window.contentView = scrollView
         window.makeKeyAndOrderFront(nil)
     }

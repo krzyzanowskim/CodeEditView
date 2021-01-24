@@ -100,7 +100,7 @@ public final class CodeEditView: NSView {
     }
 
     private let _textStorage: TextStorage
-    private let _layoutManager: LayoutManager
+    let _layoutManager: LayoutManager
 
     public init(storage: TextStorage, configuration: Configuration = .default) {
         self._textStorage = storage
@@ -515,14 +515,25 @@ public final class CodeEditView: NSView {
         super.layout()
     }
 
-    /// Layout visible text
+    /// Layout visible text and adjust view frame
     private func layoutText() {
-        let textContentSize = _layoutManager.layoutText(font: configuration.font,
-                                                        color: configuration.textColor.cgColor,
-                                                        frame: enclosingScrollView?.documentVisibleRect ?? frame)
+        var visibleRect = enclosingScrollView?.documentVisibleRect ?? frame
+        if let scrollView = enclosingScrollView, let verticalRulerView = scrollView.verticalRulerView , scrollView.rulersVisible == true {
+            let rulerWidth = verticalRulerView.requiredThickness
 
-        if frame.size != textContentSize {
-            frame.size = textContentSize
+            visibleRect = NSRect(
+                origin: scrollView.documentVisibleRect.origin,
+                size: NSSize(width: scrollView.documentVisibleRect.width - rulerWidth, height: scrollView.documentVisibleRect.height)
+            )
+        }
+
+        // FIXME: the size is few pixels too wide
+        let newTextContentSize = _layoutManager.layoutText(font: configuration.font,
+                                                           color: configuration.textColor.cgColor,
+                                                           frame: visibleRect)
+
+        if frame.size != newTextContentSize {
+            frame.size = newTextContentSize
         }
     }
 
