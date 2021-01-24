@@ -532,8 +532,10 @@ public final class CodeEditView: NSView {
                                                            color: configuration.textColor.cgColor,
                                                            frame: visibleRect)
 
+
         if frame.size != newTextContentSize {
             frame.size = newTextContentSize
+            scrollToVisible(visibleRect)
         }
     }
 
