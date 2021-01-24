@@ -204,7 +204,7 @@ class LayoutManager {
         var currentPos: CGPoint = .zero
 
         // estimate text content size
-        var textContentSize = CGSize(width: frame.width, height: CGFloat(_textStorage.linesCount) * CTFontGetBoundingBox(font).height)
+        var textContentSize = CGSize(width: frame.width, height: floor(CGFloat(_textStorage.linesCount) * CTFontGetBoundingBox(font).height) + 0.5)
 
         var lineLayoutsRun: [LineLayout] = []
         lineLayoutsRun.reserveCapacity(_lineLayouts.underestimatedCount)
