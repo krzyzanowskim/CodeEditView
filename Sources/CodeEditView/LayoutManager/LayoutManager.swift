@@ -195,7 +195,7 @@ class LayoutManager {
                 lineBreakWidth = width
         }
 
-        let indentWidth = configuration.indentWrappedLines ? (CTFontGetBoundingBox(font).width * CGFloat(configuration.indentLevel)) : 0
+        let indentWidth = configuration.indentWrappedLines ? floor((CTFontGetBoundingBox(font).width * CGFloat(configuration.indentLevel)) + 0.5) : 0
 
         // TopBottom/LeftRight
         // let firstInvalidLineNumber = _invalidRanges.min()?.start.line ?? 0
@@ -249,13 +249,13 @@ class LayoutManager {
                 var ascent: CGFloat = 0
                 var descent: CGFloat = 0
                 var leading: CGFloat = 0
-                let lineWidth = CGFloat(CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading))
-                let lineHeight = (ascent + descent + leading).rounded(.awayFromZero)
-                let lineSpacing = (lineHeight * configuration.lineSpacing.rawValue).rounded(.awayFromZero)
+                let lineWidth = CGFloat(floor(CTLineGetTypographicBounds(ctline, &ascent, &descent, &leading) + 0.5))
+                let lineHeight = floor((ascent + descent + leading) + 0.5)
+                let lineSpacing = floor((lineHeight * configuration.lineSpacing.rawValue) + 0.5)
 
                 // first line
                 if currentPos == .zero {
-                    currentPos.y = lineSpacing / 2
+                    currentPos.y = floor((lineSpacing / 2) + 0.5)
                 }
 
                 // font origin based position
