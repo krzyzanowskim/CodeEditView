@@ -31,7 +31,7 @@ public class EditorRulerView: NSRulerView {
         ]
 
         var currentLineNumber = Int.min
-        for lineLayout in codeEditView._layoutManager.linesLayouts(in: codeEditView.visibleRect) {
+        for lineLayout in codeEditView._layoutManager.linesLayouts(in: CGRect(x: 0, y: codeEditView.visibleRect.origin.y, width: 0, height: codeEditView.visibleRect.size.height)) {
             if lineLayout.lineNumber != currentLineNumber {
                 currentLineNumber = lineLayout.lineNumber
 
