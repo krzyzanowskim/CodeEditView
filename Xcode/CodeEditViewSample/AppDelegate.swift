@@ -37,7 +37,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         textStorage.add(\.foreground, NSColor.systemIndigo, Range(start: Position(line: 4, character: 0), end: Position(line: 6, character: 100)))
 
-        let codeView = CodeEditView(storage: textStorage)
+        var configuration = CodeEditView.Configuration.default
+        configuration.lineWrapping = .none
+        let codeView = CodeEditView(storage: textStorage, configuration: configuration)
         codeView.autoresizingMask = [.width, .height]
 
         let scrollView = NSScrollView()
@@ -50,7 +52,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         scrollView.contentView = clipView
         scrollView.documentView = codeView
 
-        // scrollView.automaticallyAdjustsContentInsets = true
         let rulerView = EditorRulerView(scrollView: scrollView)
         scrollView.verticalRulerView = rulerView
         scrollView.hasVerticalRuler = true
