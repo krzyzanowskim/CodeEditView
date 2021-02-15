@@ -27,7 +27,8 @@ public final class TextStorage {
         _textAttributes.processRangeInsert(string, at: position, in: self) {
             _storageProvider.insert(string: string, at: position)
         }
-        if let endPosition = position.position(after: 1, in: self) {
+        
+        if let endPosition = position.position(after: string.count, in: self) {
             storageDidChange.send(Range(start: position, end: endPosition))
         }
     }
