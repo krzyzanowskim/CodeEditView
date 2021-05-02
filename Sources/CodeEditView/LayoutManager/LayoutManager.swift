@@ -47,7 +47,7 @@ class LayoutManager {
     private var _lineLayouts: [LineLayout]
     private var _textStorage: TextStorage
     private var _invalidRanges: Set<Range>
-    private var _cancellables: [AnyCancellable]
+    private var _cancellables: Set<AnyCancellable>
 
     init(configuration: Configuration, textStorage: TextStorage) {
         self._lineLayouts = []
@@ -58,7 +58,9 @@ class LayoutManager {
 
         self.configuration = configuration
 
-        _cancellables.append(textStorage.storageDidChange.sink(receiveValue: invalidateLayout))
+        textStorage.publisher
+            .sink(receiveValue: invalidateLayout)
+            .store(in: &_cancellables)
     }
 
     private func invalidateLayout(range: Range) {

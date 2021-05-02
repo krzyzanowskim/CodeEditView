@@ -5,7 +5,14 @@ import Cocoa
 /// Text Storage
 /// TODO: notify about updates via delegate or callbacks
 public final class TextStorage {
-    public let storageDidChange = PassthroughSubject<Range, Never>()
+
+    /// Storage did chage publisher
+    public let publisher = PassthroughSubject<Range, Never>()
+
+    /// Whether text attribute ranges should update automatically on
+    /// text storage mutations. Disabled by default to not interfere with
+    /// an external systems that may want to update attributes instead.
+    public var shouldUpdateAttributedRangesAutomatically: Bool
 
     internal let _textAttributes = TextAttributes() // TODO: Private
     private let _storageProvider: TextStorageProvider
@@ -14,9 +21,8 @@ public final class TextStorage {
         _storageProvider.linesCount
     }
 
-    public var shouldUpdateAttributedRangesAutomatically = false
-
-    public init(string: String = "") {
+    public init(string: String = "", shouldUpdateAttributedRangesAutomatically: Bool = false) {
+        self.shouldUpdateAttributedRangesAutomatically = shouldUpdateAttributedRangesAutomatically
         _storageProvider = StringTextStorageProvider()
         if !string.isEmpty {
             insert(string: string, at: Position(line: 0, character: 0))
@@ -29,7 +35,7 @@ public final class TextStorage {
         }
         
         if let endPosition = position.position(after: string.count, in: self) {
-            storageDidChange.send(Range(start: position, end: endPosition))
+            publisher.send(Range(start: position, end: endPosition))
         }
     }
 
@@ -41,7 +47,7 @@ public final class TextStorage {
         } else {
             _storageProvider.remove(range: range)
         }
-        storageDidChange.send(range)
+        publisher.send(range)
     }
 
     public func character(at position: Position) -> Character? {
