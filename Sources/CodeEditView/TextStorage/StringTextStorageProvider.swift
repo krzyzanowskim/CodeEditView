@@ -11,7 +11,7 @@ class StringTextStorageProvider: TextStorageProvider {
         _cacheLineRange.count
     }
 
-    func insert(string: String, at position: Position) {
+    func insert<S: StringProtocol>(string: S, at position: Position) {
         let index = _content.index(offset(line: position.line), offsetBy: position.character)
         _content.insert(contentsOf: string, at: index)
         if string.contains(where: \.isNewline) {
