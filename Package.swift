@@ -9,9 +9,15 @@ let package = Package(
             name: "CodeEditView",
             targets: ["CodeEditView"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/krzyzanowskim/TextBufferKit", .branch("main"))
+    ],
     targets: [
         .target(
-            name: "CodeEditView"
+            name: "CodeEditView",
+            dependencies: [
+                "TextBufferKit"
+            ]
         ),
         .testTarget(
             name: "CodeEditViewTests",
