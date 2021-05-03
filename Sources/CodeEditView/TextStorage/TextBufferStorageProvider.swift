@@ -33,11 +33,30 @@ class TextBufferStorageProvider: TextStorageProvider {
     }
 
     func string(in range: Swift.Range<Position>) -> Substring? {
-        nil
+        // TODO: open range
+        Substring(
+            decoding: pieceTree.getValueInRange(
+                range: TextBufferKit.Range.from(
+                    start: offset(position: range.lowerBound),
+                    end: offset(position: range.upperBound),
+                    on: pieceTree
+                )
+            ),
+            as: UTF8.self
+        )
     }
 
     func string(in range: ClosedRange<Position>) -> Substring? {
-        nil
+        Substring(
+            decoding: pieceTree.getValueInRange(
+                range: TextBufferKit.Range.from(
+                    start: offset(position: range.lowerBound),
+                    end: offset(position: range.upperBound),
+                    on: pieceTree
+                )
+            ),
+            as: UTF8.self
+        )
     }
 
     func string(line lineIndex: Int) -> Substring {
