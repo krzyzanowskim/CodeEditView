@@ -3,10 +3,10 @@
     "pins": [
       {
         "package": "TextBufferKit",
-        "repositoryURL": "https://github.com/krzyzanowskim/TextBufferKit",
+        "repositoryURL": "https://github.com/migueldeicaza/TextBufferKit",
         "state": {
           "branch": "main",
-          "revision": "d9d51362cff6a996b5c19488f976da4ee012629e",
+          "revision": "fd35cd9247e639d2c4066d8e36af2ec438fc008f",
           "version": null
         }
       }

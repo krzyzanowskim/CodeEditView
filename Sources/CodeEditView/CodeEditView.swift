@@ -591,6 +591,8 @@ extension CodeEditView: NSTextInputClient {
             return
         }
 
+        undoManager?.beginUndoGrouping()
+
         // delete selected area
         delete(self)
 
@@ -606,6 +608,7 @@ extension CodeEditView: NSTextInputClient {
 
             if shouldRegisterUndoAction, let undoManager = self.undoManager {
                 let caretPosition = _caret.position
+                undoManager.setActionName("Typing")
                 undoManager.registerUndo(withTarget: _textStorage) {
                     $0.remove(
                         range: Range(
@@ -622,6 +625,7 @@ extension CodeEditView: NSTextInputClient {
             }
 
             _textStorage.insert(string: string, at: _caret.position)
+            undoManager?.endUndoGrouping()
         }
 
         // if string contains new line, caret position need to adjust
@@ -822,6 +826,7 @@ extension CodeEditView {
         }
 
         let removedString = String(_textStorage.string(in: removeRange) ?? "")
+        undoManager?.setActionName("Delete")
         undoManager?.registerUndo(withTarget: _textStorage) {
             $0.insert(string: removedString, at: caretPosition)
             self._caret.position = removeRange.end
@@ -920,6 +925,7 @@ extension CodeEditView {
         }
 
         let removedString = String(_textStorage.string(in: removeRange) ?? "")
+        undoManager?.setActionName("Delete")
         undoManager?.registerUndo(withTarget: _textStorage) {
             $0.insert(string: removedString, at: removeRange.start)
             self._caret.position = startingCarretPosition
@@ -936,6 +942,7 @@ extension CodeEditView {
         let removeRange = Range(start: _caret.position, end: Position(line: _caret.position.line, character: _caret.position.character + 1))
         let removedString = String(_textStorage.string(in: removeRange) ?? "")
         let caretPosition = _caret.position
+        undoManager?.setActionName("Delete")
         undoManager?.registerUndo(withTarget: _textStorage) {
             $0.insert(string: removedString, at: caretPosition)
             self._caret.position = caretPosition
