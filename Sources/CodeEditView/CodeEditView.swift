@@ -591,8 +591,6 @@ extension CodeEditView: NSTextInputClient {
             return
         }
 
-        undoManager?.beginUndoGrouping()
-
         // delete selected area
         delete(self)
 
@@ -606,10 +604,10 @@ extension CodeEditView: NSTextInputClient {
             _caret.position = start
         } else {
 
-            if shouldRegisterUndoAction, let undoManager = self.undoManager {
+            if shouldRegisterUndoAction {
                 let caretPosition = _caret.position
-                undoManager.setActionName("Typing")
-                undoManager.registerUndo(withTarget: _textStorage) {
+                undoManager?.setActionName("Typing")
+                undoManager?.registerUndo(withTarget: _textStorage) {
                     $0.remove(
                         range: Range(
                             start: caretPosition,
@@ -625,7 +623,6 @@ extension CodeEditView: NSTextInputClient {
             }
 
             _textStorage.insert(string: string, at: _caret.position)
-            undoManager?.endUndoGrouping()
         }
 
         // if string contains new line, caret position need to adjust
