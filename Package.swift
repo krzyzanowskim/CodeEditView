@@ -10,7 +10,7 @@ let package = Package(
             targets: ["CodeEditView"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/krzyzanowskim/TextBufferKit", .branch("main"))
+        .package(url: "https://github.com/migueldeicaza/TextBufferKit", .branch("main"))
     ],
     targets: [
         .target(

@@ -8,6 +8,7 @@ import CoreText
 //  - Text Checking: NSTextCheckingClient, NSTextCheckingController
 //  - tell the input context when position information for a character range changes, when the text view scrolls, by sending the invalidateCharacterCoordinates message to the input context.
 //  - Remember maxX of caret and back to the position if there's enough characters in new line
+//  - Undo text attributes along text
 
 /// Code Edit View
 public final class CodeEditView: NSView {
@@ -566,8 +567,15 @@ public final class CodeEditView: NSView {
 // an NSTextInputContext instance automatically if the view subclass conforms
 // to the NSTextInputClient protocol.
 extension CodeEditView: NSTextInputClient {
-
     public func insertText(_ string: Any, replacementRange: NSRange) {
+        insertText(
+            string,
+            replacementRange: replacementRange,
+            registerUndo: false
+        )
+    }
+
+    private func insertText(_ string: Any, replacementRange: NSRange, registerUndo shouldRegisterUndoAction: Bool) {
         guard let string = string as? String else {
             return
         }
@@ -595,6 +603,24 @@ extension CodeEditView: NSTextInputClient {
             _textStorage.insert(string: string, at: start)
             _caret.position = start
         } else {
+
+            if shouldRegisterUndoAction, let undoManager = self.undoManager {
+                let caretPosition = _caret.position
+                undoManager.registerUndo(withTarget: _textStorage) {
+                    $0.remove(
+                        range: Range(
+                            start: caretPosition,
+                            end: caretPosition.position(after: string.count, in: $0) ?? caretPosition
+                        )
+                    )
+
+                    self._caret.position = caretPosition
+
+                    self.needsLayout = true
+                    self.needsDisplay = true
+                }
+            }
+
             _textStorage.insert(string: string, at: _caret.position)
         }
 
@@ -621,7 +647,10 @@ extension CodeEditView: NSTextInputClient {
         // (??) If there is no marked text, the current selection is replaced.
         // If there is no selection, the string is inserted at the insertion point.
         if selectedRange.location != NSNotFound {
-            insertText(string, replacementRange: replacementRange)
+            insertText(
+                string,
+                replacementRange: replacementRange
+            )
         }
 
         logger.debug("setMarkedText \(string) selectedRange \(selectedRange) replacementRange \(replacementRange)")
@@ -764,12 +793,17 @@ extension CodeEditView {
             return
         }
 
-        self.insertText(string)
+        self.insertText(
+            string,
+            registerUndo: true
+        )
     }
 
     @objc func cut(_ sender: Any?) {
+        undoManager?.beginUndoGrouping()
         self.copy(sender)
         self.delete(sender)
+        undoManager?.endUndoGrouping()
     }
 
     @objc func delete(_ sender: Any?) {
@@ -777,13 +811,26 @@ extension CodeEditView {
             return
         }
 
+        let removeRange: Range
+        let caretPosition: Position
         if selectionRange.start > selectionRange.end {
-            _textStorage.remove(range: selectionRange.inverted())
-            _caret.position = selectionRange.end
+            removeRange = selectionRange.inverted()
+            caretPosition = selectionRange.end
         } else {
-            _textStorage.remove(range: selectionRange)
-            _caret.position = selectionRange.start
+            removeRange = selectionRange
+            caretPosition = selectionRange.start
         }
+
+        let removedString = String(_textStorage.string(in: removeRange) ?? "")
+        undoManager?.registerUndo(withTarget: _textStorage) {
+            $0.insert(string: removedString, at: caretPosition)
+            self._caret.position = removeRange.end
+            self.needsLayout = true
+            self.needsDisplay = true
+        }
+
+        _textStorage.remove(range: removeRange)
+        _caret.position = caretPosition
 
         unselectText()
         needsLayout = true
@@ -821,11 +868,23 @@ extension CodeEditView {
         #warning("selectWord")
     }
 
-    public override func insertText(_ insertString: Any) {
+    private func insertText(_ insertString: Any, registerUndo: Bool) {
         guard let string = insertString as? String else {
             return
         }
-        self.insertText(string, replacementRange: NSRange(location: NSNotFound, length: 0))
+
+        insertText(
+            string,
+            replacementRange: NSRange(location: NSNotFound, length: 0),
+            registerUndo: registerUndo
+        )
+    }
+
+    public override func insertText(_ insertString: Any) {
+        insertText(
+            insertString,
+            registerUndo: false
+        )
     }
 
     public override func deleteBackward(_ sender: Any?) {
@@ -841,26 +900,50 @@ extension CodeEditView {
 
         unselectText()
 
+        let removeRange: Range
         let startingCarretPosition = _caret.position
 
         if let oneCharBeforePosition = _caret.position.position(before: 1, in: _textStorage) {
             _caret.position = oneCharBeforePosition
-            _textStorage.remove(range: Range(start: oneCharBeforePosition, end: startingCarretPosition))
+            removeRange = Range(start: oneCharBeforePosition, end: startingCarretPosition)
         } else {
             // move to previous line
             let lineNumber = _caret.position.line - 1
             if lineNumber >= 0 {
                 let prevLineString = _textStorage.string(line: lineNumber)
                 _caret.position = Position(line: lineNumber, character: prevLineString.count - 1)
-                _textStorage.remove(range: Range(start: _caret.position, end: startingCarretPosition))
+                removeRange = Range(start: _caret.position, end: startingCarretPosition)
+            } else {
+                removeRange = Range(start: _caret.position, end: startingCarretPosition)
+                assertionFailure("Should not happen")
             }
         }
+
+        let removedString = String(_textStorage.string(in: removeRange) ?? "")
+        undoManager?.registerUndo(withTarget: _textStorage) {
+            $0.insert(string: removedString, at: removeRange.start)
+            self._caret.position = startingCarretPosition
+            self.needsLayout = true
+            self.needsDisplay = true
+        }
+
+        _textStorage.remove(range: removeRange)
     }
 
     public override func deleteForward(_ sender: Any?) {
         unselectText()
 
-        _textStorage.remove(range: Range(start: _caret.position, end: Position(line: _caret.position.line, character: _caret.position.character + 1)))
+        let removeRange = Range(start: _caret.position, end: Position(line: _caret.position.line, character: _caret.position.character + 1))
+        let removedString = String(_textStorage.string(in: removeRange) ?? "")
+        let caretPosition = _caret.position
+        undoManager?.registerUndo(withTarget: _textStorage) {
+            $0.insert(string: removedString, at: caretPosition)
+            self._caret.position = caretPosition
+            self.needsLayout = true
+            self.needsDisplay = true
+        }
+
+        _textStorage.remove(range: removeRange)
 
         needsLayout = true
         needsDisplay = true
@@ -1034,10 +1117,19 @@ extension CodeEditView {
     }
 
     public override func insertTab(_ sender: Any?) {
+
         if configuration.insertSpacesForTab {
-            self.insertText(String([Character](repeating: " ", count: configuration.tabSpaceSize)), replacementRange: NSRange(location: NSNotFound, length: 0))
+            insertText(
+                String([Character](repeating: " ", count: configuration.tabSpaceSize)),
+                replacementRange: NSRange(location: NSNotFound, length: 0),
+                registerUndo: true
+            )
         } else {
-            self.insertText("\t", replacementRange: NSRange(location: NSNotFound, length: 0))
+            insertText(
+                "\t",
+                replacementRange: NSRange(location: NSNotFound, length: 0),
+                registerUndo: true
+            )
         }
         scrollToVisiblePosition(_caret.position)
     }

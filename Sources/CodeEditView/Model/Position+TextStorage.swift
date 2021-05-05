@@ -36,7 +36,7 @@ extension Position {
         self = newPosition
     }
 
-    func moved(by charactersCount: Int, in textStorage: TextStorage) -> Self? {
+    private func moved(by charactersCount: Int, in textStorage: TextStorage) -> Self? {
         if charactersCount > 0 {
             if let newPosition = position(after: charactersCount, in: textStorage) {
                 return newPosition
