@@ -23,7 +23,7 @@ public final class TextStorage {
 
     public init(string: String = "", shouldUpdateAttributedRangesAutomatically: Bool = false) {
         self.shouldUpdateAttributedRangesAutomatically = shouldUpdateAttributedRangesAutomatically
-        _storageProvider = TextBufferStorageProvider() // StringTextStorageProvider() // TextBufferStorageProvider()
+        _storageProvider = TextBufferStorageProvider() // StringTextStorageProvider()
         if !string.isEmpty {
             insert(string: string, at: Position(line: 0, character: 0))
         }

@@ -224,8 +224,7 @@ class LayoutManager {
         }
 
         // Iterate over invalid lines
-//        for lineNumber in (invalidLineNumbers.min() ?? 0)...(invalidLineNumbers.max() ?? _textStorage.linesCount) {
-        for lineNumber in 0..._textStorage.linesCount {
+        for lineNumber in 0..<_textStorage.linesCount {
 
             // Copy valid lines
 //            if !invalidLineNumbers.contains(lineNumber) {
@@ -317,7 +316,7 @@ class LayoutManager {
         return textContentSize
     }
 
-    private func createAttributedString(lineNumber: LineNumber, lineString: String.SubSequence, defaultFont: NSFont, defaultColor: CGColor) -> CFMutableAttributedString {
+    private func createAttributedString(lineNumber: LineNumber, lineString: Substring, defaultFont: NSFont, defaultColor: CGColor) -> CFMutableAttributedString {
         let attributedString = CFAttributedStringCreateMutable(nil, 0)!
         CFAttributedStringBeginEditing(attributedString)
         CFAttributedStringReplaceString(attributedString, CFRange(), lineString as CFString)
