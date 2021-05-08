@@ -17,8 +17,10 @@ class LayoutManager {
         /// In wrapping scenario, multiple LineLayouts for a single lineIndex.
         let lineNumber: LineNumber
 
-        // Note: After inserting an instance of a reference type into a set, the properties of that instance must not be modified in a way that affects its hash value or testing for equality.
-        //       this is why can't really use it in Set
+        // Note: After inserting an instance of a reference type into a set,
+        //       the properties of that instance must not be modified in a way
+        //       that affects its hash value or testing for equality.
+        //       This is why can't really use it in Set.
         let ctline: CTLine
         /// A line baseline
         let baseline: CGPoint
@@ -51,9 +53,9 @@ class LayoutManager {
 
     init(configuration: Configuration, textStorage: TextStorage) {
         self._lineLayouts = []
-        self._lineLayouts.reserveCapacity(500)
+        self._lineLayouts.reserveCapacity(2048)
         self._textStorage = textStorage
-        self._invalidRanges = []
+        self._invalidRanges = Set(minimumCapacity: 2048)
         self._cancellables = []
 
         self.configuration = configuration
@@ -211,17 +213,42 @@ class LayoutManager {
         var lineLayoutsRun: [LineLayout] = []
         lineLayoutsRun.reserveCapacity(_lineLayouts.underestimatedCount)
 
-        for lineNumber in 0..<_textStorage.linesCount {
+        // get all invalid lines
+        let invalidLineNumbers = _invalidRanges.reduce(into: Set<LineNumber>()) { result, range in
+            result.formUnion(range.start.line...range.end.line)
+        }
 
-            // WIP: re-layout invalid ranges
-            if _invalidRanges.contains(where: { $0.start.line >= lineNumber && $0.end.line <= lineNumber }) {
-                logger.debug("Invalid line layout: \(lineNumber)")
-            }
+        defer {
+            // TODO: move it at the end, properly
+            _invalidRanges.removeAll(keepingCapacity: true)
+        }
 
-            // Store previous lines
-            let oldLineNumberLayouts = lineLayouts(forLineNumber: lineNumber)
-            var newLineNumberLayouts: [LineLayout] = []
-            newLineNumberLayouts.reserveCapacity(oldLineNumberLayouts.count)
+        // Iterate over invalid lines
+//        for lineNumber in (invalidLineNumbers.min() ?? 0)...(invalidLineNumbers.max() ?? _textStorage.linesCount) {
+        for lineNumber in 0..._textStorage.linesCount {
+
+            // Copy valid lines
+//            if !invalidLineNumbers.contains(lineNumber) {
+//                let existingLayouts = lineLayouts(forLineNumber: lineNumber)
+//                if !existingLayouts.isEmpty {
+//                    lineLayoutsRun.append(contentsOf: existingLayouts)
+//
+//                    let height = existingLayouts.reduce(0) { result, lineLayout in
+//                        result + lineLayout.bounds.height + lineLayout.lineSpacing
+//                    }
+//
+//                    // First line
+//                    if currentPos == .zero, let firstLine = _lineLayouts.first {
+//                        currentPos.y = floor((firstLine.lineSpacing / 2) + 0.5)
+//                    }
+//
+//                    currentPos.y += height
+//                    continue
+//                }
+//            }
+
+            // Update invalid lines
+            // logger.debug("actual layout \(lineNumber)")
 
             let lineString = _textStorage.string(line: lineNumber)
             let attributedString = createAttributedString(lineNumber: lineNumber, lineString: lineString, defaultFont: font, defaultColor: color)
@@ -272,7 +299,6 @@ class LayoutManager {
                                lineSpacing: lineSpacing,
                                stringRange: stringRange)
 
-                newLineNumberLayouts.append(lineLayout)
                 lineLayoutsRun.append(lineLayout)
 
                 lineStartIndex += breakIndex
@@ -280,20 +306,10 @@ class LayoutManager {
 
                 textContentSize.width = max(textContentSize.width, lineWidth)
             }
-
-            // diff oldLineNumberLayouts -> newLineNumberLayouts
-            //for change in newLineNumberLayouts.difference(from: oldLineNumberLayouts) {
-            //}
-            if !oldLineNumberLayouts.isEmpty && newLineNumberLayouts.count > oldLineNumberLayouts.count {
-                // logger.debug("wazaaaa \(lineNumber)")
-                // TODO: move everything below by height of the new line
-            }
-
         }
 
-        // TODO: analyze how layout change and apply changes to invisible parts below too
-        // by set the Y adjustment value
-        _lineLayouts = lineLayoutsRun
+        _lineLayouts.removeAll(keepingCapacity: true)
+        _lineLayouts.append(contentsOf: lineLayoutsRun)
 
         textContentSize.height = max(textContentSize.height, currentPos.y)
         logger.trace("layoutText didEnd, contentSize: \(NSStringFromSize(textContentSize))")

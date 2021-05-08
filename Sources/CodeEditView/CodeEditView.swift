@@ -840,6 +840,8 @@ extension CodeEditView {
     }
 
     public override func uppercaseWord(_ sender: Any?) {
+        // Find word at current position
+        // change it
         #warning("uppercaseWord")
     }
 
