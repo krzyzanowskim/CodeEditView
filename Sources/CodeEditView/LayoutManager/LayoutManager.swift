@@ -31,6 +31,13 @@ class LayoutManager {
         let stringRange: CFRange
     }
 
+
+    enum Overscroll {
+        case none
+        case automatic
+        case height(CGFloat)
+    }
+
     struct Configuration {
         /// Line wrapping mode.
         var lineWrapping: LineWrapping = .none
@@ -42,6 +49,8 @@ class LayoutManager {
         var indentLevel: Int = 2
         /// Line spacing style.
         var lineSpacing: LineSpacing = .normal
+        /// Overscroll
+        var overscroll: Overscroll = .automatic
     }
 
     var configuration: Configuration
@@ -208,21 +217,16 @@ class LayoutManager {
         var currentPos: CGPoint = .zero
 
         // estimate text content size
-        var textContentSize = CGSize(width: frame.width, height: floor(CGFloat(_textStorage.linesCount) * CTFontGetBoundingBox(font).height) + 0.5)
+        var textContentSize = CGSize.zero //CGSize(width: frame.width, height: floor(CGFloat(_textStorage.linesCount) * CTFontGetBoundingBox(font).height) + 0.5)
 
         var lineLayoutsRun: [LineLayout] = []
         lineLayoutsRun.reserveCapacity(_lineLayouts.underestimatedCount)
 
-        // get all invalid lines
-        let invalidLineNumbers = _invalidRanges.reduce(into: Set<LineNumber>()) { result, range in
-            result.formUnion(range.start.line...range.end.line)
-        }
-
-        defer {
-            // TODO: move it at the end, properly
-            _invalidRanges.removeAll(keepingCapacity: true)
-        }
-
+//        // get all invalid lines
+//        let invalidLineNumbers = _invalidRanges.reduce(into: Set<LineNumber>()) { result, range in
+//            result.formUnion(range.start.line...range.end.line)
+//        }
+//
         // Iterate over invalid lines
         for lineNumber in 0..<_textStorage.linesCount {
 
@@ -310,8 +314,21 @@ class LayoutManager {
         _lineLayouts.removeAll(keepingCapacity: true)
         _lineLayouts.append(contentsOf: lineLayoutsRun)
 
-        textContentSize.height = max(textContentSize.height, currentPos.y)
+        var overscroll: CGFloat {
+            switch configuration.overscroll {
+            case .automatic:
+                return CTFontGetBoundingBox(font).height * 8
+            case .none:
+                return 0
+            case .height(let value):
+                return value
+            }
+        }
+        textContentSize.height = max(textContentSize.height, currentPos.y) + overscroll
         logger.trace("layoutText didEnd, contentSize: \(NSStringFromSize(textContentSize))")
+
+        // Clear invalid lines. Layout is valid
+        _invalidRanges.removeAll(keepingCapacity: true)
 
         return textContentSize
     }
