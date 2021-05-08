@@ -1,4 +1,5 @@
 extension Sequence {
+    @inlinable
     func count(isIncluded: (Element) -> Bool) -> Int {
         var count = 0
         for x in self {
