@@ -13,6 +13,8 @@ class LayoutManager {
 
     /// Cached layout. LayoutManager datasource.
     struct LineLayout: Equatable, Hashable {
+        // TODO: CoW
+
         /// Line index in store. Line number (zero based)
         /// In wrapping scenario, multiple LineLayouts for a single lineIndex.
         let lineNumber: LineNumber
@@ -20,7 +22,7 @@ class LayoutManager {
         // Note: After inserting an instance of a reference type into a set,
         //       the properties of that instance must not be modified in a way
         //       that affects its hash value or testing for equality.
-        //       This is why can't really use it in Set.
+        //       This is why can't really use it in a Set.
         let ctline: CTLine
         /// A line baseline
         let baseline: CGPoint
@@ -320,7 +322,7 @@ class LayoutManager {
                 return CTFontGetBoundingBox(font).height * 8
             case .none:
                 return 0
-            case .height(let value):
+            case .fixed(let value):
                 return value
             }
         }
