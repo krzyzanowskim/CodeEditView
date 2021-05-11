@@ -222,7 +222,7 @@ class LayoutManager {
         }
 
         let firstInvalidLineNumber = _invalidRanges.min()?.start.line ?? 0
-        let firstInvalidLineLayoutIndex = _lineLayouts.lastIndex(where: { $0.lineNumber == invalidLineNumbers.min() }) ?? 0
+        let firstInvalidLineLayoutIndex = _lineLayouts.firstIndex(where: { $0.lineNumber == invalidLineNumbers.min() }) ?? 0
 
         let lastInvalidLineNumber = _invalidRanges.max()?.end.line ?? _textStorage.linesCount - 1
         // let lastInvalidLineLayoutIndex = prevLineLayouts.lastIndex(where: { $0.lineNumber == invalidLineNumbers.max() }) ?? 0
@@ -236,7 +236,7 @@ class LayoutManager {
 
         // Revalidate
         var revalidatedLineLayouts: [LineLayout] = []
-        revalidatedLineLayouts.reserveCapacity(3000)
+        revalidatedLineLayouts.reserveCapacity(25)
         for lineNumber in firstInvalidLineNumber..<(lastInvalidLineNumber + 1) {
             let lineString = _textStorage.string(line: lineNumber)
             let attributedString = createAttributedString(lineNumber: lineNumber, lineString: lineString, defaultFont: font, defaultColor: color)
@@ -307,6 +307,7 @@ class LayoutManager {
             suffix[i].lineNumber += linesCountChange
             // TODO: calculate actuall diff change.
             suffix[i].bounds.origin.y += CGFloat(linesCountChange) * 18
+            textContentSize.width = max(textContentSize.width, suffix[i].bounds.width)
         }
 
         currentPos = suffix.last?.bounds.origin ?? currentPos
