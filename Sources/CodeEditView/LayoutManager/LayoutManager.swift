@@ -215,9 +215,7 @@ class LayoutManager {
         // TopBottom/LeftRight
         var currentPos: CGPoint = .zero
 
-        let prevLineLayouts = _lineLayouts
-
-        let prevLinesCount = Set(prevLineLayouts.map(\.lineNumber)).count
+        let prevLinesCount = Set(_lineLayouts.map(\.lineNumber)).count
         let currentLinesCount = _textStorage.linesCount
         let linesCountChange = currentLinesCount - prevLinesCount
 
@@ -227,14 +225,14 @@ class LayoutManager {
         }
 
         let firstInvalidLineNumber = _invalidRanges.min()?.start.line ?? 0
-        let firstInvalidLineLayoutIndex = prevLineLayouts.lastIndex(where: { $0.lineNumber == invalidLineNumbers.min() }) ?? 0
+        let firstInvalidLineLayoutIndex = _lineLayouts.lastIndex(where: { $0.lineNumber == invalidLineNumbers.min() }) ?? 0
 
         let lastInvalidLineNumber = _invalidRanges.max()?.end.line ?? _textStorage.linesCount - 1
         // let lastInvalidLineLayoutIndex = prevLineLayouts.lastIndex(where: { $0.lineNumber == invalidLineNumbers.max() }) ?? 0
 
         // Skip the beginngin up to first invalid line
-        currentPos = prevLineLayouts[safe: firstInvalidLineLayoutIndex]?.bounds.origin ?? .zero
-        let prefix = prevLineLayouts[..<firstInvalidLineLayoutIndex]
+        currentPos = _lineLayouts[safe: firstInvalidLineLayoutIndex]?.bounds.origin ?? .zero
+        let prefix = _lineLayouts[..<firstInvalidLineLayoutIndex]
 
         // estimate text content size
         var textContentSize = CGSize(width: prefix.reduce(0.0, { max($0, $1.bounds.width) }), height: 0)
@@ -304,7 +302,7 @@ class LayoutManager {
 
         // Suffix need adjustments in position and line numbers
         // Suffix is everything below, but adjusted but what happened in revalidatedLineLayouts
-        var suffix = prevLineLayouts.filter {
+        var suffix = _lineLayouts.filter {
             $0.lineNumber > (lastInvalidLineNumber - linesCountChange)
         }
 
