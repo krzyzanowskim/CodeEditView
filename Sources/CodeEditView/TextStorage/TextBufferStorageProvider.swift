@@ -64,7 +64,7 @@ class TextBufferStorageProvider: TextStorageProvider {
         if content.isEmpty {
             return "\n"
         }
-        return Substring(decoding: pieceTree.getLineContent(lineIndex + 1), as: UTF8.self)
+        return Substring(decoding: content + "\n".utf8, as: UTF8.self)
     }
 
     func characterIndex(at position: Position) -> Int {
@@ -86,8 +86,8 @@ class TextBufferStorageProvider: TextStorageProvider {
         let positionLine = pieceTreePosition.line - 1
 
         // Get a string index of the start of the line
-        let bzz = self.characterIndex(at: Position(line: positionLine, character: 0))
-        let lineStartIndex = content.index(content.startIndex, offsetBy: bzz)
+        let tmp = self.characterIndex(at: Position(line: positionLine, character: 0))
+        let lineStartIndex = content.index(content.startIndex, offsetBy: tmp)
 
         // Get a character position in the line
         let distance = content.distance(from: lineStartIndex, to: contentCharacterIndex)

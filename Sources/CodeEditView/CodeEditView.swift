@@ -911,7 +911,7 @@ extension CodeEditView {
             _caret.position = oneCharBeforePosition
             removeRange = Range(start: oneCharBeforePosition, end: startingCarretPosition)
         } else {
-            // move to previous line
+            // move to the previous line
             let lineNumber = _caret.position.line - 1
             if lineNumber >= 0 {
                 let prevLineString = _textStorage.string(line: lineNumber)

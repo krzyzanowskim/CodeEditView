@@ -60,11 +60,11 @@ extension Position {
 
         while consumedCount < charactersOffset {
             let currentLineString = textStorage.string(line: currentLinePosition.line)
-            let newCharacterOffset = currentLinePosition.character + (Int(charactersOffset) - consumedCount)
+            let newCharacterIndex = currentLinePosition.character + (Int(charactersOffset) - consumedCount)
 
-            if newCharacterOffset < currentLineString.count {
-                consumedCount += newCharacterOffset - currentLinePosition.character
-                currentLinePosition = Position(line: currentLinePosition.line, character: newCharacterOffset)
+            if newCharacterIndex < currentLineString.count {
+                consumedCount += newCharacterIndex - currentLinePosition.character
+                currentLinePosition = Position(line: currentLinePosition.line, character: newCharacterIndex)
             } else if currentLinePosition.line + 1 < textStorage.linesCount {
                 consumedCount += currentLineString.count - (currentLinePosition.character + 1) + 1 // TODO: 1 for newline, will fail for \r\n and any other newline
                 currentLinePosition = Position(line: currentLinePosition.line + 1, character: 0)

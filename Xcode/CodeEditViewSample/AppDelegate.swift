@@ -21,7 +21,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.titleVisibility = .visible
         // window.contentView = NSHostingView(rootView: CodeEdit(text: sampleText))
 
-         let sampleText = String(decoding: NSDataAsset(name: "sample-2mb-text-file")!.data, as: UTF8.self)
+        let sampleText = String(decoding: NSDataAsset(name: "sample-2mb-text-file")!.data, as: UTF8.self)
 //        let sampleText = String(decoding: NSDataAsset(name: "sample-text-file")!.data, as: UTF8.self)
 //        let sampleText = loremIpsum
 
@@ -67,7 +67,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 }
 
 private let loremIpsum = """
-Aaaaaa
+A
+aaaaa
 Bbbbbb
 Cccccc
 Dddddd

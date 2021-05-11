@@ -212,9 +212,6 @@ class LayoutManager {
 
         let indentWidth = configuration.indentWrappedLines ? floor((CTFontGetBoundingBox(font).width * CGFloat(configuration.indentLevel)) + 0.5) : 0
 
-        // TopBottom/LeftRight
-        var currentPos: CGPoint = .zero
-
         let prevLinesCount = Set(_lineLayouts.map(\.lineNumber)).count
         let currentLinesCount = _textStorage.linesCount
         let linesCountChange = currentLinesCount - prevLinesCount
@@ -231,7 +228,7 @@ class LayoutManager {
         // let lastInvalidLineLayoutIndex = prevLineLayouts.lastIndex(where: { $0.lineNumber == invalidLineNumbers.max() }) ?? 0
 
         // Skip the beginngin up to first invalid line
-        currentPos = _lineLayouts[safe: firstInvalidLineLayoutIndex]?.bounds.origin ?? .zero
+        var currentPos = _lineLayouts[safe: firstInvalidLineLayoutIndex]?.bounds.origin ?? .zero
         let prefix = _lineLayouts[..<firstInvalidLineLayoutIndex]
 
         // estimate text content size
@@ -308,7 +305,8 @@ class LayoutManager {
 
         for i in suffix.indices {
             suffix[i].lineNumber += linesCountChange
-            suffix[i].bounds.origin.y += CGFloat(linesCountChange) * 18 // TODO: calculate actuall diff change
+            // TODO: calculate actuall diff change.
+            suffix[i].bounds.origin.y += CGFloat(linesCountChange) * 18
         }
 
         currentPos = suffix.last?.bounds.origin ?? currentPos
