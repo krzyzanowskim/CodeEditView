@@ -15,7 +15,7 @@ class LayoutManager {
     struct LineLayout: Equatable, Hashable {
         /// Line index in store. Line number (zero based)
         /// In wrapping scenario, multiple LineLayouts for a single lineIndex.
-        let lineNumber: LineNumber
+        var lineNumber: LineNumber
 
         // Note: After inserting an instance of a reference type into a set,
         //       the properties of that instance must not be modified in a way
@@ -24,7 +24,7 @@ class LayoutManager {
         let ctline: CTLine
         /// A line baseline
         let baseline: CGPoint
-        let bounds: CGRect
+        var bounds: CGRect
         let lineSpacing: CGFloat
         /// A string range of the line, related to the real line (lineNumber).
         /// For soft wrapped line its a fragment of the line.
@@ -213,39 +213,36 @@ class LayoutManager {
         let indentWidth = configuration.indentWrappedLines ? floor((CTFontGetBoundingBox(font).width * CGFloat(configuration.indentLevel)) + 0.5) : 0
 
         // TopBottom/LeftRight
-        // let firstInvalidLineNumber = _invalidRanges.min()?.start.line ?? 0
-        // let lastInvalidLineNumber = _invalidRanges.max()?.end.line ?? 0
-        // var currentPos: CGPoint = lineLayouts(forLineNumber: firstInvalidLineNumber).first?.bounds.origin ?? .zero
         var currentPos: CGPoint = .zero
 
-        // estimate text content size
-        var textContentSize = CGSize.zero //CGSize(width: frame.width, height: floor(CGFloat(_textStorage.linesCount) * CTFontGetBoundingBox(font).height) + 0.5)
+        let prevLineLayouts = _lineLayouts
 
-        // Mutate _lineLayouts in place
-        var currentLineLayoutsIndex = 0
+        let prevLinesCount = Set(prevLineLayouts.map(\.lineNumber)).count
+        let currentLinesCount = _textStorage.linesCount
+        let linesCountChange = currentLinesCount - prevLinesCount
 
         // get all invalid lines
         let invalidLineNumbers = _invalidRanges.reduce(into: Set<LineNumber>()) { result, range in
             result.formUnion(range.start.line...range.end.line)
         }
 
-        // Skip layout calculation from start to last valid line
-        if let lastValidLineLayoutIndex = _lineLayouts.lastIndex(where: { $0.lineNumber == invalidLineNumbers.min() }) {
-            let lastValidLineLayout = _lineLayouts[lastValidLineLayoutIndex]
-            currentPos = lastValidLineLayout.bounds.origin
-            currentLineLayoutsIndex = lastValidLineLayoutIndex + 1
-        }
+        let firstInvalidLineNumber = _invalidRanges.min()?.start.line ?? 0
+        let firstInvalidLineLayoutIndex = prevLineLayouts.lastIndex(where: { $0.lineNumber == invalidLineNumbers.min() }) ?? 0
 
+        let lastInvalidLineNumber = _invalidRanges.max()?.end.line ?? _textStorage.linesCount - 1
+        // let lastInvalidLineLayoutIndex = prevLineLayouts.lastIndex(where: { $0.lineNumber == invalidLineNumbers.max() }) ?? 0
 
-        // Remove everything starting at first invalid line.
-        // It's recreated below
-        let firstInvalidLineNumer = invalidLineNumbers.min() ?? 0
-        if let firstInvalidLineLayoutIndex = _lineLayouts.firstIndex(where: { $0.lineNumber == invalidLineNumbers.min() }) {
-            _lineLayouts.removeSubrange(firstInvalidLineLayoutIndex...)
-        }
+        // Skip the beginngin up to first invalid line
+        currentPos = prevLineLayouts[safe: firstInvalidLineLayoutIndex]?.bounds.origin ?? .zero
+        let prefix = prevLineLayouts[..<firstInvalidLineLayoutIndex]
 
-        // Iterate over invalid lines
-        for lineNumber in firstInvalidLineNumer..<_textStorage.linesCount {
+        // estimate text content size
+        var textContentSize = CGSize(width: prefix.reduce(0.0, { max($0, $1.bounds.width) }), height: 0)
+
+        // Revalidate
+        var revalidatedLineLayouts: [LineLayout] = []
+        revalidatedLineLayouts.reserveCapacity(3000)
+        for lineNumber in firstInvalidLineNumber..<(lastInvalidLineNumber + 1) {
             let lineString = _textStorage.string(line: lineNumber)
             let attributedString = createAttributedString(lineNumber: lineNumber, lineString: lineString, defaultFont: font, defaultColor: color)
             let typesetter = CTTypesetterCreateWithAttributedString(attributedString)
@@ -295,9 +292,7 @@ class LayoutManager {
                                lineSpacing: lineSpacing,
                                stringRange: stringRange)
 
-                //_lineLayouts.insert(lineLayout, at: currentLineLayoutsIndex)
-                _lineLayouts.append(lineLayout)
-                currentLineLayoutsIndex += 1
+                revalidatedLineLayouts.append(lineLayout)
 
                 lineStartIndex += breakIndex
                 currentPos.y += lineHeight + lineSpacing
@@ -306,8 +301,21 @@ class LayoutManager {
             }
         }
 
-//        _lineLayouts.removeAll(keepingCapacity: true)
-//        _lineLayouts.append(contentsOf: lineLayoutsRun)
+
+        // Suffix need adjustments in position and line numbers
+        // Suffix is everything below, but adjusted but what happened in revalidatedLineLayouts
+        var suffix = prevLineLayouts.filter {
+            $0.lineNumber > (lastInvalidLineNumber - linesCountChange)
+        }
+
+        for i in suffix.indices {
+            suffix[i].lineNumber += linesCountChange
+            suffix[i].bounds.origin.y += CGFloat(linesCountChange) * 18 // TODO: calculate actuall diff change
+        }
+
+        currentPos = suffix.last?.bounds.origin ?? currentPos
+
+        _lineLayouts = prefix + revalidatedLineLayouts + suffix
 
         var overscroll: CGFloat {
             switch configuration.overscroll {
@@ -319,6 +327,7 @@ class LayoutManager {
                 return value
             }
         }
+
         textContentSize.height = max(textContentSize.height, currentPos.y) + overscroll
         logger.trace("layoutText didEnd, contentSize: \(NSStringFromSize(textContentSize))")
 

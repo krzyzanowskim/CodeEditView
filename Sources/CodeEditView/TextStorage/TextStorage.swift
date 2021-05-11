@@ -11,7 +11,7 @@ public final class TextStorage {
 
     /// Whether text attribute ranges should update automatically on
     /// text storage mutations. Disabled by default to not interfere with
-    /// an external systems that may want to update attributes instead.
+    /// an external systems that may want to update attributes instead.w
     public var shouldUpdateAttributedRangesAutomatically: Bool
 
     internal let _textAttributes = TextAttributes() // TODO: Private
