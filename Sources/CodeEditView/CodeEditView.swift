@@ -1107,7 +1107,27 @@ extension CodeEditView {
     public override func insertNewline(_ sender: Any?) {
         unselectText()
 
-        _textStorage.insert(string: "\n", at: _caret.position)
+        let newLine = "\n"
+
+        let caretPosition = _caret.position
+        undoManager?.setActionName("New Line")
+        undoManager?.registerUndo(withTarget: _textStorage) {
+            $0.remove(
+                range: Range(
+                    start: caretPosition,
+                    end: caretPosition.position(after: 1, in: $0) ?? caretPosition
+                )
+            )
+
+            self._caret.position = caretPosition
+
+            self.needsLayout = true
+            self.needsDisplay = true
+
+            self.scrollToVisiblePosition(self._caret.position)
+        }
+
+        _textStorage.insert(string: newLine, at: _caret.position)
         _caret.position = Position(line: _caret.position.line + 1, character: 0)
 
         needsLayout = true
