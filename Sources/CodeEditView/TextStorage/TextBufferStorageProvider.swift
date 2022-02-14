@@ -2,7 +2,7 @@ import Foundation
 import TextBufferKit
 
 class TextBufferStorageProvider: TextStorageProvider {
-    private let pieceTree: PieceTreeTextBuffer
+    private let pieceTree: PieceTreeTextBuffer<[UInt8]>
 
     var linesCount: Int {
         pieceTree.lineCount

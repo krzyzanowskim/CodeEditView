@@ -1,16 +1,15 @@
 {
-  "object": {
-    "pins": [
+  "object" : {
+    "pins" : [
       {
-        "package": "TextBufferKit",
-        "repositoryURL": "https://github.com/migueldeicaza/TextBufferKit",
-        "state": {
-          "branch": "main",
-          "revision": "fd35cd9247e639d2c4066d8e36af2ec438fc008f",
-          "version": null
+        "package" : "TextBufferKit",
+        "repositoryURL" : "https://github.com/migueldeicaza/TextBufferKit",
+        "state" : {
+          "branch" : "main",
+          "revision" : "fd35cd9247e639d2c4066d8e36af2ec438fc008f"
         }
       }
     ]
   },
-  "version": 1
+  "version" : 1
 }

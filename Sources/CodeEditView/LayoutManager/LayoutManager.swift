@@ -379,4 +379,3 @@ class LayoutManager {
         return attributedString
     }
 }
-

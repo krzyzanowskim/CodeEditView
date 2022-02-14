@@ -38,7 +38,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 //        textStorage.add(\.foreground, NSColor.systemIndigo, Range(start: Position(line: 4, character: 0), end: Position(line: 6, character: 100)))
 
         var configuration = CodeEditView.Configuration.default
-        configuration.lineWrapping = .none
+        configuration.lineWrapping = .bounds
         let codeView = CodeEditView(storage: textStorage, configuration: configuration)
         codeView.autoresizingMask = [.width, .height]
 

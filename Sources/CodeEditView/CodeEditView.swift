@@ -1106,10 +1106,8 @@ extension CodeEditView {
 
     public override func insertNewline(_ sender: Any?) {
         unselectText()
-
         self.insertText("\n", registerUndo: true)
         _caret.position = Position(line: _caret.position.line, character: 0)
-
         scrollToVisiblePosition(_caret.position)
     }
 

@@ -14,6 +14,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		752C47E7264DF71500017C7C /* TextBufferKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TextBufferKit; path = ../../../TextBufferKit; sourceTree = "<group>"; };
 		755EEE7425532DBA0041E2F7 /* CodeEditView */ = {isa = PBXFileReference; lastKnownFileType = folder; name = CodeEditView; path = ../..; sourceTree = "<group>"; };
 		75EB017524F27BC10056D96A /* CodeEditViewSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CodeEditViewSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		75EB017824F27BC10056D96A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -45,6 +46,7 @@
 		75EB016C24F27BC10056D96A = {
 			isa = PBXGroup;
 			children = (
+				752C47E7264DF71500017C7C /* TextBufferKit */,
 				755EEE7425532DBA0041E2F7 /* CodeEditView */,
 				75EB017724F27BC10056D96A /* CodeEditViewSample */,
 				75EB017624F27BC10056D96A /* Products */,
