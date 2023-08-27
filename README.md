@@ -1,4 +1,6 @@
-**Never finished** and abandoned attempt to build a text layout + text view. I learned a lot and decided to not pursue this approach.
+**Never finished** and abandoned attempt to build a text layout + text view. 
+
+Re-inventing the wheel by implementing a custom text layout system on the CoreText framework. I learned a lot and **decided not to pursue this approach**. 
 
 - LayoutManager
   - `LayoutManager` text layout manager. layout text from the `TextStorage`. Layout lines (fragments) of text at once.
